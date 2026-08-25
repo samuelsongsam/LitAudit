@@ -1,0 +1,24 @@
+[project]
+name = "litaudit"
+version = "0.1.0"
+description = "可核验的文献调研智能体：筛选漏斗、研究地图、论断核验与反证据报告"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pydantic>=2.7",
+  "python-dotenv>=1.0",
+  "streamlit>=1.36",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+litaudit = "src.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["src*"]

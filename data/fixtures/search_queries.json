@@ -1,0 +1,12 @@
+[
+  {
+    "query_id": "fixture-q-001",
+    "source": "fixture",
+    "query": "fixture retrieval for science QA",
+    "purpose": "schema 演示，不得当作真实检索",
+    "keywords": ["fixture", "science QA"],
+    "date": "2026-08-22",
+    "scope_version": "v0.1",
+    "notes": "example.invalid；不进入真实论文统计。"
+  }
+]

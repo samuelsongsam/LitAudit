@@ -1,0 +1,16 @@
+{
+  "query_count": 1,
+  "paper_count": 0,
+  "fixture_paper_count": 1,
+  "screening_count": 1,
+  "claim_count": 0,
+  "evidence_count": 0,
+  "falsification_count": 0,
+  "decision_counts": {
+    "include": 0,
+    "exclude": 0,
+    "pending": 0
+  },
+  "error_count": 0,
+  "generated_at": "2026-08-25T19:12:30"
+}
