@@ -1,0 +1,3 @@
+{"question_id":"eval-001","question":"找出研究科学文献全文问答的检索增强大模型智能体，并给出可定位支持证据。","gold_paper_ids":["paper-001"],"gold_claim_ids":["claim-001","claim-002"],"scope_version":"v0.1","status":"fixture_gold_standard","notes":"金标准来自本轮已核验的 arXiv 摘要；全文页码尚未纳入。"}
+{"question_id":"eval-002","question":"找出从过去科学论文检索灵感、生成并优化科学想法的新颖性系统。","gold_paper_ids":["paper-003"],"gold_claim_ids":["claim-003","claim-004"],"scope_version":"v0.1","status":"fixture_gold_standard","notes":"任务属于首期范围允许的相邻自动科研信息整合；不得与科学问答结果混为一谈。"}
+{"question_id":"eval-003","question":"找出能够削弱“检索增强普遍提高回答可信度”强断言的 RAG 风险论文。","gold_paper_ids":["paper-006","paper-007"],"gold_claim_ids":["claim-006","claim-007","claim-008"],"scope_version":"v0.1","status":"fixture_gold_standard","notes":"风险金标准来自反向检索摘要；两篇论文因任务非科研文献而排除，但保留为反证据来源。"}

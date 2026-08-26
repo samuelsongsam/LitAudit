@@ -2,7 +2,7 @@
 
 可核验的文献调研智能体。输入一个科研问题或 idea，输出筛选漏斗、研究地图、论断-证据卡和反证据报告，而不是一篇无法回溯的长综述。
 
-当前仓库处于 **B 第一轮工程骨架**：可以离线校验 A 的数据、生成 `run_id`、回放结果，并打开四屏 Demo。不会调用检索 API，也不会把 `pending` 伪装成已纳入结论。
+当前仓库处于 **A 摘要级证据 + B 第一轮工程骨架**：A 已保存 arXiv/OpenAlex 检索缓存、7 篇候选、PaperCard、Claim、Evidence 和反证据；B 可以离线校验、生成 run_id、回放结果，并打开四屏 Demo。在线 API 不由 B pipeline 自动调用，摘要级证据不会伪装成全文核验。
 
 ## 快速开始
 
@@ -46,6 +46,11 @@ B 不改变 `decision` / `status` 语义，不填充 `null` 作者或摘要，�
 
 ```text
 data/                 A 的真实候选与筛选日志
+data/cache/           实际检索来源的原始响应缓存
+data/paper_cards.jsonl A 的摘要级论文卡片
+data/claims.jsonl     A 的 Claim
+data/evidence.jsonl   A 的摘要级 Evidence
+data/falsification.jsonl A 的反证据命中
 data/fixtures/        虚构 schema 样例，不计入真实统计
 src/schema.py         字段校验
 src/pipeline.py       离线读取 -> run_id -> JSON 落盘
@@ -55,15 +60,17 @@ runs/<run_id>/        一次可回放运行
 docs/                 范围、契约、交接
 ```
 
-## 当前数据状态（A Phase 1）
+## 当前数据状态（A 摘要级核验）
 
 - 主问题见 `docs/research_scope.md`
-- 5 篇候选：3 pending，2 exclude，0 include
-- 摘要和作者均为 `null`，界面会原样显示，不会填默认值
-- 还没有真实 `claims.jsonl` / `evidence.jsonl` / `paper_cards.jsonl`
+- 7 篇候选：2 include，5 exclude，0 pending
+- 8 条 Claim、10 条摘要级 Evidence、2 条 FalsificationHit
+- paper_cards.jsonl 已有 7 张摘要级卡片；全文页码级证据尚未完成
+- claim-008 因正反摘要证据冲突保持 pending
 
 ## 已知限制
 
-- 只支持 `--offline` / `--fixture`。在线 arXiv 请求此前已失败，本轮不重试网络。
-- 研究地图只有论文节点，没有主线和矛盾对，等待 A 的论文卡片。
-- 证据卡和证伪报告在真实 run 中为空状态；fixture run 用于演示字段，不能当研究结果。
+- B pipeline 只支持 --offline / --fixture；在线检索结果需先由 A 保存为缓存和结构化数据。
+- 研究地图尚未接入独立 paper_cards.jsonl，当前节点关系和主线仍不完整。
+- Evidence 目前全部为 abstract_only；不能当作全文页码级证据。
+- Semantic Scholar 批量请求曾返回 HTTP 429；OpenAlex 部分 external ID 查询仍需修正。

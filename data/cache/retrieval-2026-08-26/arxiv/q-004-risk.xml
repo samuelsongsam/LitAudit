@@ -1,0 +1,1517 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/59cgf5+sBxS+PdjsIIeEm6rZHJs</id>
+  <title>arXiv Query: search_query=(all:RAG OR all:"retrieval-augmented") AND (all:"citation hallucination" OR all:"unsupported claim" OR all:faithfulness OR all:attribution OR all:"retrieval failure") AND (all:LLM OR all:agent)&amp;id_list=&amp;start=0&amp;max_results=50</title>
+  <updated>2026-08-26T03:50:39Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=(all:RAG+OR+all:%22retrieval-augmented%22)+AND+((all:%22citation+hallucination%22+OR+(all:%22unsupported+claim%22+OR+(all:faithfulness+OR+(all:attribution+OR+all:%22retrieval+failure%22))))+AND+(all:LLM+OR+all:agent))&amp;start=0&amp;max_results=50&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>50</opensearch:itemsPerPage>
+  <opensearch:totalResults>417</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2510.22344v1</id>
+    <title>FAIR-RAG: Faithful Adaptive Iterative Refinement for Retrieval-Augmented Generation</title>
+    <updated>2025-10-25T15:59:33Z</updated>
+    <link href="https://arxiv.org/abs/2510.22344v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.22344v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>While Retrieval-Augmented Generation (RAG) mitigates hallucination and knowledge staleness in Large Language Models (LLMs), existing frameworks often falter on complex, multi-hop queries that require synthesizing information from disparate sources. Current advanced RAG methods, employing iterative or adaptive strategies, lack a robust mechanism to systematically identify and fill evidence gaps, often propagating noise or failing to gather a comprehensive context. We introduce FAIR-RAG, a novel agentic framework that transforms the standard RAG pipeline into a dynamic, evidence-driven reasoning process. At its core is an Iterative Refinement Cycle governed by a module we term Structured Evidence Assessment (SEA). The SEA acts as an analytical gating mechanism: it deconstructs the initial query into a checklist of required findings and audits the aggregated evidence to identify confirmed facts and, critically, explicit informational gaps. These gaps provide a precise signal to an Adaptive Query Refinement agent, which generates new, targeted sub-queries to retrieve missing information. This cycle repeats until the evidence is verified as sufficient, ensuring a comprehensive context for a final, strictly faithful generation. We conducted experiments on challenging multi-hop QA benchmarks, including HotpotQA, 2WikiMultiHopQA, and MusiQue. In a unified experimental setup, FAIR-RAG significantly outperforms strong baselines. On HotpotQA, it achieves an F1-score of 0.453 -- an absolute improvement of 8.3 points over the strongest iterative baseline -- establishing a new state-of-the-art for this class of methods on these benchmarks. Our work demonstrates that a structured, evidence-driven refinement process with explicit gap analysis is crucial for unlocking reliable and accurate reasoning in advanced RAG systems for complex, knowledge-intensive tasks.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-25T15:59:33Z</published>
+    <arxiv:comment>30 pages, 5 figures, 5 tables. Keywords: Retrieval-Augmented Generation (RAG), Large Language Models (LLMs), Agentic AI, Multi-hop Question Answering, Faithfulness</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Mohammad Aghajani Asl</name>
+    </author>
+    <author>
+      <name>Majid Asgari-Bidhendi</name>
+    </author>
+    <author>
+      <name>Behrooz Minaei-Bidgoli</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.22858v1</id>
+    <title>RAG System for Supporting Japanese Litigation Procedures: Faithful Response Generation Complying with Legal Norms</title>
+    <updated>2025-11-28T03:28:27Z</updated>
+    <link href="https://arxiv.org/abs/2511.22858v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.22858v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>This study discusses the essential components that a Retrieval-Augmented Generation (RAG)-based LLM system should possess in order to support Japanese medical litigation procedures complying with legal norms. In litigation, expert commissioners, such as physicians, architects, accountants, and engineers, provide specialized knowledge to help judges clarify points of dispute. When considering the substitution of these expert roles with a RAG-based LLM system, the constraint of strict adherence to legal norms is imposed. Specifically, three requirements arise: (1) the retrieval module must retrieve appropriate external knowledge relevant to the disputed issues in accordance with the principle prohibiting the use of private knowledge, (2) the responses generated must originate from the context provided by the RAG and remain faithful to that context, and (3) the retrieval module must reference external knowledge with appropriate timestamps corresponding to the issues at hand. This paper discusses the design of a RAG-based LLM system that satisfies these requirements.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-28T03:28:27Z</published>
+    <arxiv:comment>This is a preprint version of a paper reviewed and accepted at BREV-RAG 2025: Beyond Relevance-based EValuation of RAG Systems, a SIGIR-AP 2025 workshop</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <arxiv:journal_ref>Proceedings of the International Workshop on Beyond Relevance-based EValuation of RAG Systems (BREV-RAG) 2025 (pp. 59-65)</arxiv:journal_ref>
+    <author>
+      <name>Yuya Ishihara</name>
+    </author>
+    <author>
+      <name>Atsushi Keyaki</name>
+    </author>
+    <author>
+      <name>Hiroaki Yamada</name>
+    </author>
+    <author>
+      <name>Ryutaro Ohara</name>
+    </author>
+    <author>
+      <name>Mihoko Sumida</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.25621v1</id>
+    <title>FARSIQA: Faithful and Advanced RAG System for Islamic Question Answering</title>
+    <updated>2025-10-29T15:25:34Z</updated>
+    <link href="https://arxiv.org/abs/2510.25621v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.25621v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The advent of Large Language Models (LLMs) has revolutionized Natural Language Processing, yet their application in high-stakes, specialized domains like religious question answering is hindered by challenges like hallucination and unfaithfulness to authoritative sources. This issue is particularly critical for the Persian-speaking Muslim community, where accuracy and trustworthiness are paramount. Existing Retrieval-Augmented Generation (RAG) systems, relying on simplistic single-pass pipelines, fall short on complex, multi-hop queries requiring multi-step reasoning and evidence aggregation. To address this gap, we introduce FARSIQA, a novel, end-to-end system for Faithful Advanced Question Answering in the Persian Islamic domain. FARSIQA is built upon our innovative FAIR-RAG architecture: a Faithful, Adaptive, Iterative Refinement framework for RAG. FAIR-RAG employs a dynamic, self-correcting process: it adaptively decomposes complex queries, assesses evidence sufficiency, and enters an iterative loop to generate sub-queries, progressively filling information gaps. Operating on a curated knowledge base of over one million authoritative Islamic documents, FARSIQA demonstrates superior performance. Rigorous evaluation on the challenging IslamicPCQA benchmark shows state-of-the-art performance: the system achieves a remarkable 97.0% in Negative Rejection - a 40-point improvement over baselines - and a high Answer Correctness score of 74.3%. Our work establishes a new standard for Persian Islamic QA and validates that our iterative, adaptive architecture is crucial for building faithful, reliable AI systems in sensitive domains.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-29T15:25:34Z</published>
+    <arxiv:comment>37 pages, 5 figures, 10 tables. Keywords: Retrieval-Augmented Generation (RAG), Question Answering (QA), Islamic Knowledge Base, Faithful AI, Persian NLP, Multi-hop Reasoning, Large Language Models (LLMs)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Mohammad Aghajani Asl</name>
+    </author>
+    <author>
+      <name>Behrooz Minaei Bidgoli</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.16988v2</id>
+    <title>RAGentA: Multi-Agent Retrieval-Augmented Generation for Attributed Question Answering</title>
+    <updated>2025-09-01T11:15:06Z</updated>
+    <link href="https://arxiv.org/abs/2506.16988v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.16988v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We present RAGentA, a multi-agent retrieval-augmented generation (RAG) framework for attributed question answering (QA) with large language models (LLMs). With the goal of trustworthy answer generation, RAGentA focuses on optimizing answer correctness, defined by coverage and relevance to the question and faithfulness, which measures the extent to which answers are grounded in retrieved documents. RAGentA uses a multi-agent architecture that iteratively filters retrieved documents, generates attributed answers with in-line citations, and verifies completeness through dynamic refinement. Central to the framework is a hybrid retrieval strategy that combines sparse and dense methods, improving Recall@20 by 12.5% compared to the best single retrieval model, resulting in more correct and well-supported answers. Evaluated on a synthetic QA dataset derived from the FineWeb index, RAGentA outperforms standard RAG baselines, achieving gains of 1.09% in correctness and 10.72% in faithfulness. These results demonstrate the effectiveness of our multi-agent RAG architecture and hybrid retrieval strategy in advancing trustworthy QA with LLMs.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-20T13:37:03Z</published>
+    <arxiv:comment>Accepted at SIGIR 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Ines Besrour</name>
+    </author>
+    <author>
+      <name>Jingbo He</name>
+    </author>
+    <author>
+      <name>Tobias Schreieder</name>
+    </author>
+    <author>
+      <name>Michael Färber</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.07528v2</id>
+    <title>From RAG to Agentic RAG for Faithful Islamic Question Answering</title>
+    <updated>2026-06-19T11:23:20Z</updated>
+    <link href="https://arxiv.org/abs/2601.07528v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.07528v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are increasingly used for Islamic question answering, where ungrounded responses may carry serious religious consequences. Yet standard MCQ/MRC-style evaluations (MCQ: Multiple choice questions, MRC: Machine Reading Comprehension) do not capture key real-world failure modes, notably free-form hallucinations and the ability to abstain when evidence is insufficient. To address this gap, we introduce IslamicFaithQA, a 3,810-item bilingual (Arabic/English) generative benchmark with atomic single-gold answers, which enables direct measurement of hallucination and abstention. We additionally developed an end-to-end grounded Islamic modeling suite consisting of (i) 25K Arabic text-grounded SFT reasoning pairs, (ii) 5K bilingual preference samples for reward-guided alignment, and (iii) a verse-level Qur'an retrieval corpus of ~6k atomic verses (ayat). Building on these resources, we develop an agentic Quran-grounding framework (agentic RAG) that uses structured tool calls for iterative evidence seeking and answer revision. Experiments across Arabic-centric and multilingual LLMs show that retrieval improves correctness and that agentic RAG yields the largest gains beyond standard RAG, achieving state-of-the-art performance and stronger Arabic-English robustness even with a small model (i.e., Qwen3 4B). We made the datasets are publicly available. https://huggingface.co/datasets/QCRI/IslamicFaithQA</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-12T13:28:28Z</published>
+    <arxiv:comment>Islamic Question Answering; Faithful Question Answering; Retrieval-Augmented Generation; Agentic RAG; Large Language Models</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Gagan Bhatia</name>
+    </author>
+    <author>
+      <name>Hamdy Mubarak</name>
+    </author>
+    <author>
+      <name>Mustafa Jarrar</name>
+    </author>
+    <author>
+      <name>George Mikros</name>
+    </author>
+    <author>
+      <name>Fadi Zaraket</name>
+    </author>
+    <author>
+      <name>Mahmoud Alhirthani</name>
+    </author>
+    <author>
+      <name>Mutaz Al-Khatib</name>
+    </author>
+    <author>
+      <name>Logan Cochrane</name>
+    </author>
+    <author>
+      <name>Kareem Darwish</name>
+    </author>
+    <author>
+      <name>Rashid Yahiaoui</name>
+    </author>
+    <author>
+      <name>Firoj Alam</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.04847v2</id>
+    <title>Benchmarking LLM Faithfulness in RAG with Evolving Leaderboards</title>
+    <updated>2025-11-06T15:46:58Z</updated>
+    <link href="https://arxiv.org/abs/2505.04847v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.04847v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-augmented generation (RAG) aims to reduce hallucinations by grounding responses in external context, yet large language models (LLMs) still frequently introduce unsupported information or contradictions even when provided with relevant context. This paper presents two complementary efforts at Vectara to measure and benchmark LLM faithfulness in RAG. First, we describe our original hallucination leaderboard, which has tracked hallucination rates for LLMs since 2023 using our HHEM hallucination detection model. Motivated by limitations observed in current hallucination detection methods, we introduce FaithJudge, an LLM-as-a-judge framework that leverages a pool of diverse human-annotated hallucination examples to substantially improve the automated hallucination evaluation of LLMs. We introduce an enhanced hallucination leaderboard centered on FaithJudge that benchmarks LLMs on RAG faithfulness in summarization, question-answering, and data-to-text generation tasks. FaithJudge enables a more reliable benchmarking of LLM hallucinations in RAG and supports the development of more trustworthy generative AI systems: https://github.com/vectara/FaithJudge.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-07T22:50:33Z</published>
+    <arxiv:comment>EMNLP Industry Track 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Manveer Singh Tamber</name>
+    </author>
+    <author>
+      <name>Forrest Sheng Bao</name>
+    </author>
+    <author>
+      <name>Chenyu Xu</name>
+    </author>
+    <author>
+      <name>Ge Luo</name>
+    </author>
+    <author>
+      <name>Suleman Kazi</name>
+    </author>
+    <author>
+      <name>Minseok Bae</name>
+    </author>
+    <author>
+      <name>Miaoran Li</name>
+    </author>
+    <author>
+      <name>Ofer Mendelevitch</name>
+    </author>
+    <author>
+      <name>Renyi Qu</name>
+    </author>
+    <author>
+      <name>Jimmy Lin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.08545v1</id>
+    <title>DA-RAG: Dynamic Attributed Community Search for Retrieval-Augmented Generation</title>
+    <updated>2026-02-09T11:45:13Z</updated>
+    <link href="https://arxiv.org/abs/2602.08545v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.08545v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Owing to their unprecedented comprehension capabilities, large language models (LLMs) have become indispensable components of modern web search engines. From a technical perspective, this integration represents retrieval-augmented generation (RAG), which enhances LLMs by grounding them in external knowledge bases. A prevalent technical approach in this context is graph-based RAG (G-RAG). However, current G-RAG methodologies frequently underutilize graph topology, predominantly focusing on low-order structures or pre-computed static communities. This limitation affects their effectiveness in addressing dynamic and complex queries. Thus, we propose DA-RAG, which leverages attributed community search (ACS) to extract relevant subgraphs based on the queried question dynamically. DA-RAG captures high-order graph structures, allowing for the retrieval of self-complementary knowledge. Furthermore, DA-RAG is equipped with a chunk-layer oriented graph index, which facilitates efficient multi-granularity retrieval while significantly reducing both computational and economic costs. We evaluate DA-RAG on multiple datasets, demonstrating that it outperforms existing RAG methods by up to 40% in head-to-head comparisons across four metrics while reducing index construction time and token overhead by up to 37% and 41%, respectively.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-09T11:45:13Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Xingyuan Zeng</name>
+    </author>
+    <author>
+      <name>Zuohan Wu</name>
+    </author>
+    <author>
+      <name>Yue Wang</name>
+    </author>
+    <author>
+      <name>Chen Zhang</name>
+    </author>
+    <author>
+      <name>Quanming Yao</name>
+    </author>
+    <author>
+      <name>Libin Zheng</name>
+    </author>
+    <author>
+      <name>Jian Yin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.00865v2</id>
+    <title>Doctor-RAG: A Failure-Aware Repair Framework for Agentic Retrieval-Augmented Generation</title>
+    <updated>2026-06-12T08:42:16Z</updated>
+    <link href="https://arxiv.org/abs/2604.00865v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.00865v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Agentic Retrieval-Augmented Generation interleaves retrieval and reasoning for multi-hop QA and complex knowledge tasks. As reasoning trajectories lengthen, failures become more frequent, while existing methods often either stop at diagnosis or rely on coarse replanning and rerun-style recovery, incurring high computational cost. We propose DoctorRAG (DR-RAG), a diagnose-and-repair framework that corrects failures via explicit error localization and prefix reuse. DR-RAG operates in two stages: (i) trajectory-level failure diagnosis, where a distilled diagnosis model jointly assesses evidence sufficiency, classifies the failure type, and localizes the earliest failure point; and (ii) tool-conditioned local repair that intervenes only at the diagnosed point while reusing conditionally valid prefixes and retrieved evidence. By separating error attribution from correction, DR-RAG avoids blind reruns in a post-hoc repair setting and enables targeted, efficient correction of known failed trajectories. Experiments on three multi-hop QA benchmarks across multiple agentic RAG baselines and backbone models show substantial improvements in answer accuracy.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-01T13:13:27Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Shuguang Jiao</name>
+    </author>
+    <author>
+      <name>Chengkai Huang</name>
+    </author>
+    <author>
+      <name>Shuhan Qi</name>
+    </author>
+    <author>
+      <name>Xuan Wang</name>
+    </author>
+    <author>
+      <name>Yifan Li</name>
+    </author>
+    <author>
+      <name>Quanchi Weng</name>
+    </author>
+    <author>
+      <name>Lingchuan Liu</name>
+    </author>
+    <author>
+      <name>Xunliang Cai</name>
+    </author>
+    <author>
+      <name>Lina Yao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.04480v1</id>
+    <title>Source Attribution in Retrieval-Augmented Generation</title>
+    <updated>2025-07-06T17:36:45Z</updated>
+    <link href="https://arxiv.org/abs/2507.04480v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.04480v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>While attribution methods, such as Shapley values, are widely used to explain the importance of features or training data in traditional machine learning, their application to Large Language Models (LLMs), particularly within Retrieval-Augmented Generation (RAG) systems, is nascent and challenging. The primary obstacle is the substantial computational cost, where each utility function evaluation involves an expensive LLM call, resulting in direct monetary and time expenses. This paper investigates the feasibility and effectiveness of adapting Shapley-based attribution to identify influential retrieved documents in RAG. We compare Shapley with more computationally tractable approximations and some existing attribution methods for LLM. Our work aims to: (1) systematically apply established attribution principles to the RAG document-level setting; (2) quantify how well SHAP approximations can mirror exact attributions while minimizing costly LLM interactions; and (3) evaluate their practical explainability in identifying critical documents, especially under complex inter-document relationships such as redundancy, complementarity, and synergy. This study seeks to bridge the gap between powerful attribution techniques and the practical constraints of LLM-based RAG systems, offering insights into achieving reliable and affordable RAG explainability.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-06T17:36:45Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Ikhtiyor Nematov</name>
+    </author>
+    <author>
+      <name>Tarik Kalai</name>
+    </author>
+    <author>
+      <name>Elizaveta Kuzmenko</name>
+    </author>
+    <author>
+      <name>Gabriele Fugagnoli</name>
+    </author>
+    <author>
+      <name>Dimitris Sacharidis</name>
+    </author>
+    <author>
+      <name>Katja Hose</name>
+    </author>
+    <author>
+      <name>Tomer Sagi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2503.16581v1</id>
+    <title>Investigating Retrieval-Augmented Generation in Quranic Studies: A Study of 13 Open-Source Large Language Models</title>
+    <updated>2025-03-20T13:26:30Z</updated>
+    <link href="https://arxiv.org/abs/2503.16581v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2503.16581v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Accurate and contextually faithful responses are critical when applying large language models (LLMs) to sensitive and domain-specific tasks, such as answering queries related to quranic studies. General-purpose LLMs often struggle with hallucinations, where generated responses deviate from authoritative sources, raising concerns about their reliability in religious contexts. This challenge highlights the need for systems that can integrate domain-specific knowledge while maintaining response accuracy, relevance, and faithfulness. In this study, we investigate 13 open-source LLMs categorized into large (e.g., Llama3:70b, Gemma2:27b, QwQ:32b), medium (e.g., Gemma2:9b, Llama3:8b), and small (e.g., Llama3.2:3b, Phi3:3.8b). A Retrieval-Augmented Generation (RAG) is used to make up for the problems that come with using separate models. This research utilizes a descriptive dataset of Quranic surahs including the meanings, historical context, and qualities of the 114 surahs, allowing the model to gather relevant knowledge before responding. The models are evaluated using three key metrics set by human evaluators: context relevance, answer faithfulness, and answer relevance. The findings reveal that large models consistently outperform smaller models in capturing query semantics and producing accurate, contextually grounded responses. The Llama3.2:3b model, even though it is considered small, does very well on faithfulness (4.619) and relevance (4.857), showing the promise of smaller architectures that have been well optimized. This article examines the trade-offs between model size, computational efficiency, and response quality while using LLMs in domain-specific applications.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-03-20T13:26:30Z</published>
+    <arxiv:comment>11 pages, keywords: Large-language-models; retrieval-augmented generation; question answering; Quranic studies; Islamic teachings</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <arxiv:journal_ref>International Journal of Advanced Computer Science and Applications(IJACSA), 16(2), 2025</arxiv:journal_ref>
+    <author>
+      <name>Zahra Khalila</name>
+    </author>
+    <author>
+      <name>Arbi Haza Nasution</name>
+    </author>
+    <author>
+      <name>Winda Monika</name>
+    </author>
+    <author>
+      <name>Aytug Onan</name>
+    </author>
+    <author>
+      <name>Yohei Murakami</name>
+    </author>
+    <author>
+      <name>Yasir Bin Ismail Radi</name>
+    </author>
+    <author>
+      <name>Noor Mohammad Osmani</name>
+    </author>
+    <arxiv:doi>10.14569/IJACSA.2025.01602134</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.14569/IJACSA.2025.01602134" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2406.13663v4</id>
+    <title>Model Internals-based Answer Attribution for Trustworthy Retrieval-Augmented Generation</title>
+    <updated>2024-10-18T13:16:57Z</updated>
+    <link href="https://arxiv.org/abs/2406.13663v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2406.13663v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Ensuring the verifiability of model answers is a fundamental challenge for retrieval-augmented generation (RAG) in the question answering (QA) domain. Recently, self-citation prompting was proposed to make large language models (LLMs) generate citations to supporting documents along with their answers. However, self-citing LLMs often struggle to match the required format, refer to non-existent sources, and fail to faithfully reflect LLMs' context usage throughout the generation. In this work, we present MIRAGE --Model Internals-based RAG Explanations -- a plug-and-play approach using model internals for faithful answer attribution in RAG applications. MIRAGE detects context-sensitive answer tokens and pairs them with retrieved documents contributing to their prediction via saliency methods. We evaluate our proposed approach on a multilingual extractive QA dataset, finding high agreement with human answer attribution. On open-ended QA, MIRAGE achieves citation quality and efficiency comparable to self-citation while also allowing for a finer-grained control of attribution parameters. Our qualitative evaluation highlights the faithfulness of MIRAGE's attributions and underscores the promising application of model internals for RAG answer attribution.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-06-19T16:10:26Z</published>
+    <arxiv:comment>Accepted by EMNLP 2024 Main Conference. Code and data released at https://github.com/Betswish/MIRAGE</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <arxiv:journal_ref>Proceedings of EMNLP (2024) 6037-6053</arxiv:journal_ref>
+    <author>
+      <name>Jirui Qi</name>
+    </author>
+    <author>
+      <name>Gabriele Sarti</name>
+    </author>
+    <author>
+      <name>Raquel Fernández</name>
+    </author>
+    <author>
+      <name>Arianna Bisazza</name>
+    </author>
+    <arxiv:doi>10.18653/v1/2024.emnlp-main.347</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.18653/v1/2024.emnlp-main.347" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.17853v4</id>
+    <title>CiteGuard: Faithful Citation Attribution for LLMs via Retrieval-Augmented Validation</title>
+    <updated>2026-04-13T01:44:44Z</updated>
+    <link href="https://arxiv.org/abs/2510.17853v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.17853v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have emerged as powerful assistants for scientific writing. However, concerns remain about the quality and reliability of the generated text, including citation accuracy and faithfulness. While most recent work relies on methods such as LLM-as-a-Judge, the reliability of LLM-as-a-Judge alone is also in doubt. In this work, we reframe citation evaluation as a problem of citation attribution alignment, which assesses whether LLM-generated citations match those a human author would include for the same text. We propose CiteGuard, a retrieval-aware agent framework designed to provide more faithful grounding for citation validation. CiteGuard improves over the prior baseline by 10 percentage points and achieves up to 68.1% accuracy on the CiteME benchmark, approaching human performance (69.2%). It also identifies alternative valid citations and demonstrates generalization ability for cross-domain citation attribution. Our code is available at https://github.com/KathCYM/CiteGuard.</summary>
+    <category term="cs.DL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-15T00:32:26Z</published>
+    <arxiv:comment>Project Page: https://kathcym.github.io/CiteGuard_Page/. ACL 2026 Main Conference</arxiv:comment>
+    <arxiv:primary_category term="cs.DL"/>
+    <author>
+      <name>Yee Man Choi</name>
+    </author>
+    <author>
+      <name>Xuehang Guo</name>
+    </author>
+    <author>
+      <name>Yi R. Fung</name>
+    </author>
+    <author>
+      <name>Qingyun Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.06211v2</id>
+    <title>Illocutionary Explanation Planning for Source-Faithful Explanations in Retrieval-Augmented Language Models</title>
+    <updated>2026-04-18T00:13:59Z</updated>
+    <link href="https://arxiv.org/abs/2604.06211v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.06211v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Natural language explanations produced by large language models (LLMs) are often persuasive, but not necessarily scrutable: users cannot easily verify whether the claims in an explanation are supported by evidence. In XAI, this motivates a focus on faithfulness and traceability, i.e., the extent to which an explanation's claims can be grounded in, and traced back to, an explicit source. We study these desiderata in retrieval-augmented generation (RAG) for programming education, where textbooks provide authoritative evidence. We benchmark six LLMs on 90 Stack Overflow questions grounded in three programming textbooks and quantify source faithfulness via source adherence metrics. We find that non Retrieval-Augmented Generation (RAG) models have median source adherence of 0%, while baseline RAG systems still exhibit low median adherence (22-40%, depending on the model). Motivated by Achinstein's illocutionary theory of explanation, we introduce illocutionary macro-planning as a descriptive design principle for source-faithful explanations and instantiate it with chain-of-illocution prompting (CoI), which expands a query into implicit explanatory questions that drive retrieval. Across models, CoI yields statistically significant gains (up to 63%) in source adherence, although absolute adherence remains moderate and the gains are weak or non-significant for some models. A user study with 165 retained participants (220 recruited) indicates that these gains do not harm satisfaction, relevance, or perceived correctness.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-16T11:10:29Z</published>
+    <arxiv:comment>24 pages; Accepted for publication at XAI'2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Francesco Sovrano</name>
+    </author>
+    <author>
+      <name>Alberto Bacchelli</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.23515v1</id>
+    <title>ragR: Retrieval-Augmented Generation and RAG Assessment in R</title>
+    <updated>2026-04-26T03:37:12Z</updated>
+    <link href="https://arxiv.org/abs/2604.23515v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.23515v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-augmented generation (RAG) combines document retrieval with large language models to produce responses grounded in external evidence. While several R packages support core components of RAG workflows, integrated evaluation of RAG systems in R remains limited and is often conducted through Python-based tools, most notably the RAG assessment (RAGAS) framework. To address this gap, we introduce ragR, an R package that unifies document ingestion, embedding and vector storage, similarity-based retrieval, grounded generation, structured question-answer logging, and RAGAS-style evaluation within a single R-native workflow. The current implementation provides LLM-based scoring for four core RAGAS metrics: context precision, context recall, faithfulness, and answer relevance. Validation experiments under controlled settings show that ragR captures similar metric behavior to the reference Python RAGAS workflow across multiple use cases. By integrating RAG construction and evaluation within a reproducible workflow in R, ragR provides a practical framework for research, teaching, and moderate-scale experimentation on RAG systems entirely within the R ecosystem.</summary>
+    <category term="stat.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-26T03:37:12Z</published>
+    <arxiv:comment>Preprint. Code available at the GitHub repository listed in the paper</arxiv:comment>
+    <arxiv:primary_category term="stat.CO"/>
+    <author>
+      <name>Muhammad Aimal Rehman</name>
+    </author>
+    <author>
+      <name>Zhili Lu</name>
+    </author>
+    <author>
+      <name>Chi-Kuang Yeh</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.15682v1</id>
+    <title>SQuAI: Scientific Question-Answering with Multi-Agent Retrieval-Augmented Generation</title>
+    <updated>2025-10-17T14:20:55Z</updated>
+    <link href="https://arxiv.org/abs/2510.15682v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.15682v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We present SQuAI (https://squai.scads.ai/), a scalable and trustworthy multi-agent retrieval-augmented generation (RAG) framework for scientific question answering (QA) with large language models (LLMs). SQuAI addresses key limitations of existing RAG systems in the scholarly domain, where complex, open-domain questions demand accurate answers, explicit claims with citations, and retrieval across millions of scientific documents. Built on over 2.3 million full-text papers from arXiv.org, SQuAI employs four collaborative agents to decompose complex questions into sub-questions, retrieve targeted evidence via hybrid sparse-dense retrieval, and adaptively filter documents to improve contextual relevance. To ensure faithfulness and traceability, SQuAI integrates in-line citations for each generated claim and provides supporting sentences from the source documents. Our system improves faithfulness, answer relevance, and contextual relevance by up to +0.088 (12%) over a strong RAG baseline. We further release a benchmark of 1,000 scientific question-answer-evidence triplets to support reproducibility. With transparent reasoning, verifiable citations, and domain-wide scalability, SQuAI demonstrates how multi-agent RAG enables more trustworthy scientific QA with LLMs.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-17T14:20:55Z</published>
+    <arxiv:comment>Accepted at CIKM 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Ines Besrour</name>
+    </author>
+    <author>
+      <name>Jingbo He</name>
+    </author>
+    <author>
+      <name>Tobias Schreieder</name>
+    </author>
+    <author>
+      <name>Michael Färber</name>
+    </author>
+    <arxiv:doi>10.1145/3746252.3761471</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1145/3746252.3761471" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.17225v2</id>
+    <title>SSFO: Self-Supervised Faithfulness Optimization for Retrieval-Augmented Generation</title>
+    <updated>2025-10-04T11:26:02Z</updated>
+    <link href="https://arxiv.org/abs/2508.17225v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.17225v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) systems require Large Language Models (LLMs) to generate responses that are faithful to the retrieved context. However, faithfulness hallucination remains a critical challenge, as existing methods often require costly supervision and post-training or significant inference burdens. To overcome these limitations, we introduce Self-Supervised Faithfulness Optimization (SSFO), the first self-supervised alignment approach for enhancing RAG faithfulness. SSFO constructs preference data pairs by contrasting the model's outputs generated with and without the context. Leveraging Direct Preference Optimization (DPO), SSFO aligns model faithfulness without incurring labeling costs or additional inference burden. We theoretically and empirically demonstrate that SSFO leverages a benign form of \emph{likelihood displacement}, transferring probability mass from parametric-based tokens to context-aligned tokens. Based on this insight, we propose a modified DPO loss function to encourage likelihood displacement. Comprehensive evaluations show that SSFO significantly outperforms existing methods, achieving state-of-the-art faithfulness on multiple context-based question-answering datasets. Notably, SSFO exhibits strong generalization, improving cross-lingual faithfulness and preserving general instruction-following capabilities. We release our code and model at the anonymous link: https://github.com/chkwy/SSFO</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-24T06:58:29Z</published>
+    <arxiv:comment>Working in progress</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xiaqiang Tang</name>
+    </author>
+    <author>
+      <name>Yi Wang</name>
+    </author>
+    <author>
+      <name>Keyu Hu</name>
+    </author>
+    <author>
+      <name>Rui Xu</name>
+    </author>
+    <author>
+      <name>Chuang Li</name>
+    </author>
+    <author>
+      <name>Weigao Sun</name>
+    </author>
+    <author>
+      <name>Jian Li</name>
+    </author>
+    <author>
+      <name>Sihong Xie</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2509.03626v1</id>
+    <title>Explainable Knowledge Graph Retrieval-Augmented Generation (KG-RAG) with KG-SMILE</title>
+    <updated>2025-09-03T18:29:30Z</updated>
+    <link href="https://arxiv.org/abs/2509.03626v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2509.03626v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Generative AI, such as Large Language Models (LLMs), has achieved impressive progress but still produces hallucinations and unverifiable claims, limiting reliability in sensitive domains. Retrieval-Augmented Generation (RAG) improves accuracy by grounding outputs in external knowledge, especially in domains like healthcare, where precision is vital. However, RAG remains opaque and essentially a black box, heavily dependent on data quality. We developed a method-agnostic, perturbation-based framework that provides token and component-level interoperability for Graph RAG using SMILE and named it as Knowledge-Graph (KG)-SMILE. By applying controlled perturbations, computing similarities, and training weighted linear surrogates, KG-SMILE identifies the graph entities and relations most influential to generated outputs, thereby making RAG more transparent. We evaluate KG-SMILE using comprehensive attribution metrics, including fidelity, faithfulness, consistency, stability, and accuracy. Our findings show that KG-SMILE produces stable, human-aligned explanations, demonstrating its capacity to balance model effectiveness with interpretability and thereby fostering greater transparency and trust in machine learning technologies.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-03T18:29:30Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zahra Zehtabi Sabeti Moghaddam</name>
+    </author>
+    <author>
+      <name>Zeinab Dehghani</name>
+    </author>
+    <author>
+      <name>Maneeha Rani</name>
+    </author>
+    <author>
+      <name>Koorosh Aslansefat</name>
+    </author>
+    <author>
+      <name>Bhupesh Kumar Mishra</name>
+    </author>
+    <author>
+      <name>Rameez Raja Kureshi</name>
+    </author>
+    <author>
+      <name>Dhavalkumar Thakker</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.10143v1</id>
+    <title>Reason and Verify: A Framework for Faithful Retrieval-Augmented Generation</title>
+    <updated>2026-03-10T18:25:07Z</updated>
+    <link href="https://arxiv.org/abs/2603.10143v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.10143v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) significantly improves the factuality of Large Language Models (LLMs), yet standard pipelines often lack mechanisms to verify inter- mediate reasoning, leaving them vulnerable to hallucinations in high-stakes domains. To address this, we propose a domain-specific RAG framework that integrates explicit rea- soning and faithfulness verification. Our architecture augments standard retrieval with neural query rewriting, BGE-based cross-encoder reranking, and a rationale generation module that grounds sub-claims in specific evidence spans. We further introduce an eight-category verification taxonomy that enables fine-grained assessment of rationale faithfulness, distinguishing between explicit and implicit support patterns to facilitate structured error diagnosis. We evaluate this framework on the BioASQ and PubMedQA benchmarks, specifically analyzing the impact of dynamic in-context learning and rerank- ing under constrained token budgets. Experiments demonstrate that explicit rationale generation improves accuracy over vanilla RAG baselines, while dynamic demonstration selection combined with robust reranking yields further gains in few-shot settings. Using Llama-3-8B-Instruct, our approach achieves 89.1% on BioASQ-Y/N and 73.0% on Pub- MedQA, competitive with systems using significantly larger models. Additionally, we perform a pilot study combining human expert assessment with LLM-based verification to explore how explicit rationale generation improves system transparency and enables more detailed diagnosis of retrieval failures in biomedical question answering.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-10T18:25:07Z</published>
+    <arxiv:comment>Accepted to Canadian AI 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Eeham Khan</name>
+    </author>
+    <author>
+      <name>Luis Rodriguez</name>
+    </author>
+    <author>
+      <name>Marc Queudot</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.09341v1</id>
+    <title>TaSR-RAG: Taxonomy-guided Structured Reasoning for Retrieval-Augmented Generation</title>
+    <updated>2026-03-10T08:16:36Z</updated>
+    <link href="https://arxiv.org/abs/2603.09341v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.09341v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) helps large language models (LLMs) answer knowledge-intensive and time-sensitive questions by conditioning generation on external evidence. However, most RAG systems still retrieve unstructured chunks and rely on one-shot generation, which often yields redundant context, low information density, and brittle multi-hop reasoning. While structured RAG pipelines can improve grounding, they typically require costly and error-prone graph construction or impose rigid entity-centric structures that do not align with the query's reasoning chain.
+  We propose \textsc{TaSR-RAG}, a taxonomy-guided structured reasoning framework for evidence selection. We represent both queries and documents as relational triples, and constrain entity semantics with a lightweight two-level taxonomy to balance generalization and precision. Given a complex question, \textsc{TaSR-RAG} decomposes it into an ordered sequence of triple sub-queries with explicit latent variables, then performs step-wise evidence selection via hybrid triple matching that combines semantic similarity over raw triples with structural consistency over typed triples.
+  By maintaining an explicit entity binding table across steps, \textsc{TaSR-RAG} resolves intermediate variables and reduces entity conflation without explicit graph construction or exhaustive search. Experiments on multiple multi-hop question answering benchmarks show that \textsc{TaSR-RAG} consistently outperforms strong RAG and structured-RAG baselines by up to 14\%, while producing clearer evidence attribution and more faithful reasoning traces.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-10T08:16:36Z</published>
+    <arxiv:comment>14 pages, 7 tables, 5 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jiashuo Sun</name>
+    </author>
+    <author>
+      <name>Yixuan Xie</name>
+    </author>
+    <author>
+      <name>Jimeng Shi</name>
+    </author>
+    <author>
+      <name>Shaowen Wang</name>
+    </author>
+    <author>
+      <name>Jiawei Han</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2412.15235v1</id>
+    <title>OG-RAG: Ontology-Grounded Retrieval-Augmented Generation For Large Language Models</title>
+    <updated>2024-12-12T01:21:03Z</updated>
+    <link href="https://arxiv.org/abs/2412.15235v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2412.15235v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>This paper presents OG-RAG, an Ontology-Grounded Retrieval Augmented Generation method designed to enhance LLM-generated responses by anchoring retrieval processes in domain-specific ontologies. While LLMs are widely used for tasks like question answering and search, they struggle to adapt to specialized knowledge, such as industrial workflows or knowledge work, without expensive fine-tuning or sub-optimal retrieval methods. Existing retrieval-augmented models, such as RAG, offer improvements but fail to account for structured domain knowledge, leading to suboptimal context generation. Ontologies, which conceptually organize domain knowledge by defining entities and their interrelationships, offer a structured representation to address this gap. OG-RAG constructs a hypergraph representation of domain documents, where each hyperedge encapsulates clusters of factual knowledge grounded using domain-specific ontology. An optimization algorithm then retrieves the minimal set of hyperedges that constructs a precise, conceptually grounded context for the LLM. This method enables efficient retrieval while preserving the complex relationships between entities. OG-RAG applies to domains where fact-based reasoning is essential, particularly in tasks that require workflows or decision-making steps to follow predefined rules and procedures. These include industrial workflows in healthcare, legal, and agricultural sectors, as well as knowledge-driven tasks such as news journalism, investigative research, consulting and more. Our evaluations demonstrate that OG-RAG increases the recall of accurate facts by 55% and improves response correctness by 40% across four different LLMs. Additionally, OG-RAG enables 30% faster attribution of responses to context and boosts fact-based reasoning accuracy by 27% compared to baseline methods.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-12-12T01:21:03Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Kartik Sharma</name>
+    </author>
+    <author>
+      <name>Peeyush Kumar</name>
+    </author>
+    <author>
+      <name>Yunqing Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2502.09891v4</id>
+    <title>ArchRAG: Attributed Community-based Hierarchical Retrieval-Augmented Generation</title>
+    <updated>2026-05-11T03:00:07Z</updated>
+    <link href="https://arxiv.org/abs/2502.09891v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2502.09891v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) has proven effective in integrating external knowledge into large language models (LLMs) for solving question-answer (QA) tasks. The state-of-the-art RAG approaches often use the graph data as the external data since they capture the rich semantic information and link relationships between entities. However, existing graph-based RAG approaches cannot accurately identify the relevant information from the graph and also consume large numbers of tokens in the online retrieval process. To address these issues, we introduce a novel graph-based RAG approach, called Attributed Community-based Hierarchical RAG (ArchRAG), by augmenting the question using attributed communities, and also introducing a novel LLM-based hierarchical clustering method. To retrieve the most relevant information from the graph for the question, we build a novel hierarchical index structure for the attributed communities and develop an effective online retrieval method. Experimental results demonstrate that ArchRAG outperforms existing methods in both accuracy and token cost.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-02-14T03:28:36Z</published>
+    <arxiv:comment>Published in Proceedings of the AAAI Conference on Artificial Intelligence, 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <arxiv:journal_ref>Proceedings of the AAAI Conference on Artificial Intelligence, 40(19), 15868-15876, 2026</arxiv:journal_ref>
+    <author>
+      <name>Shu Wang</name>
+    </author>
+    <author>
+      <name>Yixiang Fang</name>
+    </author>
+    <author>
+      <name>Yingli Zhou</name>
+    </author>
+    <author>
+      <name>Xilin Liu</name>
+    </author>
+    <author>
+      <name>Yuchi Ma</name>
+    </author>
+    <arxiv:doi>10.1609/aaai.v40i19.38619</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1609/aaai.v40i19.38619" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2502.15543v4</id>
+    <title>ParamMute: Suppressing Knowledge-Critical FFNs for Faithful Retrieval-Augmented Generation</title>
+    <updated>2026-07-09T09:34:11Z</updated>
+    <link href="https://arxiv.org/abs/2502.15543v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2502.15543v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) integrated with retrieval-augmented generation (RAG) have improved factuality by grounding outputs in external evidence. However, they remain susceptible to unfaithful generation, where outputs contradict retrieved context despite its relevance and accuracy. Existing approaches aiming to improve faithfulness primarily focus on enhancing the utilization of external context, but often overlook the persistent influence of internal parametric knowledge during generation. In this work, we investigate the internal mechanisms behind unfaithful generation and identify a subset of mid-to-deep feed-forward networks (FFNs) that are disproportionately activated in such cases. Building on this insight, we propose Parametric Knowledge Muting through FFN Suppression (ParamMute), a framework that improves contextual faithfulness by suppressing the activation of unfaithfulness-associated FFNs and calibrating the model toward retrieved knowledge. To evaluate our approach, we introduce CoFaithfulQA, a benchmark specifically designed to evaluate faithfulness in scenarios where internal knowledge conflicts with accurate external evidence. Experimental results show that ParamMute significantly enhances faithfulness across both CoFaithfulQA and the established ConFiQA benchmark, achieving substantial reductions in reliance on parametric memory. These findings underscore the importance of mitigating internal knowledge dominance and provide a new direction for improving LLM trustworthiness in RAG. All codes are available at https://github.com/OpenBMB/ParamMute.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-02-21T15:50:41Z</published>
+    <arxiv:comment>26 pages, 7 figures, 7 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Pengcheng Huang</name>
+    </author>
+    <author>
+      <name>Zhenghao Liu</name>
+    </author>
+    <author>
+      <name>Yukun Yan</name>
+    </author>
+    <author>
+      <name>Haiyan Zhao</name>
+    </author>
+    <author>
+      <name>Xiaoyuan Yi</name>
+    </author>
+    <author>
+      <name>Hao Chen</name>
+    </author>
+    <author>
+      <name>Zhiyuan Liu</name>
+    </author>
+    <author>
+      <name>Maosong Sun</name>
+    </author>
+    <author>
+      <name>Tong Xiao</name>
+    </author>
+    <author>
+      <name>Ge Yu</name>
+    </author>
+    <author>
+      <name>Chenyan Xiong</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.12460v3</id>
+    <title>Beyond Black-Box Interventions: Latent Probing for Faithful Retrieval-Augmented Generation</title>
+    <updated>2026-04-15T12:28:12Z</updated>
+    <link href="https://arxiv.org/abs/2510.12460v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.12460v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) systems often fail to maintain contextual faithfulness, generating responses that conflict with the provided context or fail to fully leverage the provided evidence. Existing methods attempt to improve faithfulness through external interventions, such as specialized prompting, decoding-based calibration, or preference optimization. However, since these approaches treat the LLM as a black box, they lack a reliable mechanism to assess when and why knowledge conflicts occur. Consequently, they tend to be brittle, data-intensive, and agnostic to the model's internal reasoning process. In this paper, we move beyond black-box interventions to analyze the model's internal reasoning process. We discover that conflicting and aligned knowledge states are linearly separable in the model's latent space, and contextual noise systematically increases the entropy of these representations. Based on these findings, we propose ProbeRAG, a novel framework for faithful RAG that operates in three stages: (i) fine-grained knowledge pruning to filter irrelevant context, (ii) latent conflict probing to identify hard conflicts in the model's latent space, and (iii) conflict-aware attention to modulate attention heads toward faithful context integration. Extensive experiments demonstrate that ProbeRAG substantially improves both accuracy and contextual faithfulness. The related resources are available at https://github.com/LinfengGao/ProbeRAG.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-14T12:48:24Z</published>
+    <arxiv:comment>ACL 2026 Findings; Code is available at https://github.com/LinfengGao/ProbeRAG</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Linfeng Gao</name>
+    </author>
+    <author>
+      <name>Qinggang Zhang</name>
+    </author>
+    <author>
+      <name>Baolong Bi</name>
+    </author>
+    <author>
+      <name>Bo Zeng</name>
+    </author>
+    <author>
+      <name>Zheng Yuan</name>
+    </author>
+    <author>
+      <name>Zerui Chen</name>
+    </author>
+    <author>
+      <name>Zhimin Wei</name>
+    </author>
+    <author>
+      <name>Shenghua Liu</name>
+    </author>
+    <author>
+      <name>Linlong Xu</name>
+    </author>
+    <author>
+      <name>Longyue Wang</name>
+    </author>
+    <author>
+      <name>Weihua Luo</name>
+    </author>
+    <author>
+      <name>Jinsong Su</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.21072v5</id>
+    <title>Faithfulness-Aware Uncertainty Quantification for Fact-Checking the Output of Retrieval Augmented Generation</title>
+    <updated>2026-04-29T15:09:14Z</updated>
+    <link href="https://arxiv.org/abs/2505.21072v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.21072v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) enhanced with retrieval, an approach known as Retrieval-Augmented Generation (RAG), have achieved strong performance in open-domain question answering. However, RAG remains prone to hallucinations: factually incorrect outputs may arise from inaccuracies in the model's internal knowledge and the retrieved context. Existing approaches to mitigating hallucinations often conflate factuality with faithfulness to the retrieved evidence, incorrectly labeling factually correct statements as hallucinations if they are not explicitly supported by the retrieval. In this paper, we introduce FRANQ, a new method for hallucination detection in RAG outputs. FRANQ applies distinct uncertainty quantification (UQ) techniques to estimate factuality, conditioning on whether a statement is faithful to the retrieved context. To evaluate FRANQ and competing UQ methods, we construct a new long-form question answering dataset annotated for both factuality and faithfulness, combining automated labeling with manual validation of challenging cases. Extensive experiments across multiple datasets, tasks, and LLMs show that FRANQ achieves more accurate detection of factual errors in RAG-generated responses compared to existing approaches.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-27T11:56:59Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ekaterina Fadeeva</name>
+    </author>
+    <author>
+      <name>Aleksandr Rubashevskii</name>
+    </author>
+    <author>
+      <name>Dzianis Piatrashyn</name>
+    </author>
+    <author>
+      <name>Roman Vashurin</name>
+    </author>
+    <author>
+      <name>Shehzaad Dhuliawala</name>
+    </author>
+    <author>
+      <name>Artem Shelmanov</name>
+    </author>
+    <author>
+      <name>Timothy Baldwin</name>
+    </author>
+    <author>
+      <name>Preslav Nakov</name>
+    </author>
+    <author>
+      <name>Mrinmaya Sachan</name>
+    </author>
+    <author>
+      <name>Maxim Panov</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2512.08892v2</id>
+    <title>Toward Faithful Retrieval-Augmented Generation with Sparse Autoencoders</title>
+    <updated>2026-02-11T06:00:36Z</updated>
+    <link href="https://arxiv.org/abs/2512.08892v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2512.08892v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) improves the factuality of large language models (LLMs) by grounding outputs in retrieved evidence, but faithfulness failures, where generations contradict or extend beyond the provided sources, remain a critical challenge. Existing hallucination detection methods for RAG often rely either on large-scale detector training, which requires substantial annotated data, or on querying external LLM judges, which leads to high inference costs. Although some approaches attempt to leverage internal representations of LLMs for hallucination detection, their accuracy remains limited. Motivated by recent advances in mechanistic interpretability, we employ sparse autoencoders (SAEs) to disentangle internal activations, successfully identifying features that are specifically triggered during RAG hallucinations. Building on a systematic pipeline of information-based feature selection and additive feature modeling, we introduce RAGLens, a lightweight hallucination detector that accurately flags unfaithful RAG outputs using LLM internal representations. RAGLens not only achieves superior detection performance compared to existing methods, but also provides interpretable rationales for its decisions, enabling effective post-hoc mitigation of unfaithful RAG. Finally, we justify our design choices and reveal new insights into the distribution of hallucination-related signals within LLMs. The code is available at https://github.com/Teddy-XiongGZ/RAGLens.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-09T18:33:22Z</published>
+    <arxiv:comment>ICLR 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Guangzhi Xiong</name>
+    </author>
+    <author>
+      <name>Zhenghao He</name>
+    </author>
+    <author>
+      <name>Bohan Liu</name>
+    </author>
+    <author>
+      <name>Sanchit Sinha</name>
+    </author>
+    <author>
+      <name>Aidong Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.28358v1</id>
+    <title>How Do LLMs Cite? A Mechanistic Interpretation of Attribution in Retrieval-Augmented Generation</title>
+    <updated>2026-06-09T07:06:13Z</updated>
+    <link href="https://arxiv.org/abs/2606.28358v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.28358v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) aims to enhance the trustworthiness of Large Language Models (LLMs) by grounding their outputs in external documents, often using inline citations for verifiability. However, the faithfulness of these citations -- whether the model genuinely uses a source to generate an answer -- remains a critical, unverified assumption. This paper offers the first mechanistic account of how a large language model decides whether to attach an inline citation while answering a factoid question. Using the Llama-3.1-8B-Instruct model in a controlled experimental environment based on the PopQA dataset, we employ an activation patching approach. We map the underlying mechanism responsible for citation, discovering that it is not a single, localized component but a distributed, multi-stage "attributional ensemble" of attention heads and MLP layers. We show that amplifying or attenuating only those critical heads and MLPs repairs over 90% of missed citations and eliminates 69% of spurious ones on PopQA without harming answer accuracy. Although gains on the multi-document HotpotQA benchmark are modest, the same component set still moves citation rates in the intended direction, indicating that the underlying mechanism is not dataset-specific. The results reveal a potential disconnect between the model's apparent reasoning and its internal computational pathway, suggesting that inline citations can create a false sense of security.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-09T07:06:13Z</published>
+    <arxiv:comment>This preprint has not undergone peer review or any post-submission improvements or corrections. The Version of Record of this contribution is published in Advances in Information Retrieval, ECIR 2026, Lecture Notes in Computer Science, vol. 16485, pp. 458-473, and is available online at https://doi.org/10.1007/978-3-032-21324-2_35</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <arxiv:journal_ref>Advances in Information Retrieval, ECIR 2026. Lecture Notes in Computer Science, vol. 16485, pp. 458-473. Springer, Cham (2026)</arxiv:journal_ref>
+    <author>
+      <name>Ian van Dort</name>
+      <arxiv:affiliation>University of Amsterdam</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Maria Heuss</name>
+      <arxiv:affiliation>University of Amsterdam</arxiv:affiliation>
+    </author>
+    <arxiv:doi>10.1007/978-3-032-21324-2_35</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1007/978-3-032-21324-2_35" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2410.12380v2</id>
+    <title>Evaluation of Attribution Bias in Generator-Aware Retrieval-Augmented Large Language Models</title>
+    <updated>2025-07-12T15:07:14Z</updated>
+    <link href="https://arxiv.org/abs/2410.12380v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.12380v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Attributing answers to source documents is an approach used to enhance the verifiability of a model's output in retrieval augmented generation (RAG). Prior work has mainly focused on improving and evaluating the attribution quality of large language models (LLMs) in RAG, but this may come at the expense of inducing biases in the attribution of answers. We define and examine two aspects in the evaluation of LLMs in RAG pipelines, namely attribution sensitivity and bias with respect to authorship information. We explicitly inform an LLM about the authors of source documents, instruct it to attribute its answers, and analyze (i) how sensitive the LLM's output is to the author of source documents, and (ii) whether the LLM exhibits a bias towards human-written or AI-generated source documents. We design an experimental setup in which we use counterfactual evaluation to study three LLMs in terms of their attribution sensitivity and bias in RAG pipelines. Our results show that adding authorship information to source documents can significantly change the attribution quality of LLMs by 3% to 18%. Moreover, we show that LLMs can have an attribution bias towards explicit human authorship, which can serve as a competing hypothesis for findings of prior work that shows that LLM-generated content may be preferred over human-written contents. Our findings indicate that metadata of source documents can influence LLMs' trust, and how they attribute their answers. Furthermore, our research highlights attribution bias and sensitivity as a novel aspect of brittleness in LLMs.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-16T08:55:49Z</published>
+    <arxiv:comment>Accepted at ACL 2025 (Findings)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Amin Abolghasemi</name>
+    </author>
+    <author>
+      <name>Leif Azzopardi</name>
+    </author>
+    <author>
+      <name>Seyyed Hadi Hashemi</name>
+    </author>
+    <author>
+      <name>Maarten de Rijke</name>
+    </author>
+    <author>
+      <name>Suzan Verberne</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.20627v1</id>
+    <title>When Failures Propagate: Causal Failure Attribution in Agentic Retrieval-Augmented Generation</title>
+    <updated>2026-08-20T23:56:34Z</updated>
+    <link href="https://arxiv.org/abs/2608.20627v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.20627v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Agentic retrieval-augmented generation (RAG) interleaves retrieval, reasoning, and answer generation across multiple hops. A retrieval error at hop 1 can surface only as a wrong answer at hop 3, while later retrieval can also repair the trajectory. This paper introduces AgenticRAG-FP, an interventional benchmark for causal failure attribution in agentic RAG. The benchmark injects a certified fault at a specified hop, re-executes the downstream trajectory, and evaluates diagnosers against the known intervention. Its central question is whether a post-hoc trace still identifies the injected hop after the suffix changes. In the completed strict dense Claude Haiku 4.5 sweep on 80 three-hop MuSiQue questions, coverage-based diagnosis is 0.91 at hop 1 and 0.00 at hops 2 and 3 (n=43,36,21 failed trajectories). A smaller content-corruption study changes an answer-bearing or bridge fact in topically intact evidence. At depth 2, where 18 failed cases remain after filtering, coverage-based diagnosis is 0.00 and a frozen-hop counterfactual probe is 0.67 in an exploratory pooled comparison. Depth-3 content estimates are descriptive only because they contain three failed cases. These results make propagation depth an explicit evaluation axis for diagnosing agentic RAG failures while distinguishing broad evidence of post-hoc signal loss from small-sample method comparisons.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-20T23:56:34Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Lauren Pothuru</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.23915v1</id>
+    <title>Do LLM Attribution Metrics Transfer? Auditing Retrieval-Augmented Generation Evaluation Across Datasets and Constructs</title>
+    <updated>2026-06-22T20:25:36Z</updated>
+    <link href="https://arxiv.org/abs/2606.23915v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.23915v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Practice often treats automatic metrics for attribution in LLM retrieval-augmented generation as interchangeable. We audit eight automatic scorers -- lexical, embedding, and BERTScore baselines alongside entailment/grounding-trained models (clean and FEVER NLI, the checker MiniCheck) -- across three evaluation constructs (provenance/topicality, generated-answer attribution, and fact-check entailment), asking whether any scorer transfers: stays within the 95% confidence interval of the best audited scorer on every dataset of a multi-dataset construct. In the construct with the most multi-dataset human-labeled coverage -- generated-answer attribution (AttributionBench's four source datasets, n = 1,610, with independent HAGRID, n = 2,150) -- none does: the per-dataset metric rankings invert (Kendall tau = -0.64, p = 0.031 on AttributedQA vs. LFQA), and an off-the-shelf NLI scorer that is best on short-claim AttributedQA (AUROC 0.90) collapses to AUROC 0.53 (chance) on long-form LFQA, where BERTScore wins (0.91); the flip is not a length or truncation artifact. This instability has a concrete decision cost: a naive "best-on-average" rule for choosing an evaluator fails leave-one-dataset-out (mean held-out regret 0.172 AUROC, worse than fixing one scorer), so metric choice must be validated on the target dataset rather than learned from others. A prompt-based LLM judge avoids the chance-level collapses the automatic scorers suffer (no LFQA collapse) but is not uniformly best, ~100x costlier, and non-deterministic -- relocating, not removing, the validation burden.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-22T20:25:36Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Tianyu Ding</name>
+    </author>
+    <author>
+      <name>Aditya Nannapaneni</name>
+    </author>
+    <author>
+      <name>Juan Pablo De la Cruz Weinstein</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2406.16828v1</id>
+    <title>Ragnarök: A Reusable RAG Framework and Baselines for TREC 2024 Retrieval-Augmented Generation Track</title>
+    <updated>2024-06-24T17:37:52Z</updated>
+    <link href="https://arxiv.org/abs/2406.16828v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2406.16828v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Did you try out the new Bing Search? Or maybe you fiddled around with Google AI~Overviews? These might sound familiar because the modern-day search stack has recently evolved to include retrieval-augmented generation (RAG) systems. They allow searching and incorporating real-time data into large language models (LLMs) to provide a well-informed, attributed, concise summary in contrast to the traditional search paradigm that relies on displaying a ranked list of documents. Therefore, given these recent advancements, it is crucial to have an arena to build, test, visualize, and systematically evaluate RAG-based search systems. With this in mind, we propose the TREC 2024 RAG Track to foster innovation in evaluating RAG systems. In our work, we lay out the steps we've made towards making this track a reality -- we describe the details of our reusable framework, Ragnarök, explain the curation of the new MS MARCO V2.1 collection choice, release the development topics for the track, and standardize the I/O definitions which assist the end user. Next, using Ragnarök, we identify and provide key industrial baselines such as OpenAI's GPT-4o or Cohere's Command R+. Further, we introduce a web-based user interface for an interactive arena allowing benchmarking pairwise RAG systems by crowdsourcing. We open-source our Ragnarök framework and baselines to achieve a unified standard for future RAG systems.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-06-24T17:37:52Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Ronak Pradeep</name>
+    </author>
+    <author>
+      <name>Nandan Thakur</name>
+    </author>
+    <author>
+      <name>Sahel Sharifymoghaddam</name>
+    </author>
+    <author>
+      <name>Eric Zhang</name>
+    </author>
+    <author>
+      <name>Ryan Nguyen</name>
+    </author>
+    <author>
+      <name>Daniel Campos</name>
+    </author>
+    <author>
+      <name>Nick Craswell</name>
+    </author>
+    <author>
+      <name>Jimmy Lin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2502.16636v2</id>
+    <title>Visual-RAG: Benchmarking Text-to-Image Retrieval Augmented Generation for Visual Knowledge Intensive Queries</title>
+    <updated>2025-08-15T09:45:15Z</updated>
+    <link href="https://arxiv.org/abs/2502.16636v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2502.16636v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-augmented generation (RAG) is a paradigm that augments large language models (LLMs) with external knowledge to tackle knowledge-intensive question answering. While several benchmarks evaluate Multimodal LLMs (MLLMs) under Multimodal RAG settings, they predominantly retrieve from textual corpora and do not explicitly assess how models exploit visual evidence during generation. Consequently, there still lacks benchmark that isolates and measures the contribution of retrieved images in RAG. We introduce Visual-RAG, a question-answering benchmark that targets visually grounded, knowledge-intensive questions. Unlike prior work, Visual-RAG requires text-to-image retrieval and the integration of retrieved clue images to extract visual evidence for answer generation. With Visual-RAG, we evaluate 5 open-source and 3 proprietary MLLMs, showcasing that images provide strong evidence in augmented generation. However, even state-of-the-art models struggle to efficiently extract and utilize visual knowledge. Our results highlight the need for improved visual retrieval, grounding, and attribution in multimodal RAG systems.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-02-23T16:23:50Z</published>
+    <arxiv:comment>21 pages, 6 figures, 17 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yin Wu</name>
+    </author>
+    <author>
+      <name>Quanyu Long</name>
+    </author>
+    <author>
+      <name>Jing Li</name>
+    </author>
+    <author>
+      <name>Jianfei Yu</name>
+    </author>
+    <author>
+      <name>Wenya Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.20848v1</id>
+    <title>MATRAG: Multi-Agent Transparent Retrieval-Augmented Generation for Explainable Recommendations</title>
+    <updated>2026-02-11T06:02:31Z</updated>
+    <link href="https://arxiv.org/abs/2604.20848v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.20848v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Model (LLM)-based recommendation systems have demonstrated remarkable capabilities in understanding user preferences and generating personalized suggestions. However, existing approaches face critical challenges in transparency, knowledge grounding, and the ability to provide coherent explanations that foster user trust. We introduce MATRAG (Multi-Agent Transparent Retrieval-Augmented Generation), a novel framework that combined multi-agent collaboration with knowledge graph-augmented retrieval to deliver explainable recommendations. MATRAG employs four specialized agents: a User Modeling Agent that constructs dynamic preference profiles, an Item Analysis Agent that extracts semantic features from knowledge graphs, a Reasoning Agent that synthesizes collaborative and content-based signals, and an Explanation Agent that generates natural language justifications grounded in retrieved knowledge. Our framework incorporates a transparency scoring mechanism that quantifies explanation faithfulness and relevance. Extensive experiments on three benchmark datasets (Amazon Reviews, MovieLens-1M, and Yelp) demonstrate that MATRAG achieves state-of-the-art performance, improving recommendation accuracy by 12.7\% (Hit Rate) and 15.3\% (NDCG) over leading baselines, while human evaluation confirms that 87.4\% of generated explanations are rated as helpful and trustworthy by domain experts. Our work establishes new benchmarks for transparent, agentic recommendation systems and provides actionable insights for deploying LLM-based recommenders in production environments.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-11T06:02:31Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Sushant Mehta</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2409.19804v2</id>
+    <title>Does RAG Introduce Unfairness in LLMs? Evaluating Fairness in Retrieval-Augmented Generation Systems</title>
+    <updated>2025-03-27T04:36:46Z</updated>
+    <link href="https://arxiv.org/abs/2409.19804v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2409.19804v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) has recently gained significant attention for its enhanced ability to integrate external knowledge sources into open-domain question answering (QA) tasks. However, it remains unclear how these models address fairness concerns, particularly with respect to sensitive attributes such as gender, geographic location, and other demographic factors. First, as language models evolve to prioritize utility, like improving exact match accuracy, fairness considerations may have been largely overlooked. Second, the complex, multi-component architecture of RAG methods poses challenges in identifying and mitigating biases, as each component is optimized for distinct objectives. In this paper, we aim to empirically evaluate fairness in several RAG methods. We propose a fairness evaluation framework tailored to RAG, using scenario-based questions and analyzing disparities across demographic attributes. Our experimental results indicate that, despite recent advances in utility-driven optimization, fairness issues persist in both the retrieval and generation stages. These findings underscore the need for targeted interventions to address fairness concerns throughout the RAG pipeline. The dataset and code used in this study are publicly available at this GitHub Repository https://github.com/elviswxy/RAG_fairness .</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-09-29T22:04:26Z</published>
+    <arxiv:comment>Published at COLING 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xuyang Wu</name>
+    </author>
+    <author>
+      <name>Shuowei Li</name>
+    </author>
+    <author>
+      <name>Hsin-Tai Wu</name>
+    </author>
+    <author>
+      <name>Zhiqiang Tao</name>
+    </author>
+    <author>
+      <name>Yi Fang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.08862v1</id>
+    <title>RAG Safety: Exploring Knowledge Poisoning Attacks to Retrieval-Augmented Generation</title>
+    <updated>2025-07-09T13:06:58Z</updated>
+    <link href="https://arxiv.org/abs/2507.08862v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.08862v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) enhances large language models (LLMs) by retrieving external data to mitigate hallucinations and outdated knowledge issues. Benefiting from the strong ability in facilitating diverse data sources and supporting faithful reasoning, knowledge graphs (KGs) have been increasingly adopted in RAG systems, giving rise to KG-based RAG (KG-RAG) methods. Though RAG systems are widely applied in various applications, recent studies have also revealed its vulnerabilities to data poisoning attacks, where malicious information injected into external knowledge sources can mislead the system into producing incorrect or harmful responses. However, these studies focus exclusively on RAG systems using unstructured textual data sources, leaving the security risks of KG-RAG largely unexplored, despite the fact that KGs present unique vulnerabilities due to their structured and editable nature. In this work, we conduct the first systematic investigation of the security issue of KG-RAG methods through data poisoning attacks. To this end, we introduce a practical, stealthy attack setting that aligns with real-world implementation. We propose an attack strategy that first identifies adversarial target answers and then inserts perturbation triples to complete misleading inference chains in the KG, increasing the likelihood that KG-RAG methods retrieve and rely on these perturbations during generation. Through extensive experiments on two benchmarks and four recent KG-RAG methods, our attack strategy demonstrates strong effectiveness in degrading KG-RAG performance, even with minimal KG perturbations. In-depth analyses are also conducted to understand the safety threats within the internal stages of KG-RAG systems and to explore the robustness of LLMs against adversarial knowledge.</summary>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-09T13:06:58Z</published>
+    <arxiv:comment>13 pages, 6 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CR"/>
+    <author>
+      <name>Tianzhe Zhao</name>
+    </author>
+    <author>
+      <name>Jiaoyan Chen</name>
+    </author>
+    <author>
+      <name>Yanchi Ru</name>
+    </author>
+    <author>
+      <name>Haiping Zhu</name>
+    </author>
+    <author>
+      <name>Nan Hu</name>
+    </author>
+    <author>
+      <name>Jun Liu</name>
+    </author>
+    <author>
+      <name>Qika Lin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.11722v1</id>
+    <title>RAC: Retrieval-Augmented Clarification for Faithful Conversational Search</title>
+    <updated>2026-01-16T19:16:38Z</updated>
+    <link href="https://arxiv.org/abs/2601.11722v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.11722v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Clarification questions help conversational search systems resolve ambiguous or underspecified user queries. While prior work has focused on fluency and alignment with user intent, especially through facet extraction, much less attention has been paid to grounding clarifications in the underlying corpus. Without such grounding, systems risk asking questions that cannot be answered from the available documents. We introduce RAC (Retrieval-Augmented Clarification), a framework for generating corpus-faithful clarification questions. After comparing several indexing strategies for retrieval, we fine-tune a large language model to make optimal use of research context and to encourage the generation of evidence-based question. We then apply contrastive preference optimization to favor questions supported by retrieved passages over ungrounded alternatives. Evaluated on four benchmarks, RAC demonstrate significant improvements over baselines. In addition to LLM-as-Judge assessments, we introduce novel metrics derived from NLI and data-to-text to assess how well questions are anchored in the context, and we demonstrate that our approach consistently enhances faithfulness.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-16T19:16:38Z</published>
+    <arxiv:comment>This is the author's version of the work. The definitive version is published in: Proceedings of the 48th European Conference on Information Retrieval (ECIR '26), 29 March--2 April, 2026, Delft, Netherlands</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ahmed Rayane Kebir</name>
+    </author>
+    <author>
+      <name>Vincent Guigue</name>
+    </author>
+    <author>
+      <name>Lynda Said Lhadj</name>
+    </author>
+    <author>
+      <name>Laure Soulier</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.12668v2</id>
+    <title>Understanding Parametric Knowledge Injection in Retrieval-Augmented Generation</title>
+    <updated>2026-01-24T03:37:28Z</updated>
+    <link href="https://arxiv.org/abs/2510.12668v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.12668v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Context-grounded generation underpins many LLM applications, including long-document question answering (QA), conversational personalization, and retrieval-augmented generation (RAG). However, classic token-based context concatenation is costly for long inputs and can be lost in the middle at extreme context lengths. Recent work explores context parameterization, which encodes context into lightweight trainable parameters (e.g., LoRA adapters) injected into a frozen LLM. Extending this idea to retrieved evidence yields parametric RAG (P-RAG), which incorporates knowledge via parameter updates rather than token-level attention.
+  In this paper, we present a systematic study of this emerging RAG paradigm-parametric knowledge injection. First, we reassess P-RAG under answer-presence accuracy and show that it does not consistently outperform standard token-based RAG (T-RAG), while combining both (PT-RAG) achieves the best overall performance. Second, we introduce a QA benchmark with up-to-date knowledge beyond the LLM's internal memory to enable controlled analysis. Our representational and mechanistic results indicate that parametric representations capture document-level semantics and primarily influence deeper feed-forward computations, providing high-level guidance but limited evidence consolidation. Finally, we evaluate parametric injection under key RAG challenges, demonstrating improved faithfulness under knowledge conflicts, stronger robustness to retrieval noise, and solid generalization to tasks beyond QA. Our findings clarify the strengths and limitations of parametric RAG and provide practical guidance for future retrieval-augmented LLM systems.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-14T16:05:01Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Minghao Tang</name>
+    </author>
+    <author>
+      <name>Shiyu Ni</name>
+    </author>
+    <author>
+      <name>Jingtong Wu</name>
+    </author>
+    <author>
+      <name>Zengxin Han</name>
+    </author>
+    <author>
+      <name>Keping Bi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.17584v1</id>
+    <title>LLM-Powered Text-Attributed Graph Anomaly Detection via Retrieval-Augmented Reasoning</title>
+    <updated>2025-11-16T05:21:14Z</updated>
+    <link href="https://arxiv.org/abs/2511.17584v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.17584v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Anomaly detection on attributed graphs plays an essential role in applications such as fraud detection, intrusion monitoring, and misinformation analysis. However, text-attributed graphs (TAGs), in which node information is expressed in natural language, remain underexplored, largely due to the absence of standardized benchmark datasets. In this work, we introduce TAG-AD, a comprehensive benchmark for anomaly node detection on TAGs. TAG-AD leverages large language models (LLMs) to generate realistic anomalous node texts directly in the raw text space, producing anomalies that are semantically coherent yet contextually inconsistent and thus more reflective of real-world irregularities. In addition, TAG-AD incorporates multiple other anomaly types, enabling thorough and reproducible evaluation of graph anomaly detection (GAD) methods. With these datasets, we further benchmark existing unsupervised GNN-based GAD methods as well as zero-shot LLMs for GAD.
+  As part of our zero-shot detection setup, we propose a retrieval-augmented generation (RAG)-assisted, LLM-based zero-shot anomaly detection framework. The framework mitigates reliance on brittle, hand-crafted prompts by constructing a global anomaly knowledge base and distilling it into reusable analysis frameworks. Our experimental results reveal a clear division of strengths: LLMs are particularly effective at detecting contextual anomalies, whereas GNN-based methods remain superior for structural anomaly detection. Moreover, RAG-assisted prompting achieves performance comparable to human-designed prompts while eliminating manual prompt engineering, underscoring the practical value of our RAG-assisted zero-shot LLM anomaly detection framework.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-16T05:21:14Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Haoyan Xu</name>
+    </author>
+    <author>
+      <name>Ruizhi Qian</name>
+    </author>
+    <author>
+      <name>Zhengtao Yao</name>
+    </author>
+    <author>
+      <name>Ziyi Liu</name>
+    </author>
+    <author>
+      <name>Li Li</name>
+    </author>
+    <author>
+      <name>Yuqi Li</name>
+    </author>
+    <author>
+      <name>Yanshu Li</name>
+    </author>
+    <author>
+      <name>Wenqing Zheng</name>
+    </author>
+    <author>
+      <name>Daniele Rosa</name>
+    </author>
+    <author>
+      <name>Daniel Barcklow</name>
+    </author>
+    <author>
+      <name>Senthil Kumar</name>
+    </author>
+    <author>
+      <name>Jieyu Zhao</name>
+    </author>
+    <author>
+      <name>Yue Zhao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.16415v5</id>
+    <title>Attributing Response to Context: A Jensen-Shannon Divergence Driven Mechanistic Study of Context Attribution in Retrieval-Augmented Generation</title>
+    <updated>2026-02-11T13:01:39Z</updated>
+    <link href="https://arxiv.org/abs/2505.16415v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.16415v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) leverages large language models (LLMs) combined with external contexts to enhance the accuracy and reliability of generated responses. However, reliably attributing generated content to specific context segments, context attribution, remains challenging due to the computationally intensive nature of current methods, which often require extensive fine-tuning or human annotation. In this work, we introduce a novel Jensen-Shannon Divergence driven method to Attribute Response to Context (ARC-JSD), enabling efficient and accurate identification of essential context sentences without additional fine-tuning, gradient-calculation or surrogate modelling. Evaluations on a wide range of RAG benchmarks, such as TyDi QA, Hotpot QA, and Musique, using instruction-tuned LLMs in different scales demonstrate superior accuracy and significant computational efficiency improvements compared to the previous surrogate-based method. Furthermore, our mechanistic analysis reveals specific attention heads and multilayer perceptron (MLP) layers responsible for context attribution, providing valuable insights into the internal workings of RAG models and how they affect RAG behaviours. Our code is available at https://github.com/ruizheliUOA/ARC_JSD.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-22T09:04:03Z</published>
+    <arxiv:comment>Accepted at ICLR 2026; Best Paper Award at COLM 2025 XLLM-Reason-Plan Workshop; Accepted at NeurIPS 2025 Mechanistic Interpretability Workshop</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ruizhe Li</name>
+    </author>
+    <author>
+      <name>Chen Chen</name>
+    </author>
+    <author>
+      <name>Yuchen Hu</name>
+    </author>
+    <author>
+      <name>Yanjun Gao</name>
+    </author>
+    <author>
+      <name>Xi Wang</name>
+    </author>
+    <author>
+      <name>Emine Yilmaz</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.19927v1</id>
+    <title>Attribution Techniques for Mitigating Hallucinated Information in RAG Systems: A Survey</title>
+    <updated>2026-01-10T04:19:27Z</updated>
+    <link href="https://arxiv.org/abs/2601.19927v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.19927v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs)-based question answering (QA) systems play a critical role in modern AI, demonstrating strong performance across various tasks. However, LLM-generated responses often suffer from hallucinations, unfaithful statements lacking reliable references. Retrieval-Augmented Generation (RAG) frameworks enhance LLM responses by incorporating external references but also introduce new forms of hallucination due to complex interactions between the retriever and generator. To address these challenges, researchers have explored attribution-based techniques that ensure responses are verifiably supported by retrieved content. Despite progress, a unified pipeline for these techniques, along with a clear taxonomy and systematic comparison of their strengths and weaknesses, remains lacking. A well-defined taxonomy is essential for identifying specific failure modes within RAG systems, while comparative analysis helps practitioners choose appropriate solutions based on hallucination types and application context. This survey investigates how attribution-based techniques are used within RAG systems to mitigate hallucinations and addresses the gap by: (i) outlining a taxonomy of hallucination types in RAG systems, (ii) presenting a unified pipeline for attribution techniques, (iii) reviewing techniques based on the hallucinations they target, and (iv) discussing strengths and weaknesses with practical guidelines. This work offers insights for future research and practical use of attribution techniques in RAG systems.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-10T04:19:27Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <arxiv:journal_ref>The 8th International Conference on Artifcial Intelligence in Information and Communication (ICAIIC 2026)</arxiv:journal_ref>
+    <author>
+      <name>Yuqing Zhao</name>
+    </author>
+    <author>
+      <name>Ziyao Liu</name>
+    </author>
+    <author>
+      <name>Yongsen Zheng</name>
+    </author>
+    <author>
+      <name>Kwok-Yan Lam</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.12188v1</id>
+    <title>Cost-Governed RAG: Unified Per-Tenant Cost Attribution Across Retrieval and Generation in Multi-Tenant LLM Systems</title>
+    <updated>2026-07-13T22:16:58Z</updated>
+    <link href="https://arxiv.org/abs/2607.12188v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.12188v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Enterprise Retrieval-Augmented Generation (RAG) deployments face a critical governance gap: while LLM generation cost is metered per token, the retrieval layer - vector memory, similarity compute, and embedding API calls - remains an unattributed shared cost, enabling invisible cross-subsidization among tenants. We present Cost-Governed RAG, an architecture that integrates a codebook-oblivious vector index (TurboVec) with a multi-tenant LLM governance gateway, creating a unified observability stack where embedding, retrieval, and generation costs are jointly attributable per tenant. The architecture exploits TurboVec's deterministic, closed-form memory formula to enable near-exact per-tenant retrieval cost calculation - a property unavailable in graph-based indexes with non-linear memory overhead. Deployed on Snowpark Container Services within a cloud data platform's governance boundary, the system achieves 99.96% end-to-end cost attribution accuracy across 100 simulated tenants (10M vectors, log-normal size distribution) with telemetry overhead below 0.04% of query latency. The architecture reduces retrieval infrastructure cost by 3.1-9.0x compared to managed vector database services under the pricing assumptions detailed in Section IV. We formalize a three-layer cost model and demonstrate that codebook-oblivious quantization enables deterministic per-tenant cost attribution while also removing the shared-codebook leakage surface present in trained quantizers - the latter observation being exploratory and subject to the limitations described in Section VII.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.DB" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-13T22:16:58Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Navnit Shukla</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.22688v1</id>
+    <title>FashionKG-RAG: Knowledge Graph-Enhanced Retrieval-Augmented Generation for Fashion Question Answering</title>
+    <updated>2026-08-24T01:01:06Z</updated>
+    <link href="https://arxiv.org/abs/2608.22688v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.22688v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Fashion is a knowledge-intensive domain in which effective decision-making depends on integrating multiple types of knowledge. Although Large Language Models (LLMs) have transformed many areas, their application in fashion remains limited by hallucinations and weak domain specialization. Knowledge Graph (KG)-based Retrieval-Augmented Generation (RAG) offers a promising way to add structured knowledge to LLMs. However, existing fashion KGs are typically restricted to product-level attributes or item relations, and fail to capture the broader fashion ecosystem. To bridge these gaps, we propose \textbf{FashionEcoKG}, a comprehensive, domain-wide knowledge graph built with expert-level precision and professionalism. It is constructed through a three-stage agentic pipeline that extracts high-fidelity knowledge cores from authoritative textbooks and strengthens structural connectivity through cross-domain augmentation and generative expansion. To leverage this resource, we further develop \textbf{PG-RAG} (Pruning-Grounding RAG), a training-free framework designed to handle the conceptual density and linguistic noise of fashion queries. Specifically, we introduce a Dual-Granularity Path Re-Ranking (DGPR) module of two stages. The Pruning-based Semantic Ranking (PSR) module distills each query into a skeleton form to improve retrieval recall, while the Grounding-based Agentic Ranking (GAR) performs point-wise scrutiny of candidate paths against the original full query to ensure global relevance. Experiments on a curated fashion QA dataset show that PG-RAG effectively leverages FashionEcoKG to improve retrieval and answer accuracy, outperforming both non-RAG and existing KG-RAG baselines.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-24T01:01:06Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Yujuan Ding</name>
+    </author>
+    <author>
+      <name>Linyin Luo</name>
+    </author>
+    <author>
+      <name>Shijie Wang</name>
+    </author>
+    <author>
+      <name>Xu Yuan</name>
+    </author>
+    <author>
+      <name>Yunshan Ma</name>
+    </author>
+    <author>
+      <name>Yi Bin</name>
+    </author>
+    <author>
+      <name>Wenqi Fan</name>
+    </author>
+    <author>
+      <name>Qing Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.24218v1</id>
+    <title>Who Benefits from RAG? The Role of Exposure, Utility and Attribution Bias</title>
+    <updated>2026-03-25T11:45:52Z</updated>
+    <link href="https://arxiv.org/abs/2603.24218v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.24218v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) enhanced with Retrieval-Augmented Generation (RAG) have achieved substantial improvements in accuracy by grounding their responses in external documents that are relevant to the user's query. However, relatively little work has investigated the impact of RAG in terms of fairness. Particularly, it is not yet known if queries that are associated with certain groups within a fairness category systematically receive higher accuracy, or accuracy improvements in RAG systems compared to LLM-only, a phenomenon we refer to as query group fairness. In this work, we conduct extensive experiments to investigate the impact of three key factors on query group fairness in RAG, namely: Group exposure, i.e., the proportion of documents from each group appearing in the retrieved set, determined by the retriever; Group utility, i.e., the degree to which documents from each group contribute to improving answer accuracy, capturing retriever-generator interactions; and Group attribution, i.e., the extent to which the generator relies on documents from each group when producing responses. We examine group-level average accuracy and accuracy improvements disparities across four fairness categories using three datasets derived from the TREC 2022 Fair Ranking Track for two tasks: article generation and title generation. Our findings show that RAG systems suffer from the query group fairness problem and amplify disparities in terms of average accuracy across queries from different groups, compared to an LLM-only setting. Moreover, group utility, exposure, and attribution can exhibit strong positive or negative correlations with average accuracy or accuracy improvements of queries from that group, highlighting their important role in fair RAG. Our data and code are publicly available from Github.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-25T11:45:52Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Mahdi Dehghan</name>
+    </author>
+    <author>
+      <name>Graham McDonald</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.15782v1</id>
+    <title>Demo: Guide-RAG: Evidence-Driven Corpus Curation for Retrieval-Augmented Generation in Long COVID</title>
+    <updated>2025-10-17T16:05:52Z</updated>
+    <link href="https://arxiv.org/abs/2510.15782v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.15782v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As AI chatbots gain adoption in clinical medicine, developing effective frameworks for complex, emerging diseases presents significant challenges. We developed and evaluated six Retrieval-Augmented Generation (RAG) corpus configurations for Long COVID (LC) clinical question answering, ranging from expert-curated sources to large-scale literature databases. Our evaluation employed an LLM-as-a-judge framework across faithfulness, relevance, and comprehensiveness metrics using LongCOVID-CQ, a novel dataset of expert-generated clinical questions. Our RAG corpus configuration combining clinical guidelines with high-quality systematic reviews consistently outperformed both narrow single-guideline approaches and large-scale literature databases. Our findings suggest that for emerging diseases, retrieval grounded in curated secondary reviews provides an optimal balance between narrow consensus documents and unfiltered primary literature, supporting clinical decision-making while avoiding information overload and oversimplified guidance. We propose Guide-RAG, a chatbot system and accompanying evaluation framework that integrates both curated expert knowledge and comprehensive literature databases to effectively answer LC clinical questions.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-17T16:05:52Z</published>
+    <arxiv:comment>Accepted to 39th Conference on Neural Information Processing Systems (NeurIPS 2025) Workshop: The Second Workshop on GenAI for Health: Potential, Trust, and Policy Compliance</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Philip DiGiacomo</name>
+    </author>
+    <author>
+      <name>Haoyang Wang</name>
+    </author>
+    <author>
+      <name>Jinrui Fang</name>
+    </author>
+    <author>
+      <name>Yan Leng</name>
+    </author>
+    <author>
+      <name>W Michael Brode</name>
+    </author>
+    <author>
+      <name>Ying Ding</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2509.21557v2</id>
+    <title>Generation-Time vs. Post-hoc Citation: A Holistic Evaluation of LLM Attribution</title>
+    <updated>2025-12-18T04:13:27Z</updated>
+    <link href="https://arxiv.org/abs/2509.21557v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2509.21557v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Trustworthy Large Language Models (LLMs) must cite human-verifiable sources in high-stakes domains such as healthcare, law, academia, and finance, where even small errors can have severe consequences. Practitioners and researchers face a choice: let models generate citations during decoding, or let models draft answers first and then attach appropriate citations. To clarify this choice, we introduce two paradigms: Generation-Time Citation (G-Cite), which produces the answer and citations in one pass, and Post-hoc Citation (P-Cite), which adds or verifies citations after drafting. We conduct a comprehensive evaluation from zero-shot to advanced retrieval-augmented methods across four popular attribution datasets and provide evidence-based recommendations that weigh trade-offs across use cases. Our results show a consistent trade-off between coverage and citation correctness, with retrieval as the main driver of attribution quality in both paradigms. P-Cite methods achieve high coverage with competitive correctness and moderate latency, whereas G-Cite methods prioritize precision at the cost of coverage and speed. We recommend a retrieval-centric, P-Cite-first approach for high-stakes applications, reserving G-Cite for precision-critical settings such as strict claim verification. Our codes and human evaluation results are available at https://anonymous.4open.science/r/Citation_Paradigms-BBB5/</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-25T20:39:26Z</published>
+    <arxiv:comment>NeurIPS 2025 LLM Evaluation Workshop</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yash Saxena</name>
+    </author>
+    <author>
+      <name>Raviteja Bommireddy</name>
+    </author>
+    <author>
+      <name>Ankur Padia</name>
+    </author>
+    <author>
+      <name>Manas Gaur</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.04406v1</id>
+    <title>CTRL-RAG: Contrastive Likelihood Reward Based Reinforcement Learning for Context-Faithful RAG Models</title>
+    <updated>2026-02-02T12:21:59Z</updated>
+    <link href="https://arxiv.org/abs/2603.04406v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.04406v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>With the growing use of Retrieval-Augmented Generation (RAG), training large language models (LLMs) for context-sensitive reasoning and faithfulness is increasingly important. Existing RAG-oriented reinforcement learning (RL) methods rely on external rewards that often fail to evaluate document faithfulness, and may misjudge similar answers in open-domain settings. In addition, there is no RAG-based selfreward mechanism. Moreover, although such a mechanism could in principle estimate answer confidence given documents, the absence of objective feedback in a self-judgment can cause hallucination accumulation and eventual model collapse. To tackle these issues, we propose a novel "internal-external" hybrid reward framework centered on a Contrastive Likelihood Reward (CLR). CLR directly optimizes the log-likelihood gap between responses conditioned on prompts with and without supporting evidence. This encourages the model to extract relevant evidence and increases its confidence when grounded in a specific context. Experiments show that our method (used alone or combined with external correctness rewards) achieves strong performance on singlehop, multi-hop, vertical-domain, and faithfulness benchmarks. Our training code and models are coming soon.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-02T12:21:59Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Zhehao Tan</name>
+    </author>
+    <author>
+      <name>Yihan Jiao</name>
+    </author>
+    <author>
+      <name>Dan Yang</name>
+    </author>
+    <author>
+      <name>Junjie Wang</name>
+    </author>
+    <author>
+      <name>Duolin Sun</name>
+    </author>
+    <author>
+      <name>Jie Feng</name>
+    </author>
+    <author>
+      <name>Xidong Wang</name>
+    </author>
+    <author>
+      <name>Lei Liu</name>
+    </author>
+    <author>
+      <name>Yue Shen</name>
+    </author>
+    <author>
+      <name>Jian Wang</name>
+    </author>
+    <author>
+      <name>Jinjie Gu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.03608v2</id>
+    <title>Benchmarking Vector, Graph and Hybrid Retrieval Augmented Generation (RAG) Pipelines for Open Radio Access Networks (ORAN)</title>
+    <updated>2025-08-20T08:37:28Z</updated>
+    <link href="https://arxiv.org/abs/2507.03608v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.03608v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Generative AI (GenAI) is expected to play a pivotal role in enabling autonomous optimization in future wireless networks. Within the ORAN architecture, Large Language Models (LLMs) can be specialized to generate xApps and rApps by leveraging specifications and API definitions from the RAN Intelligent Controller (RIC) platform. However, fine-tuning base LLMs for telecom-specific tasks remains expensive and resource-intensive. Retrieval-Augmented Generation (RAG) offers a practical alternative through in-context learning, enabling domain adaptation without full retraining. While traditional RAG systems rely on vector-based retrieval, emerging variants such as GraphRAG and Hybrid GraphRAG incorporate knowledge graphs or dual retrieval strategies to support multi-hop reasoning and improve factual grounding. Despite their promise, these methods lack systematic, metric-driven evaluations, particularly in high-stakes domains such as ORAN. In this study, we conduct a comparative evaluation of Vector RAG, GraphRAG, and Hybrid GraphRAG using ORAN specifications. We assess performance across varying question complexities using established generation metrics: faithfulness, answer relevance, context relevance, and factual correctness. Results show that both GraphRAG and Hybrid GraphRAG outperform traditional RAG. Hybrid GraphRAG improves factual correctness by 8%, while GraphRAG improves context relevance by 11%.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.DC" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.ET" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.NI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-04T14:31:30Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Sarat Ahmad</name>
+    </author>
+    <author>
+      <name>Zeinab Nezami</name>
+    </author>
+    <author>
+      <name>Maryam Hafeez</name>
+    </author>
+    <author>
+      <name>Syed Ali Raza Zaidi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2406.14773v2</id>
+    <title>Mitigating the Privacy Issues in Retrieval-Augmented Generation (RAG) via Pure Synthetic Data</title>
+    <updated>2025-02-19T21:24:11Z</updated>
+    <link href="https://arxiv.org/abs/2406.14773v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2406.14773v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-augmented generation (RAG) enhances the outputs of language models by integrating relevant information retrieved from external knowledge sources. However, when the retrieval process involves private data, RAG systems may face severe privacy risks, potentially leading to the leakage of sensitive information. To address this issue, we propose using synthetic data as a privacy-preserving alternative for the retrieval data. We propose SAGE, a novel two-stage synthetic data generation paradigm. In the stage-1, we employ an attribute-based extraction and generation approach to preserve key contextual information from the original data. In the stage-2, we further enhance the privacy properties of the synthetic data through an agent-based iterative refinement process. Extensive experiments demonstrate that using our synthetic data as the retrieval context achieves comparable performance to using the original data while substantially reducing privacy risks. Our work takes the first step towards investigating the possibility of generating high-utility and privacy-preserving synthetic data for RAG, opening up new opportunities for the safe application of RAG systems in various domains.</summary>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-06-20T22:53:09Z</published>
+    <arxiv:primary_category term="cs.CR"/>
+    <author>
+      <name>Shenglai Zeng</name>
+    </author>
+    <author>
+      <name>Jiankun Zhang</name>
+    </author>
+    <author>
+      <name>Pengfei He</name>
+    </author>
+    <author>
+      <name>Jie Ren</name>
+    </author>
+    <author>
+      <name>Tianqi Zheng</name>
+    </author>
+    <author>
+      <name>Hanqing Lu</name>
+    </author>
+    <author>
+      <name>Han Xu</name>
+    </author>
+    <author>
+      <name>Hui Liu</name>
+    </author>
+    <author>
+      <name>Yue Xing</name>
+    </author>
+    <author>
+      <name>Jiliang Tang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2512.20136v3</id>
+    <title>M$^3$KG-RAG: Multi-hop Multimodal Knowledge Graph-enhanced Retrieval-Augmented Generation</title>
+    <updated>2026-04-13T03:03:06Z</updated>
+    <link href="https://arxiv.org/abs/2512.20136v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2512.20136v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) has recently been extended to multimodal settings, connecting multimodal large language models (MLLMs) with vast corpora of external knowledge such as multimodal knowledge graphs (MMKGs). Despite their recent success, multimodal RAG in the audio-visual domain remains challenging due to 1) limited modality coverage and multi-hop connectivity of existing MMKGs, and 2) retrieval based solely on similarity in a shared multimodal embedding space, which fails to filter out off-topic or redundant knowledge. To address these limitations, we propose M$^3$KG-RAG, a Multi-hop Multimodal Knowledge Graph-enhanced RAG that retrieves query-aligned audio-visual knowledge from MMKGs, improving reasoning depth and answer faithfulness in MLLMs. Specifically, we devise a lightweight multi-agent pipeline to construct multi-hop MMKG (M$^3$KG), which contains context-enriched triplets of multimodal entities, enabling modality-wise retrieval based on input queries. Furthermore, we introduce GRASP (Grounded Retrieval And Selective Pruning), which ensures precise entity grounding to the query, evaluates answer-supporting relevance, and prunes redundant context to retain only knowledge essential for response generation. Extensive experiments across diverse multimodal benchmarks demonstrate that M$^3$KG-RAG significantly enhances MLLMs' multimodal reasoning and grounding over existing approaches. Project website: https://kuai-lab.github.io/cvpr2026m3kgrag/</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-23T07:54:03Z</published>
+    <arxiv:comment>Accepted to CVPR 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Hyeongcheol Park</name>
+    </author>
+    <author>
+      <name>Jiyoung Seo</name>
+    </author>
+    <author>
+      <name>Jaewon Mun</name>
+    </author>
+    <author>
+      <name>Hogun Park</name>
+    </author>
+    <author>
+      <name>Wonmin Byeon</name>
+    </author>
+    <author>
+      <name>Sung June Kim</name>
+    </author>
+    <author>
+      <name>Hyeonsoo Im</name>
+    </author>
+    <author>
+      <name>JeungSub Lee</name>
+    </author>
+    <author>
+      <name>Sangpil Kim</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2407.01796v2</id>
+    <title>Ground Every Sentence: Improving Retrieval-Augmented LLMs with Interleaved Reference-Claim Generation</title>
+    <updated>2025-05-23T04:38:57Z</updated>
+    <link href="https://arxiv.org/abs/2407.01796v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2407.01796v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) has been widely adopted to enhance Large Language Models (LLMs) in knowledge-intensive tasks. To enhance credibility and verifiability in RAG systems, Attributed Text Generation (ATG) is proposed, which provides citations to retrieval knowledge in LLM-generated responses. Prior methods mainly adopt coarse-grained attributions, with passage-level or paragraph-level references or citations, which fall short in verifiability. This paper proposes ReClaim (Refer &amp; Claim), a fine-grained ATG method that alternates the generation of references and answers step by step. Different from previous coarse-grained attribution, ReClaim provides sentence-level citations in long-form question-answering tasks. With extensive experiments, we verify the effectiveness of ReClaim in extensive settings, achieving a citation accuracy rate of 90%.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-07-01T20:47:47Z</published>
+    <arxiv:comment>Accepted to NAACL 2025 Findings</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Sirui Xia</name>
+    </author>
+    <author>
+      <name>Xintao Wang</name>
+    </author>
+    <author>
+      <name>Jiaqing Liang</name>
+    </author>
+    <author>
+      <name>Yifei Zhang</name>
+    </author>
+    <author>
+      <name>Weikang Zhou</name>
+    </author>
+    <author>
+      <name>Jiaji Deng</name>
+    </author>
+    <author>
+      <name>Fei Yu</name>
+    </author>
+    <author>
+      <name>Yanghua Xiao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.01852v1</id>
+    <title>Evaluating Chunking Strategies for Retrieval-Augmented Generation on Academic Texts</title>
+    <updated>2026-07-02T08:12:35Z</updated>
+    <link href="https://arxiv.org/abs/2607.01852v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.01852v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-Augmented Generation (RAG) systems use the question-answering capabilities of Large Language Models (LLMs) to access information outside their parameters. We evaluate if cluster-based semantic chunking improves retrieval and answer quality compared to fixed-size and recursive chunking evaluating on long, structured academic theses using the Retrieval Augmented Generation Assessment (RAGAs) framework. RAGAs based faithfulness shows limited reliability in this setup. Performance on fixed versus document specific questions varied substantially, likely related to the formatting of documents and preprocessing. Under the tested configuration, cluster-based chunking did not outperform simpler strategies.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-02T08:12:35Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Valentin J. J. Kreileder</name>
+    </author>
+    <author>
+      <name>Johannes Reisinger</name>
+    </author>
+    <author>
+      <name>Andreas Fischer</name>
+    </author>
+  </entry>
+</feed>

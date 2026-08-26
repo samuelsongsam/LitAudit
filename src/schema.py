@@ -269,7 +269,8 @@ def _unique(items: list[str], label: str) -> list[ValidationIssue]:
 
 
 def validate_dataset(dataset: Dataset) -> Dataset:
-    issues: list[ValidationIssue] = []
+    # Preserve parse-time issues from load_dataset; semantic validation adds to them.
+    issues: list[ValidationIssue] = list(dataset.issues)
     issues.extend(_unique([q.query_id for q in dataset.queries], "query_id"))
     issues.extend(_unique([p.paper_id for p in dataset.papers], "paper_id"))
     issues.extend(_unique([s.screening_id for s in dataset.screening], "screening_id"))

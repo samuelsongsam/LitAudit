@@ -28,6 +28,8 @@
 
 可选完整字段 fields：task、method、data、metrics、claims、limitations；每项都必须带来源或显式 null。解析失败使用 parse_status=failed 和 parse_error，不能补造页码。
 
+本轮新增的 data/paper_cards.jsonl 使用同一 paper_id 和基础 PaperCard 标识，并填充 fields、parse_status、parse_error。当前内容主要来自已核验的 arXiv 摘要：parse_status=abstract_verified 不等于全文已核验；fields 中没有数值或定位时不得由流水线补写。
+
 ## Claim
 字段：claim_id:string（必填且唯一）；text:string（原子、可证伪论断）；source: user_idea|paper|derived；paper_id:string/null（source=paper 时必填）；status: supported|partial|unsupported|pending；decision_reason:string（必填）。supported 只允许在至少一条有效 Evidence 且没有未解决冲突时使用；缺 Evidence 或规则/模型冲突必须降级为 pending。
 
@@ -39,6 +41,12 @@
 
 ## FalsificationHit（后续）
 字段：hit_id、target_claim、paper_id、threat、threat_level、snippet、locator、reason、status。threat 为 fatal|overlap|distinguishable；threat_level 为 high|medium|low；status 为 verified|pending|rejected。必须关联目标 Claim 和 PaperCard，保留反向检索词与原文证据。
+
+## ClaimDecision 与检索运行记录
+
+data/claim_decisions.jsonl 是 Claim 判决审计账本。字段为 claim_id、status、evidence_ids、reason、reviewer、reviewed_at、scope_version；它不能替代 claims.jsonl，且 status 必须与 Claim.status 一致。
+
+data/retrieval_runs.jsonl 记录实际检索调用。字段为 retrieval_id、query_id、source、request、retrieved_at、http_status、status、result_count、response_path、notes。HTTP 429、连接失败或解析失败必须保留记录，不能写成零结果成功。
 
 ## 关联与无效数据处理
 读取时先校验 ID、枚举、日期和外键，再构建地图/界面。未知枚举、重复 ID、孤立 Claim/Evidence、缺少 paper_id、空 snippet 或无 locator 的 Evidence 应报错或降级为 pending，不能静默丢弃。UI 必须展示 exclude 与 pending 及失败原因。

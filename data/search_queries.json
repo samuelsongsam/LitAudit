@@ -7,7 +7,7 @@
     "keywords": ["large language model", "LLM", "agent", "RAG", "scientific literature", "literature review", "scientific question answering"],
     "date": "2026-08-22",
     "scope_version": "v0.1",
-    "notes": "可转换为 arXiv search_query=all:...；在线请求于 2026-08-22 尝试但因套接字权限失败，未声称获得结果。"
+    "notes": "2026-08-26 授权执行的可执行收窄式为 all:\"retrieval-augmented\" AND all:agent AND (all:scientific OR all:literature)，HTTP 200，返回 50 条；原始响应见 data/cache/retrieval-2026-08-26/arxiv/q-001-main.xml。"
   },
   {
     "query_id": "q-002",
@@ -17,7 +17,7 @@
     "keywords": ["LLM", "large language model", "retrieval augmented", "RAG", "tool-using agent", "literature review", "scientific question answering"],
     "date": "2026-08-22",
     "scope_version": "v0.1",
-    "notes": "用于 OpenAlex concept/fulltext 查询转换；尚未执行 API 调用。"
+    "notes": "2026-08-26 以 OpenAlex free-text search=large language model retrieval augmented scientific literature 执行，HTTP 200，返回 50/44165；结果较宽且含噪，不能单独决定纳入，原始响应见 data/cache/retrieval-2026-08-26/openalex/q-002-expanded.json。"
   },
   {
     "query_id": "q-003",
@@ -27,7 +27,7 @@
     "keywords": ["scientific question answering", "RAG", "retrieval augmented", "agent"],
     "date": "2026-08-22",
     "scope_version": "v0.1",
-    "notes": "限制到科学问答；尚未执行 API 调用。"
+    "notes": "2026-08-26 Semantic Scholar search 请求返回 HTTP 429（rate limited），未取得结果；失败记录见 data/retrieval_runs.jsonl。"
   },
   {
     "query_id": "q-004",
@@ -37,6 +37,6 @@
     "keywords": ["RAG", "citation hallucination", "unsupported claim", "faithfulness", "attribution", "retrieval failure", "LLM", "agent"],
     "date": "2026-08-22",
     "scope_version": "v0.1",
-    "notes": "用于召回削弱主问题的风险/负面证据；尚未执行 API 调用。"
+    "notes": "2026-08-26 arXiv 风险检索 HTTP 200，返回 50 条；原始响应见 data/cache/retrieval-2026-08-26/arxiv/q-004-risk.xml。Semantic Scholar 同类请求返回 HTTP 429。"
   }
 ]

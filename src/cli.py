@@ -37,7 +37,8 @@ def cmd_doctor(_: argparse.Namespace) -> int:
             "stats": dataset_stats(dataset) if dataset is not None else None,
         }
     )
-    return 0 if not missing else 1
+    ok = not missing and dataset is not None and dataset_stats(dataset)["error_count"] == 0
+    return 0 if ok else 1
 
 
 def cmd_validate(args: argparse.Namespace) -> int:

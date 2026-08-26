@@ -1,0 +1,1595 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/2hemgunmTyPp3RiM/wpcfdRZHdE</id>
+  <title>arXiv Query: search_query=all:"retrieval-augmented" AND all:agent AND (all:scientific OR all:literature)&amp;id_list=&amp;start=0&amp;max_results=50</title>
+  <updated>2026-08-26T03:52:35Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:%22retrieval-augmented%22+AND+(all:agent+AND+(all:scientific+OR+all:literature))&amp;start=0&amp;max_results=50&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>50</opensearch:itemsPerPage>
+  <opensearch:totalResults>158</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2312.07559v2</id>
+    <title>PaperQA: Retrieval-Augmented Generative Agent for Scientific Research</title>
+    <updated>2023-12-14T19:40:04Z</updated>
+    <link href="https://arxiv.org/abs/2312.07559v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2312.07559v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) generalize well across language tasks, but suffer from hallucinations and uninterpretability, making it difficult to assess their accuracy without ground-truth. Retrieval-Augmented Generation (RAG) models have been proposed to reduce hallucinations and provide provenance for how an answer was generated. Applying such models to the scientific literature may enable large-scale, systematic processing of scientific knowledge. We present PaperQA, a RAG agent for answering questions over the scientific literature. PaperQA is an agent that performs information retrieval across full-text scientific articles, assesses the relevance of sources and passages, and uses RAG to provide answers. Viewing this agent as a question answering model, we find it exceeds performance of existing LLMs and LLM agents on current science QA benchmarks. To push the field closer to how humans perform research on scientific literature, we also introduce LitQA, a more complex benchmark that requires retrieval and synthesis of information from full-text scientific papers across the literature. Finally, we demonstrate PaperQA's matches expert human researchers on LitQA.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-12-08T18:50:20Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jakub Lála</name>
+    </author>
+    <author>
+      <name>Odhran O'Donoghue</name>
+    </author>
+    <author>
+      <name>Aleksandar Shtedritski</name>
+    </author>
+    <author>
+      <name>Sam Cox</name>
+    </author>
+    <author>
+      <name>Samuel G. Rodriques</name>
+    </author>
+    <author>
+      <name>Andrew D. White</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.15682v1</id>
+    <title>SQuAI: Scientific Question-Answering with Multi-Agent Retrieval-Augmented Generation</title>
+    <updated>2025-10-17T14:20:55Z</updated>
+    <link href="https://arxiv.org/abs/2510.15682v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.15682v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We present SQuAI (https://squai.scads.ai/), a scalable and trustworthy multi-agent retrieval-augmented generation (RAG) framework for scientific question answering (QA) with large language models (LLMs). SQuAI addresses key limitations of existing RAG systems in the scholarly domain, where complex, open-domain questions demand accurate answers, explicit claims with citations, and retrieval across millions of scientific documents. Built on over 2.3 million full-text papers from arXiv.org, SQuAI employs four collaborative agents to decompose complex questions into sub-questions, retrieve targeted evidence via hybrid sparse-dense retrieval, and adaptively filter documents to improve contextual relevance. To ensure faithfulness and traceability, SQuAI integrates in-line citations for each generated claim and provides supporting sentences from the source documents. Our system improves faithfulness, answer relevance, and contextual relevance by up to +0.088 (12%) over a strong RAG baseline. We further release a benchmark of 1,000 scientific question-answer-evidence triplets to support reproducibility. With transparent reasoning, verifiable citations, and domain-wide scalability, SQuAI demonstrates how multi-agent RAG enables more trustworthy scientific QA with LLMs.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-17T14:20:55Z</published>
+    <arxiv:comment>Accepted at CIKM 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Ines Besrour</name>
+    </author>
+    <author>
+      <name>Jingbo He</name>
+    </author>
+    <author>
+      <name>Tobias Schreieder</name>
+    </author>
+    <author>
+      <name>Michael Färber</name>
+    </author>
+    <arxiv:doi>10.1145/3746252.3761471</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1145/3746252.3761471" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.05666v1</id>
+    <title>HySemRAG: A Hybrid Semantic Retrieval-Augmented Generation Framework for Automated Literature Synthesis and Methodological Gap Analysis</title>
+    <updated>2025-08-01T20:30:42Z</updated>
+    <link href="https://arxiv.org/abs/2508.05666v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.05666v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We present HySemRAG, a framework that combines Extract, Transform, Load (ETL) pipelines with Retrieval-Augmented Generation (RAG) to automate large-scale literature synthesis and identify methodological research gaps. The system addresses limitations in existing RAG architectures through a multi-layered approach: hybrid retrieval combining semantic search, keyword filtering, and knowledge graph traversal; an agentic self-correction framework with iterative quality assurance; and post-hoc citation verification ensuring complete traceability. Our implementation processes scholarly literature through eight integrated stages: multi-source metadata acquisition, asynchronous PDF retrieval, custom document layout analysis using modified Docling architecture, bibliographic management, LLM-based field extraction, topic modeling, semantic unification, and knowledge graph construction. The system creates dual data products - a Neo4j knowledge graph enabling complex relationship queries and Qdrant vector collections supporting semantic search - serving as foundational infrastructure for verifiable information synthesis. Evaluation across 643 observations from 60 testing sessions demonstrates structured field extraction achieving 35.1% higher semantic similarity scores (0.655 $\pm$ 0.178) compared to PDF chunking approaches (0.485 $\pm$ 0.204, p &lt; 0.000001). The agentic quality assurance mechanism achieves 68.3% single-pass success rates with 99.0% citation accuracy in validated responses. Applied to geospatial epidemiology literature on ozone exposure and cardiovascular disease, the system identifies methodological trends and research gaps, demonstrating broad applicability across scientific domains for accelerating evidence synthesis and discovery.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-01T20:30:42Z</published>
+    <arxiv:comment>47 pages, 10 figures. Code: https://github.com/agodinezmm2007/docling_mod. Demo: https://youtu.be/ZCy5ESJ1gVE?si=K8CttwgTj7yGrWjn. ETL+multi-agent RAG framework for literature synthesis, 35.1% improvement over PDF chunking. Real application: reduced 17,400 papers to 24 relevant ones (99.86%) in 10 minutes for wastewater epidemiology review</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Alejandro Godinez</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.16478v1</id>
+    <title>DeepEra: A Deep Evidence Reranking Agent for Scientific Retrieval-Augmented Generated Question Answering</title>
+    <updated>2026-01-23T06:19:08Z</updated>
+    <link href="https://arxiv.org/abs/2601.16478v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.16478v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>With the rapid growth of scientific literature, scientific question answering (SciQA) has become increasingly critical for exploring and utilizing scientific knowledge. Retrieval-Augmented Generation (RAG) enhances LLMs by incorporating knowledge from external sources, thereby providing credible evidence for scientific question answering. But existing retrieval and reranking methods remain vulnerable to passages that are semantically similar but logically irrelevant, often reducing factual reliability and amplifying hallucinations.To address this challenge, we propose a Deep Evidence Reranking Agent (DeepEra) that integrates step-by-step reasoning, enabling more precise evaluation of candidate passages beyond surface-level semantics. To support systematic evaluation, we construct SciRAG-SSLI (Scientific RAG - Semantically Similar but Logically Irrelevant), a large-scale dataset comprising about 300K SciQA instances across 10 subjects, constructed from 10M scientific corpus. The dataset combines naturally retrieved contexts with systematically generated distractors to test logical robustness and factual grounding. Comprehensive evaluations confirm that our approach achieves superior retrieval performance compared to leading rerankers. To our knowledge, this work is the first to comprehensively study and empirically validate innegligible SSLI issues in two-stage RAG frameworks.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-23T06:19:08Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Haotian Chen</name>
+    </author>
+    <author>
+      <name>Qingqing Long</name>
+    </author>
+    <author>
+      <name>Siyu Pu</name>
+    </author>
+    <author>
+      <name>Xiao Luo</name>
+    </author>
+    <author>
+      <name>Wei Ju</name>
+    </author>
+    <author>
+      <name>Meng Xiao</name>
+    </author>
+    <author>
+      <name>Yuanchun Zhou</name>
+    </author>
+    <author>
+      <name>Jianghua Zhao</name>
+    </author>
+    <author>
+      <name>Xuezhi Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.07155v1</id>
+    <title>Evaluating Retrieval-Augmented Generation Agents for Autonomous Scientific Discovery in Astrophysics</title>
+    <updated>2025-07-09T16:46:03Z</updated>
+    <link href="https://arxiv.org/abs/2507.07155v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.07155v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We evaluate 9 Retrieval Augmented Generation (RAG) agent configurations on 105 Cosmology Question-Answer (QA) pairs that we built specifically for this purpose.The RAG configurations are manually evaluated by a human expert, that is, a total of 945 generated answers were assessed. We find that currently the best RAG agent configuration is with OpenAI embedding and generative model, yielding 91.4\% accuracy. Using our human evaluation results we calibrate LLM-as-a-Judge (LLMaaJ) system which can be used as a robust proxy for human evaluation. These results allow us to systematically select the best RAG agent configuration for multi-agent system for autonomous scientific discovery in astrophysics (e.g., cmbagent presented in a companion paper) and provide us with an LLMaaJ system that can be scaled to thousands of cosmology QA pairs. We make our QA dataset, human evaluation results, RAG pipelines, and LLMaaJ system publicly available for further use by the astrophysics community.</summary>
+    <category term="astro-ph.IM" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-09T16:46:03Z</published>
+    <arxiv:comment>Accepted contribution (spotlight) to the ICML 2025 Workshop on Machine Learning for Astrophysics; codes: https://huggingface.co/datasets/ASTROANTS/CosmoPaperQA, https://github.com/CMBAgents/cmbagent, https://github.com/CMBAgents/scirag</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.IM"/>
+    <author>
+      <name>Xueqing Xu</name>
+    </author>
+    <author>
+      <name>Boris Bolliet</name>
+    </author>
+    <author>
+      <name>Adrian Dimitrov</name>
+    </author>
+    <author>
+      <name>Andrew Laverick</name>
+    </author>
+    <author>
+      <name>Francisco Villaescusa-Navarro</name>
+    </author>
+    <author>
+      <name>Licong Xu</name>
+    </author>
+    <author>
+      <name>Íñigo Zubeldia</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.02491v1</id>
+    <title>From Experimental Limits to Physical Insight: A Retrieval-Augmented Multi-Agent Framework for Interpreting Searches Beyond the Standard Model</title>
+    <updated>2026-05-04T11:42:14Z</updated>
+    <link href="https://arxiv.org/abs/2605.02491v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.02491v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Modern searches for physics beyond the Standard Model produce rapidly expanding literature containing heterogeneous information, including textual analyses, numerical datasets, and graphical exclusion limits. Integrating these distributed sources remains a time-consuming and manual process for physicists.
+  We present HEP-CoPilot, a retrieval-augmented multi-agent AI framework for the exploration and interpretation of high-energy physics literature. The system unifies textual information from publications, structured experimental data from HEPData, and reconstructed physics plots within a multimodal retrieval and reasoning architecture. By combining retrieval-augmented language models with coordinated agent workflows, it enables evidence-grounded reasoning over experimental analyses and structured interpretation of collider results.
+  We evaluate the framework on recent CMS searches for physics beyond the Standard Model. Case studies show that HEP-CoPilot can retrieve relevant measurements, reconstruct exclusion limits directly from HEPData records, and perform cross-paper comparisons of experimental constraints. This enables consistent, physics-aware comparison across analyses without manual data integration.
+  These results demonstrate that retrieval-augmented AI systems can function as scientific co-pilots for particle physics, facilitating navigation of complex literature, structuring heterogeneous evidence, and accelerating the interpretation pipeline for new physics searches.</summary>
+    <category term="hep-ex" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-04T11:42:14Z</published>
+    <arxiv:comment>18 pages, 13 figures</arxiv:comment>
+    <arxiv:primary_category term="hep-ex"/>
+    <author>
+      <name>Altan Cakir</name>
+    </author>
+    <author>
+      <name>Ayca Yerlikaya</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.04720v1</id>
+    <title>Learning to reason about rare diseases through retrieval-augmented agents</title>
+    <updated>2025-11-06T10:27:52Z</updated>
+    <link href="https://arxiv.org/abs/2511.04720v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.04720v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Rare diseases represent the long tail of medical imaging, where AI models often fail due to the scarcity of representative training data. In clinical workflows, radiologists frequently consult case reports and literature when confronted with unfamiliar findings. Following this line of reasoning, we introduce RADAR, Retrieval Augmented Diagnostic Reasoning Agents, an agentic system for rare disease detection in brain MRI. Our approach uses AI agents with access to external medical knowledge by embedding both case reports and literature using sentence transformers and indexing them with FAISS to enable efficient similarity search. The agent retrieves clinically relevant evidence to guide diagnostic decision making on unseen diseases, without the need of additional training. Designed as a model-agnostic reasoning module, RADAR can be seamlessly integrated with diverse large language models, consistently improving their rare pathology recognition and interpretability. On the NOVA dataset comprising 280 distinct rare diseases, RADAR achieves up to a 10.2% performance gain, with the strongest improvements observed for open source models such as DeepSeek. Beyond accuracy, the retrieved examples provide interpretable, literature grounded explanations, highlighting retrieval-augmented reasoning as a powerful paradigm for low-prevalence conditions in medical imaging.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-06T10:27:52Z</published>
+    <arxiv:comment>Submitted on behalf of the PREDICTOM consortium</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ha Young Kim</name>
+    </author>
+    <author>
+      <name>Jun Li</name>
+    </author>
+    <author>
+      <name>Ana Beatriz Solana</name>
+    </author>
+    <author>
+      <name>Carolin M. Pirkl</name>
+    </author>
+    <author>
+      <name>Benedikt Wiestler</name>
+    </author>
+    <author>
+      <name>Julia A. Schnabel</name>
+    </author>
+    <author>
+      <name>Cosmin I. Bercea</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.09163v1</id>
+    <title>FlyAOC: Evaluating Agentic Ontology Curation of Drosophila Scientific Knowledge Bases</title>
+    <updated>2026-02-09T20:12:38Z</updated>
+    <link href="https://arxiv.org/abs/2602.09163v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.09163v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Scientific knowledge bases accelerate discovery by curating findings from primary literature into structured, queryable formats for both human researchers and emerging AI systems. Maintaining these resources requires expert curators to search relevant papers, reconcile evidence across documents, and produce ontology-grounded annotations - a workflow that existing benchmarks, focused on isolated subtasks like named entity recognition or relation extraction, do not capture. We present FlyBench to evaluate AI agents on end-to-end agentic ontology curation from scientific literature. Given only a gene symbol, agents must search and read from a corpus of 16,898 full-text papers to produce structured annotations: Gene Ontology terms describing function, expression patterns, and historical synonyms linking decades of nomenclature. The benchmark includes 7,397 expert-curated annotations across 100 genes drawn from FlyBase, the Drosophila (fruit fly) knowledge base. We evaluate four baseline agent architectures: memorization, fixed pipeline, single-agent, and multi-agent. We find that architectural choices significantly impact performance, with multi-agent designs outperforming simpler alternatives, yet scaling backbone models yields diminishing returns. All baselines leave substantial room for improvement. Our analysis surfaces several findings to guide future development; for example, agents primarily use retrieval to confirm parametric knowledge rather than discover new information. We hope FlyBench will drive progress on retrieval-augmented scientific reasoning, a capability with broad applications across scientific domains.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-09T20:12:38Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Xingjian Zhang</name>
+    </author>
+    <author>
+      <name>Sophia Moylan</name>
+    </author>
+    <author>
+      <name>Ziyang Xiong</name>
+    </author>
+    <author>
+      <name>Qiaozhu Mei</name>
+    </author>
+    <author>
+      <name>Yichen Luo</name>
+    </author>
+    <author>
+      <name>Jiaqi W. Ma</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.23006v1</id>
+    <title>VecTree-RAG: An Agentic Retrieval-Augmented Generation Framework Combining Vector and Tree Retrieval for Efficiency and Accuracy</title>
+    <updated>2026-07-25T02:50:05Z</updated>
+    <link href="https://arxiv.org/abs/2607.23006v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.23006v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Scientific question answering requires a retrieval system to solve two distinct problems: identifying which papers are relevant and locating the supporting evidence within those papers. Conventional retrieval-augmented generation typically addresses both through similarity search over fixed-length passages, flattening document structure and separating scientific claims from their methodological and argumentative context. We present VecTree-RAG, an agentic framework that assigns these tasks to complementary retrieval mechanisms. Vector search ranks compact document and section representations across the corpus, whereas reasoning-guided traversal of source-verified section trees localizes evidence within shortlisted papers. Full text is retained in a page store and exposed progressively only after structural localization. We evaluate VecTree-RAG on 300 QASPER questions, an open-access subset of 54 LitQA2 questions, and 49 multi-document MOSAIC questions. Compared with Dense RAG, reranked Dense RAG, RAPTOR, and Search-o1, VecTree-RAG obtained the highest observed answer score on all three benchmarks, reaching 0.800 LLM-judge correctness on QASPER, 0.925 accuracy on LitQA2, and a 0.547 composite score on MOSAIC. On QASPER, its evidence-page precision was 0.274, compared with 0.046--0.071 for the baselines. LitQA2 ablations further showed that the complete vector--tree architecture required fewer inference tokens than variants without tree navigation or corpus-level vector routing. These results indicate that vector retrieval narrows the corpus-level search space and tree navigation concentrates reading on structurally relevant evidence. Although multi-turn inference remains more expensive than single-call retrieval, VecTree-RAG provides a structure-aware and traceable architecture for scientific literature question answering.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cond-mat.mtrl-sci" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-25T02:50:05Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Xinyan Zhong</name>
+    </author>
+    <author>
+      <name>Yuwei Shi</name>
+    </author>
+    <author>
+      <name>Yuqi Wei</name>
+    </author>
+    <author>
+      <name>Chen Shen</name>
+    </author>
+    <author>
+      <name>Tianhang Zhou</name>
+    </author>
+    <author>
+      <name>Zhenghao Wu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.05660v1</id>
+    <title>Open-Source Agentic Hybrid RAG Framework for Scientific Literature Review</title>
+    <updated>2025-07-30T18:54:15Z</updated>
+    <link href="https://arxiv.org/abs/2508.05660v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.05660v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The surge in scientific publications challenges traditional review methods, demanding tools that integrate structured metadata with full-text analysis. Hybrid Retrieval Augmented Generation (RAG) systems, combining graph queries with vector search offer promise but are typically static, rely on proprietary tools, and lack uncertainty estimates. We present an agentic approach that encapsulates the hybrid RAG pipeline within an autonomous agent capable of (1) dynamically selecting between GraphRAG and VectorRAG for each query, (2) adapting instruction-tuned generation in real time to researcher needs, and (3) quantifying uncertainty during inference. This dynamic orchestration improves relevance, reduces hallucinations, and promotes reproducibility.
+  Our pipeline ingests bibliometric open-access data from PubMed, arXiv, and Google Scholar APIs, builds a Neo4j citation-based knowledge graph (KG), and embeds full-text PDFs into a FAISS vector store (VS) using the all-MiniLM-L6-v2 model. A Llama-3.3-70B agent selects GraphRAG (translating queries to Cypher for KG) or VectorRAG (combining sparse and dense retrieval with re-ranking). Instruction tuning refines domain-specific generation, and bootstrapped evaluation yields standard deviation for evaluation metrics.
+  On synthetic benchmarks mimicking real-world queries, the Instruction-Tuned Agent with Direct Preference Optimization (DPO) outperforms the baseline, achieving a gain of 0.63 in VS Context Recall and a 0.56 gain in overall Context Precision. Additional gains include 0.24 in VS Faithfulness, 0.12 in both VS Precision and KG Answer Relevance, 0.11 in overall Faithfulness score, 0.05 in KG Context Recall, and 0.04 in both VS Answer Relevance and overall Precision. These results highlight the system's improved reasoning over heterogeneous sources and establish a scalable framework for autonomous, agentic scientific discovery.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-30T18:54:15Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Aditya Nagori</name>
+    </author>
+    <author>
+      <name>Ricardo Accorsi Casonatto</name>
+    </author>
+    <author>
+      <name>Ayush Gautam</name>
+    </author>
+    <author>
+      <name>Abhinav Manikantha Sai Cheruvu</name>
+    </author>
+    <author>
+      <name>Rishikesan Kamaleswaran</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.01089v1</id>
+    <title>A literature-grounded scientific reasoning framework for defect-engineered TiO$_{2}$ photocatalysts</title>
+    <updated>2026-05-31T08:17:09Z</updated>
+    <link href="https://arxiv.org/abs/2606.01089v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.01089v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Defect-engineered TiO$_2$ photocatalysts are extensively investigated for photocatalytic hydrogen evolution; however, the highly heterogeneous nature of the literature, including inconsistent descriptors, diverse synthesis protocols, non-uniform activity metrics, and incomplete mechanistic reporting, limits the applicability of conventional machine-learning approaches based solely on statistical regression. Here, we present a literature-grounded large language model (LLM)-assisted scientific reasoning framework for defect-engineered TiO$_2$ photocatalysts integrating curated literature data, mechanistic rule extraction, and retrieval-augmented reasoning. A harmonized database was constructed from experimentally relevant publications specifically selected for hydrogen-evolution-related defect engineering in TiO$_2$, covering polymorph-dependent behavior, hydrogenation conditions, Ti$^{3+}$ defect states, oxygen vacancies, illumination conditions, and photocatalytic activity descriptors. In parallel, mechanistic evidence sentences and publications-defined scientific rules were encoded into a structured reasoning layer enabling explainable inference beyond black-box prediction. The resulting framework combines structured experimental descriptors, semantic literature retrieval, and mechanistic interpretation to generate confidence-aware recommendations for optimal defect-engineering conditions. For example, the AI agent identified a consistent optimal anatase hydrogenation window centered at ~500 $°$C under H$_2$-containing atmospheres for approximately 1 h, supported by mechanistic evidence linking balanced Ti$^{3+}$/oxygen-vacancy populations with enhanced photocatalytic hydrogen evolution.</summary>
+    <category term="cond-mat.mtrl-sci" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-31T08:17:09Z</published>
+    <arxiv:primary_category term="cond-mat.mtrl-sci"/>
+    <author>
+      <name>F. J. Dominguez-Gutierrez</name>
+    </author>
+    <author>
+      <name>E. Wierzbicka</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.20280v1</id>
+    <title>SciToolAgent: A Knowledge Graph-Driven Scientific Agent for Multi-Tool Integration</title>
+    <updated>2025-07-27T13:55:35Z</updated>
+    <link href="https://arxiv.org/abs/2507.20280v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.20280v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Scientific research increasingly relies on specialized computational tools, yet effectively utilizing these tools demands substantial domain expertise. While Large Language Models (LLMs) show promise in tool automation, they struggle to seamlessly integrate and orchestrate multiple tools for complex scientific workflows. Here, we present SciToolAgent, an LLM-powered agent that automates hundreds of scientific tools across biology, chemistry, and materials science. At its core, SciToolAgent leverages a scientific tool knowledge graph that enables intelligent tool selection and execution through graph-based retrieval-augmented generation. The agent also incorporates a comprehensive safety-checking module to ensure responsible and ethical tool usage. Extensive evaluations on a curated benchmark demonstrate that SciToolAgent significantly outperforms existing approaches. Case studies in protein engineering, chemical reactivity prediction, chemical synthesis, and metal-organic framework screening further demonstrate SciToolAgent's capability to automate complex scientific workflows, making advanced research tools accessible to both experts and non-experts.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-27T13:55:35Z</published>
+    <arxiv:comment>21 pages, 6 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Keyan Ding</name>
+    </author>
+    <author>
+      <name>Jing Yu</name>
+    </author>
+    <author>
+      <name>Junjie Huang</name>
+    </author>
+    <author>
+      <name>Yuchen Yang</name>
+    </author>
+    <author>
+      <name>Qiang Zhang</name>
+    </author>
+    <author>
+      <name>Huajun Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2504.20434v2</id>
+    <title>ARCS: Agentic Retrieval-Augmented Code Synthesis with Iterative Refinement</title>
+    <updated>2025-10-27T15:23:02Z</updated>
+    <link href="https://arxiv.org/abs/2504.20434v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2504.20434v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We present Agentic Retrieval-Augmented Code Synthesis (ARCS), a system that improves LLM-based code generation without fine-tuning. ARCS operates through a budgeted synthesize-execute-repair loop over a frozen model: it retrieves relevant code context before generation, proposes candidates, executes them against tests, and repairs based on execution feedback. This retrieval-before-generation design reduces hallucination and accelerates convergence. We formalize ARCS as a state-action process with provable guarantees on termination, monotonic improvement, and bounded cost. A tiered controller (Small/Medium/Large) trades latency for accuracy predictably. On HumanEval, ARCS achieves up to 87.2% pass@1 with Llama-3.1-405B, surpassing CodeAgent (82.3%) while using simpler control than tree-search methods. On TransCoder, it achieves &gt;= 90% accuracy on most translation pairs. On a LANL scientific corpus, it improves CodeBLEU by +0.115 over baseline RAG. ARCS provides a practical, reproducible approach to reliable code synthesis using existing LLM checkpoints.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-04-29T05:15:52Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Manish Bhattarai</name>
+    </author>
+    <author>
+      <name>Miguel Cordova</name>
+    </author>
+    <author>
+      <name>Minh Vu</name>
+    </author>
+    <author>
+      <name>Javier Santos</name>
+    </author>
+    <author>
+      <name>Ismael Boureima</name>
+    </author>
+    <author>
+      <name>Dan O'Malley</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.08322v1</id>
+    <title>Context Engineering for Multi-Agent LLM Code Assistants Using Elicit, NotebookLM, ChatGPT, and Claude Code</title>
+    <updated>2025-08-09T14:45:53Z</updated>
+    <link href="https://arxiv.org/abs/2508.08322v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.08322v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have shown promise in automating code generation and software engineering tasks, yet they often struggle with complex, multi-file projects due to context limitations and knowledge gaps. We propose a novel context engineering workflow that combines multiple AI components: an Intent Translator (GPT-5) for clarifying user requirements, an Elicit-powered semantic literature retrieval for injecting domain knowledge, NotebookLM-based document synthesis for contextual understanding, and a Claude Code multi-agent system for code generation and validation. Our integrated approach leverages intent clarification, retrieval-augmented generation, and specialized sub-agents orchestrated via Claude's agent framework. We demonstrate that this method significantly improves the accuracy and reliability of code assistants in real-world repositories, yielding higher single-shot success rates and better adherence to project context than baseline single-agent approaches. Qualitative results on a large Next.js codebase show the multi-agent system effectively plans, edits, and tests complex features with minimal human intervention. We compare our system with recent frameworks like CodePlan, MASAI, and HyperAgent, highlighting how targeted context injection and agent role decomposition lead to state-of-the-art performance. Finally, we discuss the implications for deploying LLM-based coding assistants in production, along with lessons learned on context management and future research directions.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-09T14:45:53Z</published>
+    <arxiv:comment>15 pages, 5 figures, research paper on multi-agent LLM systems for code generation</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Muhammad Haseeb</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.13246v2</id>
+    <title>Agentic publications: redesigning scientific publishing in the age of thinking large language models</title>
+    <updated>2026-05-05T10:11:43Z</updated>
+    <link href="https://arxiv.org/abs/2505.13246v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.13246v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Purpose: This paper introduces the concept of "Agentic Publication," a novel LLM-driven framework designed to complement traditional scientific publishing by transforming papers into interactive knowledge systems that address challenges created by exponential growth in scientific literature. Design/methodology/approach: Our architecture integrates structured data (knowledge graphs, metadata) with unstructured content (text, multimedia) through retrieval-augmented generation and multi-agent verification. The system provides interfaces for humans and artificial agents, offering narrative explanations alongside machine-readable outputs. Implementation leverages vector databases for semantic search, knowledge graphs for structured reasoning, and collaborative verification agents. Findings: Our proof-of-concept demonstration showcases multilingual interaction, API accessibility, continuous knowledge flow, and structured knowledge representation. The framework enables dynamic updating of knowledge, synthesis of new findings, and customizable detail levels. Originality: The Agentic Publication represents a transformative approach to scientific communication by creating responsive knowledge synthesis systems while maintaining scientific rigor. Integrating multi-agent verification with traditional publishing pathways creates a more efficient, accessible, and collaborative research ecosystem, particularly valuable in interdisciplinary fields. Practical implications: The system is a powerful companion for researchers navigating complex knowledge landscapes, offering tailored information access across disciplines while addressing ethical considerations through automated validation, expert oversight, and transparent governance.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.HC" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-19T15:28:10Z</published>
+    <arxiv:comment>v2: Revised version published in Journal of Documentation</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <arxiv:journal_ref>Journal of Documentation, 2026, 82.7: 125-149</arxiv:journal_ref>
+    <author>
+      <name>Roberto Pugliese</name>
+    </author>
+    <author>
+      <name>George Kourousias</name>
+    </author>
+    <author>
+      <name>Francesco Venier</name>
+    </author>
+    <author>
+      <name>Grazia Garlatti Costa</name>
+    </author>
+    <arxiv:doi>10.1108/JD-07-2025-0207</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1108/JD-07-2025-0207" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2504.07643v1</id>
+    <title>CollEX -- A Multimodal Agentic RAG System Enabling Interactive Exploration of Scientific Collections</title>
+    <updated>2025-04-10T10:44:19Z</updated>
+    <link href="https://arxiv.org/abs/2504.07643v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2504.07643v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In this paper, we introduce CollEx, an innovative multimodal agentic Retrieval-Augmented Generation (RAG) system designed to enhance interactive exploration of extensive scientific collections. Given the overwhelming volume and inherent complexity of scientific collections, conventional search systems often lack necessary intuitiveness and interactivity, presenting substantial barriers for learners, educators, and researchers. CollEx addresses these limitations by employing state-of-the-art Large Vision-Language Models (LVLMs) as multimodal agents accessible through an intuitive chat interface. By abstracting complex interactions via specialized agents equipped with advanced tools, CollEx facilitates curiosity-driven exploration, significantly simplifying access to diverse scientific collections and records therein. Our system integrates textual and visual modalities, supporting educational scenarios that are helpful for teachers, pupils, students, and researchers by fostering independent exploration as well as scientific excitement and curiosity. Furthermore, CollEx serves the research community by discovering interdisciplinary connections and complementing visual data. We illustrate the effectiveness of our system through a proof-of-concept application containing over 64,000 unique records across 32 collections from a local scientific collection from a public university.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-04-10T10:44:19Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Florian Schneider</name>
+    </author>
+    <author>
+      <name>Narges Baba Ahmadi</name>
+    </author>
+    <author>
+      <name>Niloufar Baba Ahmadi</name>
+    </author>
+    <author>
+      <name>Iris Vogel</name>
+    </author>
+    <author>
+      <name>Martin Semmann</name>
+    </author>
+    <author>
+      <name>Chris Biemann</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.02388v2</id>
+    <title>Learning to Route: A Rule-Driven Agent Framework for Hybrid-Source Retrieval-Augmented Generation</title>
+    <updated>2026-02-12T02:52:55Z</updated>
+    <link href="https://arxiv.org/abs/2510.02388v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.02388v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have shown remarkable performance on general Question Answering (QA), yet they often struggle in domain-specific scenarios where accurate and up-to-date information is required. Retrieval-Augmented Generation (RAG) addresses this limitation by enriching LLMs with external knowledge, but existing systems primarily rely on unstructured documents, while largely overlooking relational databases, which provide precise, timely, and efficiently queryable factual information, serving as indispensable infrastructure in domains such as finance, healthcare, and scientific research. Motivated by this gap, we conduct a systematic analysis that reveals three central observations: (i) databases and documents offer complementary strengths across queries, (ii) naively combining both sources introduces noise and cost without consistent accuracy gains, and (iii) selecting the most suitable source for each query is crucial to balance effectiveness and efficiency. We further observe that query types show consistent regularities in their alignment with retrieval paths, suggesting that routing decisions can be effectively guided by systematic rules that capture these patterns. Building on these insights, we propose a rule-driven routing framework. A routing agent scores candidate augmentation paths based on explicit rules and selects the most suitable one; a rule-making expert agent refines the rules over time using QA feedback to maintain adaptability; and a path-level meta-cache reuses past routing decisions for semantically similar queries to reduce latency and cost. Experiments on three QA benchmarks demonstrate that our framework consistently outperforms static strategies and learned routing baselines, achieving higher accuracy while maintaining moderate computational cost.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-30T22:19:44Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Haoyue Bai</name>
+    </author>
+    <author>
+      <name>Haoyu Wang</name>
+    </author>
+    <author>
+      <name>Shengyu Chen</name>
+    </author>
+    <author>
+      <name>Zhengzhang Chen</name>
+    </author>
+    <author>
+      <name>Lu-An Tang</name>
+    </author>
+    <author>
+      <name>Wei Cheng</name>
+    </author>
+    <author>
+      <name>Haifeng Chen</name>
+    </author>
+    <author>
+      <name>Yanjie Fu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.24736v1</id>
+    <title>AutoSAM: an Agentic Framework for Automating Input File Generation for the SAM Code with Multi-Modal Retrieval-Augmented Generation</title>
+    <updated>2026-03-25T18:59:13Z</updated>
+    <link href="https://arxiv.org/abs/2603.24736v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.24736v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In the design and safety analysis of advanced reactor systems, constructing input files for system-level thermal-hydraulics codes such as the System Analysis Module (SAM) remains a labor-intensive task. Analysts must extract and reconcile design data from heterogeneous engineering documents and manually translate it into solver-specific syntax. In this paper, we present AutoSAM, an agentic framework that automates SAM input file generation. The framework combines a large language model agent with retrieval-augmented generation over the solver's user guide and theory manual, together with specialized tools for analyzing PDFs, images, spreadsheets, and text files. AutoSAM ingests unstructured engineering documents, including system diagrams, design reports, and data tables, extracts simulation-relevant parameters into a human-auditable intermediate representation, and synthesizes validated, solver-compatible input decks. Its multimodal retrieval pipeline integrates scientific text extraction, vision-based figure interpretation, semantic embedding, and query answering. We evaluate AutoSAM on four case studies of increasing complexity: a single-pipe steady-state model, a solid-fuel channel with temperature reactivity feedback, the Advanced Burner Test Reactor core, and the Molten Salt Reactor Experiment primary loop. Across all cases, the agent produces runnable SAM models consistent with expected thermal-hydraulic behavior while explicitly identifying missing data and labeling assumed values. The framework achieves 100% utilization of structured inputs, about 88% extraction from PDF text, and 100% completeness in vision-based geometric extraction. These results demonstrate a practical path toward prompt-driven reactor modeling, in which analysts provide system descriptions and supporting documentation while the agent translates them into transparent, and executable, SAM simulations.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-25T18:59:13Z</published>
+    <arxiv:comment>34 Pages, 14 Figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zaid Abulawi</name>
+      <arxiv:affiliation>Department of Nuclear Engineering, Texas A&amp;M University</arxiv:affiliation>
+      <arxiv:affiliation>Nuclear Science and Engineering Division, Argonne National Laboratory</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Zavier Ndum Ndum</name>
+      <arxiv:affiliation>Department of Nuclear Engineering, Texas A&amp;M University</arxiv:affiliation>
+      <arxiv:affiliation>Nuclear Science and Engineering Division, Argonne National Laboratory</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Eric Cervi</name>
+      <arxiv:affiliation>Nuclear Science and Engineering Division, Argonne National Laboratory</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Rui Hu</name>
+      <arxiv:affiliation>Nuclear Science and Engineering Division, Argonne National Laboratory</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Yang Liu</name>
+      <arxiv:affiliation>Department of Nuclear Engineering, Texas A&amp;M University</arxiv:affiliation>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.08137v1</id>
+    <title>MuaLLM: A Multimodal Large Language Model Agent for Circuit Design Assistance with Hybrid Contextual Retrieval-Augmented Generation</title>
+    <updated>2025-08-11T16:11:09Z</updated>
+    <link href="https://arxiv.org/abs/2508.08137v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.08137v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Conducting a comprehensive literature review is crucial for advancing circuit design methodologies. However, the rapid influx of state-of-the-art research, inconsistent data representation, and the complexity of optimizing circuit design objectives make this task significantly challenging. In this paper, we propose MuaLLM, an open-source multimodal Large Language Model (LLM) agent for circuit design assistance that integrates a hybrid Retrieval-Augmented Generation (RAG) framework with an adaptive vector database of circuit design research papers. Unlike conventional LLMs, the MuaLLM agent employs a Reason + Act (ReAct) workflow for iterative reasoning, goal-setting, and multi-step information retrieval. It functions as a question-answering design assistant, capable of interpreting complex queries and providing reasoned responses grounded in circuit literature. Its multimodal capabilities enable processing of both textual and visual data, facilitating more efficient and comprehensive analysis. The system dynamically adapts using intelligent search tools, automated document retrieval from the internet, and real-time database updates. Unlike conventional approaches constrained by model context limits, MuaLLM decouples retrieval from inference, enabling scalable reasoning over arbitrarily large corpora. At the maximum context length supported by standard LLMs, MuaLLM remains up to 10x less costly and 1.6x faster while maintaining the same accuracy. This allows rapid, no-human-in-the-loop database generation, overcoming the bottleneck of simulation-based dataset creation for circuits. To evaluate MuaLLM, we introduce two custom datasets: RAG-250, targeting retrieval and citation performance, and Reasoning-100 (Reas-100), focused on multistep reasoning in circuit design. MuaLLM achieves 90.1% recall on RAG-250, and 86.8% accuracy on Reas-100.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="eess.SY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-11T16:11:09Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Pravallika Abbineni</name>
+    </author>
+    <author>
+      <name>Saoud Aldowaish</name>
+    </author>
+    <author>
+      <name>Colin Liechty</name>
+    </author>
+    <author>
+      <name>Soroosh Noorzad</name>
+    </author>
+    <author>
+      <name>Ali Ghazizadeh</name>
+    </author>
+    <author>
+      <name>Morteza Fayazi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2408.01869v1</id>
+    <title>MALADE: Orchestration of LLM-powered Agents with Retrieval Augmented Generation for Pharmacovigilance</title>
+    <updated>2024-08-03T22:14:13Z</updated>
+    <link href="https://arxiv.org/abs/2408.01869v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2408.01869v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In the era of Large Language Models (LLMs), given their remarkable text understanding and generation abilities, there is an unprecedented opportunity to develop new, LLM-based methods for trustworthy medical knowledge synthesis, extraction and summarization. This paper focuses on the problem of Pharmacovigilance (PhV), where the significance and challenges lie in identifying Adverse Drug Events (ADEs) from diverse text sources, such as medical literature, clinical notes, and drug labels. Unfortunately, this task is hindered by factors including variations in the terminologies of drugs and outcomes, and ADE descriptions often being buried in large amounts of narrative text. We present MALADE, the first effective collaborative multi-agent system powered by LLM with Retrieval Augmented Generation for ADE extraction from drug label data. This technique involves augmenting a query to an LLM with relevant information extracted from text resources, and instructing the LLM to compose a response consistent with the augmented data. MALADE is a general LLM-agnostic architecture, and its unique capabilities are: (1) leveraging a variety of external sources, such as medical literature, drug labels, and FDA tools (e.g., OpenFDA drug information API), (2) extracting drug-outcome association in a structured format along with the strength of the association, and (3) providing explanations for established associations. Instantiated with GPT-4 Turbo or GPT-4o, and FDA drug label data, MALADE demonstrates its efficacy with an Area Under ROC Curve of 0.90 against the OMOP Ground Truth table of ADEs. Our implementation leverages the Langroid multi-agent LLM framework and can be found at https://github.com/jihyechoi77/malade.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="q-bio.QM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-08-03T22:14:13Z</published>
+    <arxiv:comment>Paper published at Machine Learning for Healthcare 2024 (MLHC'24)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jihye Choi</name>
+    </author>
+    <author>
+      <name>Nils Palumbo</name>
+    </author>
+    <author>
+      <name>Prasad Chalasani</name>
+    </author>
+    <author>
+      <name>Matthew M. Engelhard</name>
+    </author>
+    <author>
+      <name>Somesh Jha</name>
+    </author>
+    <author>
+      <name>Anivarya Kumar</name>
+    </author>
+    <author>
+      <name>David Page</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.23849v1</id>
+    <title>VILLA: Versatile Information Retrieval From Scientific Literature Using Large LAnguage Models</title>
+    <updated>2026-03-25T02:15:58Z</updated>
+    <link href="https://arxiv.org/abs/2603.23849v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.23849v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The lack of high-quality ground truth datasets to train machine learning (ML) models impedes the potential of artificial intelligence (AI) for science research. Scientific information extraction (SIE) from the literature using LLMs is emerging as a powerful approach to automate the creation of these datasets. However, existing LLM-based approaches and benchmarking studies for SIE focus on broad topics such as biomedicine and chemistry, are limited to choice-based tasks, and focus on extracting information from short and well-formatted text. The potential of SIE methods in complex, open-ended tasks is considerably under-explored. In this study, we used a domain that has been virtually ignored in SIE, namely virology, to address these research gaps. We design a unique, open-ended SIE task of extracting mutations in a given virus that modify its interaction with the host. We develop a new, multi-step retrieval augmented generation (RAG) framework called VILLA for SIE. In parallel, we curate a novel dataset of 629 mutations in ten influenza A virus proteins obtained from 239 scientific publications to serve as ground truth for the mutation extraction task. Finally, we demonstrate VILLA's superior performance using a novel and comprehensive evaluation and comparison with vanilla RAG and other state-of-the art RAG- and agent-based tools for SIE.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-25T02:15:58Z</published>
+    <arxiv:comment>Under review at ACM KDD 2026 (AI for Sciences Track)</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Blessy Antony</name>
+    </author>
+    <author>
+      <name>Amartya Dutta</name>
+    </author>
+    <author>
+      <name>Sneha Aggarwal</name>
+    </author>
+    <author>
+      <name>Vasu Gatne</name>
+    </author>
+    <author>
+      <name>Ozan Gökdemir</name>
+    </author>
+    <author>
+      <name>Samantha Grimes</name>
+    </author>
+    <author>
+      <name>Adam Lauring</name>
+    </author>
+    <author>
+      <name>Brian R. Wasik</name>
+    </author>
+    <author>
+      <name>Anuj Karpatne</name>
+    </author>
+    <author>
+      <name>T. M. Murali</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.24663v1</id>
+    <title>A corrective agentic hybrid RAG and an operations-grounded evaluation for a scientific facility</title>
+    <updated>2026-07-27T17:01:30Z</updated>
+    <link href="https://arxiv.org/abs/2607.24663v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.24663v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Scientific user facilities accumulate decades of operational knowledge that no single search index covers: electronic logbooks, technical documents, internal wikis, operations chat messages, maintenance records, and live control-system data. We present APS-RAG, Advanced Photon Source Retrieval Augmented Generation, a deployed platform that makes the institutional knowledge at the Advanced Photon Source (APS) accessible to staff through natural-language queries, along with an operations-grounded evaluation. The retrieval engine fuses dense, sparse, and knowledge-graph (KG) channels with query-type-adaptive reciprocal-rank fusion, adds a corrective agentic loop, and runs a native-tool ReAct executor over a Model Context Protocol (MCP) tooling layer. We construct APS-Bench, a 50-question, question-answering (QA) dataset with auditable gold answers. Every retrieval-augmented variant numerically improves strict vital-nugget recall over a naive BM25 baseline (63.8%), with the full corrective Agentic GraphRAG scoring (70.3%). The cross-encoder reranker contributes significantly to answer quality: removing it and allowing the LLM to score relevance drastically reduces strict vital recall by 32.8%. The graph channel and corrective loop contribute positively as expected, but the performance gains are marginal. Additionally, we also compare the performance of open-source and closed-source LLMs in final answer synthesis. We release the APS-Bench construction methodology, the six-layer evaluation harness, and the underlying codebase, along with the '/aps-rag' retrieval agent skill framework, to support reproduction and adoption at other facilities. Together, the deployed platform and its operations-grounded evaluation present a promising workflow for trustworthy, statistically grounded AI assistance in facility operations, transferable to other large scientific instruments.</summary>
+    <category term="physics.acc-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-27T17:01:30Z</published>
+    <arxiv:primary_category term="physics.acc-ph"/>
+    <author>
+      <name>Rajat Sainju</name>
+    </author>
+    <author>
+      <name>Dariusz Jarosz</name>
+    </author>
+    <author>
+      <name>Hairong Shang</name>
+    </author>
+    <author>
+      <name>Michael Prince</name>
+    </author>
+    <author>
+      <name>Ryan M. Aydelott</name>
+    </author>
+    <author>
+      <name>Mathew J. Cherukara</name>
+    </author>
+    <author>
+      <name>Yine Sun</name>
+    </author>
+    <author>
+      <name>Michael D. Borland</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.13244v1</id>
+    <title>Agentic AI, Retrieval-Augmented Generation, and the Institutional Turn: Legal Architectures and Financial Governance in the Age of Distributional AGI</title>
+    <updated>2026-02-20T11:58:43Z</updated>
+    <link href="https://arxiv.org/abs/2603.13244v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.13244v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The proliferation of agentic artificial intelligence systems--characterized by autonomous goal-seeking, tool use, and multi-agent coordination--presents unprecedented challenges to existing legal and financial regulatory frameworks. While traditional AI governance has focused on model-level alignment through training-time interventions such as Reinforcement Learning from Human Feedback (RLHF), the deployment of large language models (LLMs) as persistent agents necessitates a paradigm shift toward institutional governance structures. This paper examines the intersection of agentic AI, Retrieval-Augmented Generation (RAG), and their implications for legal accountability and financial market integrity. Through analysis of the Institutional AI framework, we argue that alignment must be reconceptualized as a mechanism design problem involving runtime governance graphs, sanction functions, and observable behavioral constraints rather than internalized constitutional values[...].The analysis concludes that the future of AI governance lies not in perfecting isolated model behavior, but in architecting institutional environments where compliant behavior emerges as the dominant strategy through carefully calibrated payoff landscapes.</summary>
+    <category term="cs.CY" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-20T11:58:43Z</published>
+    <arxiv:comment>35 pages, 92 references. Comprehensive interdisciplinary analysis integrating AI safety, mechanism design, legal regulation, and financial governance. Published on Zenodo (https://doi.org/10.5281/zenodo.18711509). Includes industry practitioner perspectives alongside peer-reviewed literature</arxiv:comment>
+    <arxiv:primary_category term="cs.CY"/>
+    <author>
+      <name>Marcel Osmond</name>
+    </author>
+    <arxiv:doi>10.5281/zenodo.18711509</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.5281/zenodo.18711509" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.01118v1</id>
+    <title>ScienceDB AI: An LLM-Driven Agentic Recommender System for Large-Scale Scientific Data Sharing Services</title>
+    <updated>2026-01-03T08:42:53Z</updated>
+    <link href="https://arxiv.org/abs/2601.01118v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.01118v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The rapid growth of AI for Science (AI4S) has underscored the significance of scientific datasets, leading to the establishment of numerous national scientific data centers and sharing platforms. Despite this progress, efficiently promoting dataset sharing and utilization for scientific research remains challenging. Scientific datasets contain intricate domain-specific knowledge and contexts, rendering traditional collaborative filtering-based recommenders inadequate. Recent advances in Large Language Models (LLMs) offer unprecedented opportunities to build conversational agents capable of deep semantic understanding and personalized recommendations. In response, we present ScienceDB AI, a novel LLM-driven agentic recommender system developed on Science Data Bank (ScienceDB), one of the largest global scientific data-sharing platforms. ScienceDB AI leverages natural language conversations and deep reasoning to accurately recommend datasets aligned with researchers' scientific intents and evolving requirements. The system introduces several innovations: a Scientific Intention Perceptor to extract structured experimental elements from complicated queries, a Structured Memory Compressor to manage multi-turn dialogues effectively, and a Trustworthy Retrieval-Augmented Generation (Trustworthy RAG) framework. The Trustworthy RAG employs a two-stage retrieval mechanism and provides citable dataset references via Citable Scientific Task Record (CSTR) identifiers, enhancing recommendation trustworthiness and reproducibility. Through extensive offline and online experiments using over 10 million real-world datasets, ScienceDB AI has demonstrated significant effectiveness. To our knowledge, ScienceDB AI is the first LLM-driven conversational recommender tailored explicitly for large-scale scientific dataset sharing services. The platform is publicly accessible at: https://ai.scidb.cn/en.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.DL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-03T08:42:53Z</published>
+    <arxiv:comment>12 pages, 9 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Qingqing Long</name>
+    </author>
+    <author>
+      <name>Haotian Chen</name>
+    </author>
+    <author>
+      <name>Chenyang Zhao</name>
+    </author>
+    <author>
+      <name>Xiaolei Du</name>
+    </author>
+    <author>
+      <name>Xuezhi Wang</name>
+    </author>
+    <author>
+      <name>Pengyao Wang</name>
+    </author>
+    <author>
+      <name>Chengzan Li</name>
+    </author>
+    <author>
+      <name>Yuanchun Zhou</name>
+    </author>
+    <author>
+      <name>Hengshu Zhu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.10522v1</id>
+    <title>DeepResearch$^{\text{Eco}}$: A Recursive Agentic Workflow for Complex Scientific Question Answering in Ecology</title>
+    <updated>2025-07-14T17:47:28Z</updated>
+    <link href="https://arxiv.org/abs/2507.10522v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.10522v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce DeepResearch$^{\text{Eco}}$, a novel agentic LLM-based system for automated scientific synthesis that supports recursive, depth- and breadth-controlled exploration of original research questions -- enhancing search diversity and nuance in the retrieval of relevant scientific literature. Unlike conventional retrieval-augmented generation pipelines, DeepResearch enables user-controllable synthesis with transparent reasoning and parameter-driven configurability, facilitating high-throughput integration of domain-specific evidence while maintaining analytical rigor. Applied to 49 ecological research questions, DeepResearch achieves up to a 21-fold increase in source integration and a 14.9-fold rise in sources integrated per 1,000 words. High-parameter settings yield expert-level analytical depth and contextual diversity.
+  Source code available at: https://github.com/sciknoworg/deep-research.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-14T17:47:28Z</published>
+    <arxiv:comment>12 pages, 3 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Jennifer D'Souza</name>
+    </author>
+    <author>
+      <name>Endres Keno Sander</name>
+    </author>
+    <author>
+      <name>Andrei Aioanei</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.07262v2</id>
+    <title>AgenticSciML: Collaborative Multi-Agent Systems for Emergent Discovery in Scientific Machine Learning</title>
+    <updated>2026-02-15T19:01:14Z</updated>
+    <link href="https://arxiv.org/abs/2511.07262v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.07262v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Scientific Machine Learning (SciML) integrates data-driven inference with physical modeling to solve complex problems in science and engineering. However, the design of SciML architectures, loss formulations, and training strategies remains an expert-driven research process, requiring extensive experimentation and problem-specific insights. Here we introduce AgenticSciML, a collaborative multi-agent system in which over 10 specialized AI agents collaborate to propose, critique, and refine SciML solutions through structured reasoning and iterative evolution. The framework integrates structured debate, retrieval-augmented method memory, and ensemble-guided evolutionary search, enabling the agents to generate and assess new hypotheses about architectures and optimization procedures. Across physics-informed learning and operator learning tasks, the framework discovers solution methods that outperform single-agent and human-designed baselines by up to four orders of magnitude in error reduction. The agents produce novel strategies -- including adaptive mixture-of-expert architectures, decomposition-based PINNs, and physics-informed operator learning models -- that do not appear explicitly in the curated knowledge base. These results show that collaborative reasoning among AI agents can yield emergent methodological innovation, suggesting a path toward scalable, transparent, and autonomous discovery in scientific computing.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-10T16:06:33Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Qile Jiang</name>
+    </author>
+    <author>
+      <name>George Karniadakis</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.04878v1</id>
+    <title>Higher-Order Knowledge Representations for Agentic Scientific Reasoning</title>
+    <updated>2026-01-08T12:25:37Z</updated>
+    <link href="https://arxiv.org/abs/2601.04878v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.04878v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Scientific inquiry requires systems-level reasoning that integrates heterogeneous experimental data, cross-domain knowledge, and mechanistic evidence into coherent explanations. While Large Language Models (LLMs) offer inferential capabilities, they often depend on retrieval-augmented contexts that lack structural depth. Traditional Knowledge Graphs (KGs) attempt to bridge this gap, yet their pairwise constraints fail to capture the irreducible higher-order interactions that govern emergent physical behavior. To address this, we introduce a methodology for constructing hypergraph-based knowledge representations that faithfully encode multi-entity relationships. Applied to a corpus of ~1,100 manuscripts on biocomposite scaffolds, our framework constructs a global hypergraph of 161,172 nodes and 320,201 hyperedges, revealing a scale-free topology (power law exponent ~1.23) organized around highly connected conceptual hubs. This representation prevents the combinatorial explosion typical of pairwise expansions and explicitly preserves the co-occurrence context of scientific formulations. We further demonstrate that equipping agentic systems with hypergraph traversal tools, specifically using node-intersection constraints, enables them to bridge semantically distant concepts. By exploiting these higher-order pathways, the system successfully generates grounded mechanistic hypotheses for novel composite materials, such as linking cerium oxide to PCL scaffolds via chitosan intermediates. This work establishes a "teacherless" agentic reasoning system where hypergraph topology acts as a verifiable guardrail, accelerating scientific discovery by uncovering relationships obscured by traditional graph methods.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cond-mat.mtrl-sci" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-08T12:25:37Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Isabella A. Stewart</name>
+    </author>
+    <author>
+      <name>Markus J. Buehler</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.20431v1</id>
+    <title>Skill-Contracted Agents for Evidence-Aware Materials Literature Analysis</title>
+    <updated>2026-05-10T13:00:32Z</updated>
+    <link href="https://arxiv.org/abs/2607.20431v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.20431v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Materials science literature analysis requires simultaneous attention to composition, processing, characterization, and property relationships, yet conventional retrieval-augmented generation pipelines struggle to reconcile heterogeneous tasks within a single retrieve-then-generate architecture. Here we present AlphaAgent, a skill-driven agent framework that decouples retrieval-based question answering from paper-level report generation through explicit skill contracts. A dedicated retrieval skill rewrites user requests into material-specific search intents, queries a curated index of more than 300,000 papers from the Journal Citation Reports Metallurgy and Metallurgical Engineering category, and reformulates queries when initial evidence is insufficient. A separate report-generation skill parses full-text PDFs to produce structured per-paper analytical reports and cross-paper summaries. In a blind evaluation on 40 materials-science questions, half of which required deep analytical reasoning, AlphaAgent substantially outperformed a baseline system matched for underlying model, document index, and retrieval scale, with the largest gains in mechanistic explanation and awareness of credibility boundaries. These results indicate that explicit task separation, refined retrieval intent, and evidence-aware generation improve large-language-model-based literature analysis for materials research.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-10T13:00:32Z</published>
+    <arxiv:comment>9 pages, 5 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Bixuan Li</name>
+    </author>
+    <author>
+      <name>Yu Liu</name>
+    </author>
+    <author>
+      <name>Shuo Shi</name>
+    </author>
+    <author>
+      <name>Xiaoya Huang</name>
+    </author>
+    <author>
+      <name>Peng Kang</name>
+    </author>
+    <author>
+      <name>Lei Zheng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.01613v2</id>
+    <title>TechRAG: Evidence-Gated Multimodal Agentic RAG for Technical Literature Reasoning</title>
+    <updated>2026-06-13T19:11:55Z</updated>
+    <link href="https://arxiv.org/abs/2606.01613v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.01613v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>This paper presents an agentic multimodal retrieval-augmented generation (RAG) framework for domain-specific literature reasoning, instantiated on a curated corpus of several thousand papers in intelligent tires, vehicle dynamics, vehicle control, sensing, estimation, and machine learning. Unlike conventional single-pass RAG systems, the proposed architecture uses an autonomous, evidence-gated pipeline that classifies query intent, generates separate text and visual query rewrites, performs hybrid text retrieval with FAISS and BM25 followed by cross-encoder reranking, expands evidence through graph-guided chunk traversal over a Neo4j knowledge graph, and retrieves visual document evidence using ColSmol late-interaction embeddings with MUVERA fixed-dimensional encoding, approximate nearest-neighbor search, and MaxSim reranking. The framework scores evidence sufficiency using a 100-point rubric with hybrid rule-based/LLM review, retries retrieval through drift-guarded reformulation, searches external academic databases through optimize--search--vet loops, merges and deduplicates multimodal evidence, verifies citation integrity, and generates cited answers through Planner, Researcher, Writer, and Critic agents with self-correcting revision. Key contributions include: (i) a scalable multimodal retrieval architecture combining text, graph, and visual evidence over 40,000 document pages; (ii) an interpretable evidence sufficiency and retry mechanism; (iii) a multi-agent generation pipeline with evidence mapping and critic-driven revision; (iv) a domain knowledge graph with LLM-based entity extraction, OpenAlex author validation, and intra-corpus citation resolution; and (v) a route-dependent external search architecture for targeted literature expansion. The result is a practical, evidence-gated, multimodal agentic RAG architecture for technical reasoning over specialized research corpora.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-01T03:01:51Z</published>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Kanwar Bharat Singh</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.13068v2</id>
+    <title>Towards the Autonomous Optimization of Urban Logistics: Training Generative AI with Scientific Tools via Agentic Digital Twins and Model Context Protocol</title>
+    <updated>2025-06-17T15:06:17Z</updated>
+    <link href="https://arxiv.org/abs/2506.13068v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.13068v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Optimizing urban freight logistics is critical for developing sustainable, low-carbon cities. Traditional methods often rely on manual coordination of simulation tools, optimization solvers, and expert-driven workflows, limiting their efficiency and scalability. This paper presents an agentic system architecture that leverages the model context protocol (MCP) to orchestrate multi-agent collaboration among scientific tools for autonomous, simulation-informed optimization in urban logistics. The system integrates generative AI agents with domain-specific engines - such as Gurobi for optimization and AnyLogic for agent-based simulation - forming a generative digital twin capable of reasoning, planning, and acting across multimodal freight networks. By incorporating integrated chatbots, retrieval-augmented generation, and structured memory, the framework enables agents to interpret user intent from natural language conversations, retrieve relevant datasets and models, coordinate solvers and simulators, and execute complex workflows. We demonstrate this approach through a freight decarbonization case study, showcasing how MCP enables modular, interoperable, and adaptive agent behavior across diverse toolchains. The results reveal that our system transforms digital twins from static visualizations into autonomous, decision-capable systems, advancing the frontiers of urban operations research. By enabling context-aware, generative agents to operate scientific tools automatically and collaboratively, this framework supports more intelligent, accessible, and dynamic decision-making in transportation planning and smart city management.</summary>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-16T03:23:27Z</published>
+    <arxiv:primary_category term="cs.MA"/>
+    <author>
+      <name>Haowen Xu</name>
+    </author>
+    <author>
+      <name>Yulin Sun</name>
+    </author>
+    <author>
+      <name>Jose Tupayachi</name>
+    </author>
+    <author>
+      <name>Olufemi Omitaomu</name>
+    </author>
+    <author>
+      <name>Sisi Zlatanova</name>
+    </author>
+    <author>
+      <name>Xueping Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2410.09090v1</id>
+    <title>Automating Bibliometric Analysis with Sentence Transformers and Retrieval-Augmented Generation (RAG): A Pilot Study in Semantic and Contextual Search for Customized Literature Characterization for High-Impact Urban Research</title>
+    <updated>2024-10-08T05:13:27Z</updated>
+    <link href="https://arxiv.org/abs/2410.09090v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.09090v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Bibliometric analysis is essential for understanding research trends, scope, and impact in urban science, especially in high-impact journals, such Nature Portfolios. However, traditional methods, relying on keyword searches and basic NLP techniques, often fail to uncover valuable insights not explicitly stated in article titles or keywords. These approaches are unable to perform semantic searches and contextual understanding, limiting their effectiveness in classifying topics and characterizing studies. In this paper, we address these limitations by leveraging Generative AI models, specifically transformers and Retrieval-Augmented Generation (RAG), to automate and enhance bibliometric analysis. We developed a technical workflow that integrates a vector database, Sentence Transformers, a Gaussian Mixture Model (GMM), Retrieval Agent, and Large Language Models (LLMs) to enable contextual search, topic ranking, and characterization of research using customized prompt templates. A pilot study analyzing 223 urban science-related articles published in Nature Communications over the past decade highlights the effectiveness of our approach in generating insightful summary statistics on the quality, scope, and characteristics of papers in high-impact journals. This study introduces a new paradigm for enhancing bibliometric analysis and knowledge retrieval in urban research, positioning an AI agent as a powerful tool for advancing research evaluation and understanding.</summary>
+    <category term="cs.DL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-08T05:13:27Z</published>
+    <arxiv:primary_category term="cs.DL"/>
+    <author>
+      <name>Haowen Xu</name>
+      <arxiv:affiliation>Jamie</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Xueping Li</name>
+      <arxiv:affiliation>Jamie</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Jose Tupayachi</name>
+      <arxiv:affiliation>Jamie</arxiv:affiliation>
+    </author>
+    <author>
+      <name> Jianming</name>
+      <arxiv:affiliation>Jamie</arxiv:affiliation>
+    </author>
+    <author>
+      <name> Lian</name>
+    </author>
+    <author>
+      <name>Femi Omitaomu</name>
+    </author>
+    <arxiv:doi>10.1145/3681780.3697252</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1145/3681780.3697252" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.10381v1</id>
+    <title>Agentic Hybrid RAG for Evidence-Grounded Muon Collider Analysis</title>
+    <updated>2026-06-09T03:42:50Z</updated>
+    <link href="https://arxiv.org/abs/2606.10381v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.10381v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Muon collider research spans accelerator physics, detector instrumentation, and high-energy phenomenology, with relevant evidence scattered across a rapidly expanding and heterogeneous body of scientific literature. As high-energy physics (HEP) increasingly explores agent-assisted analysis workflows, efficiently locating, integrating, and verifying scientific evidence becomes an essential capability. While retrieval-augmented generation (RAG) offers a promising framework for scientific question answering, integrating agentic reasoning without compromising retrieval precision remains a key challenge. In this work, we present agentic hybrid RAG, an evidence-grounded RAG framework for muon collider research. The framework combines a hybrid retriever, integrating sparse lexical and dense semantic retrieval, with an agentic reasoning module for query decomposition, evidence expansion, and grounded answer generation. To enable systematic evaluation, we construct the first benchmark for retrieval-augmented scientific question answering in the muon collider domain, comprising a curated literature corpus together with dedicated retrieval and answer-generation benchmarks covering major detector and physics research topics. Extensive evaluation shows that hybrid retrieval provides the strongest retrieval backbone, while agentic reasoning is most effective for controlled evidence expansion and answer synthesis. Built on this principle, agentic hybrid RAG consistently outperforms representative retrieval and RAG baselines in retrieval effectiveness, answer quality, evidence coverage, and factual grounding. Together, the benchmark and framework provide a foundation for evidence-grounded scientific question answering and future HEP analysis agents operating over large-scale scientific literature.</summary>
+    <category term="hep-ex" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="physics.ins-det" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-09T03:42:50Z</published>
+    <arxiv:comment>22 pages, 5 figures, and 6 tables</arxiv:comment>
+    <arxiv:primary_category term="hep-ex"/>
+    <author>
+      <name>Ruobing Jiang</name>
+    </author>
+    <author>
+      <name>Dawei Fu</name>
+    </author>
+    <author>
+      <name>Cheng Jiang</name>
+    </author>
+    <author>
+      <name>Tianyi Yang</name>
+    </author>
+    <author>
+      <name>Zijian Wang</name>
+    </author>
+    <author>
+      <name>Youpeng Wu</name>
+    </author>
+    <author>
+      <name>Yong Ban</name>
+    </author>
+    <author>
+      <name>Yajun Mao</name>
+    </author>
+    <author>
+      <name>Qiang Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.15253v3</id>
+    <title>Scaling Beyond Context: A Survey of Multimodal Retrieval-Augmented Generation for Document Understanding</title>
+    <updated>2026-04-20T08:38:26Z</updated>
+    <link href="https://arxiv.org/abs/2510.15253v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.15253v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Document understanding is critical for applications from financial analysis to scientific discovery. Current approaches, whether OCR-based pipelines feeding Large Language Models (LLMs) or native Multimodal LLMs (MLLMs), face key limitations: the former loses structural detail, while the latter struggles with context modeling. Retrieval-Augmented Generation (RAG) helps ground models in external data, but documents' multimodal nature, i.e., combining text, tables, charts, and layout, demands a more advanced paradigm: Multimodal RAG. This approach enables holistic retrieval and reasoning across all modalities, unlocking comprehensive document intelligence. Recognizing its importance, this paper presents a systematic survey of Multimodal RAG for document understanding. We propose a taxonomy based on domain, retrieval modality, and granularity, and review advances involving graph structures and agentic frameworks. We also summarize key datasets, benchmarks, applications and industry deployment, and highlight open challenges in efficiency, fine-grained representation, and robustness, providing a roadmap for future progress in document AI.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-17T02:33:16Z</published>
+    <arxiv:comment>Accepted by ACL2026 Main Conference; Project is available at https://github.com/SensenGao/Multimodal-RAG-Survey-For-Document</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Sensen Gao</name>
+    </author>
+    <author>
+      <name>Shanshan Zhao</name>
+    </author>
+    <author>
+      <name>Xu Jiang</name>
+    </author>
+    <author>
+      <name>Lunhao Duan</name>
+    </author>
+    <author>
+      <name>Yong Xien Chng</name>
+    </author>
+    <author>
+      <name>Qing-Guo Chen</name>
+    </author>
+    <author>
+      <name>Weihua Luo</name>
+    </author>
+    <author>
+      <name>Kaifu Zhang</name>
+    </author>
+    <author>
+      <name>Jia-Wang Bian</name>
+    </author>
+    <author>
+      <name>Mingming Gong</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.00383v1</id>
+    <title>Agentic AI for Substance Use Education: Integrating Regulatory and Scientific Knowledge Sources</title>
+    <updated>2026-05-01T04:06:41Z</updated>
+    <link href="https://arxiv.org/abs/2605.00383v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.00383v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The delivery of traditional substance education has remained problematic due to challenges in scalability, personalization, and the currency of information in a rapidly evolving substance use landscape. While artificial intelligence (AI) offers a promising frontier for enhancing educational delivery, its application in providing real-time, authoritative substance use education remains largely underexplored. We built an agentic-based AI web application that combined Drug Enforcement Administration records with peer-reviewed literature in real-time to provide transparent context-sensitive substance use education. The system uses retrieval-augmented generation with a carefully filtered corpus of 102 documents and dynamic PubMed queries. Document storage was semantically chunked and placed in a vector representation in order to be easily retrieved. We conducted an expert evaluation study in which a panel of five subject matter experts generated 30 domain-specific questions, and two independent raters assessed 90 system interactions (30 primary questions plus two contextual follow-ups each) using a five-point Likert scale across four criteria: factual accuracy, citation quality, contextual coherence, and regulatory appropriateness. Mean ratings ranged from 4.18 to 4.35 across the four criteria (overall category range: 4.05-4.52), with substantial inter-rater agreement (Cohen's kappa = 0.78). These findings suggest that agentic AI architectures integrating authoritative regulatory sources with real-time scientific literature represent a promising direction for scalable, accurate, and verifiable health education delivery, warranting further evaluation through longitudinal user studies.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-01T04:06:41Z</published>
+    <arxiv:comment>22 pages, 6 figures, 2 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Kosar Haghani</name>
+    </author>
+    <author>
+      <name>Zahra Kolagar</name>
+    </author>
+    <author>
+      <name>Mohammed Atiquzzaman</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.08304v3</id>
+    <title>Securing Retrieval-Augmented Generation: A Taxonomy of Attacks, Defenses, and Future Directions</title>
+    <updated>2026-06-08T14:08:37Z</updated>
+    <link href="https://arxiv.org/abs/2604.08304v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.08304v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-augmented generation (RAG) extends large language models (LLMs) with external knowledge, but this access path also introduces security risks that existing work often conflates with inherent LLM flaws. We frame secure RAG as securing external knowledge access and organize the literature with SLOT, a taxonomy along four axes: the attack Surface (S) where an adversary acts, the defense Layer (L) that controls the same point, the Objective (O) it breaks following the CIA properties, and the Target (T) it pursues, from a single known query (T1) to target-claim manipulation across a query distribution (T2). Mapping attacks, defenses, remediation, and evaluation onto a six-stage knowledge-access pipeline, we expose two structural mismatches. Finally, we discuss directions for more realistic targets, no-blind-spot and adaptively evaluated defenses, stronger confidentiality, and evaluation for multimodal and agentic RAG. The curated paper list for RAG security is in: https://github.com/TreeAI-Lab/Awesome-RAG-Security.</summary>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-09T14:38:18Z</published>
+    <arxiv:comment>We have curated a paper list on RAG security in https://github.com/TreeAI-Lab/Awesome-RAG-Security, and we warmly welcome authors who wish to have their new work included to contact us via email</arxiv:comment>
+    <arxiv:primary_category term="cs.CR"/>
+    <author>
+      <name>Yuming Xu</name>
+    </author>
+    <author>
+      <name>Mingtao Zhang</name>
+    </author>
+    <author>
+      <name>Zhuohan Ge</name>
+    </author>
+    <author>
+      <name>Haoyang Li</name>
+    </author>
+    <author>
+      <name>Nicole Hu</name>
+    </author>
+    <author>
+      <name>Yongqi Zhang</name>
+    </author>
+    <author>
+      <name>Zhiyuan Wen</name>
+    </author>
+    <author>
+      <name>Jason Chen Zhang</name>
+    </author>
+    <author>
+      <name>Qing Li</name>
+    </author>
+    <author>
+      <name>Lei Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2410.02721v1</id>
+    <title>Domain-Specific Retrieval-Augmented Generation Using Vector Stores, Knowledge Graphs, and Tensor Factorization</title>
+    <updated>2024-10-03T17:40:55Z</updated>
+    <link href="https://arxiv.org/abs/2410.02721v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.02721v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are pre-trained on large-scale corpora and excel in numerous general natural language processing (NLP) tasks, such as question answering (QA). Despite their advanced language capabilities, when it comes to domain-specific and knowledge-intensive tasks, LLMs suffer from hallucinations, knowledge cut-offs, and lack of knowledge attributions. Additionally, fine tuning LLMs' intrinsic knowledge to highly specific domains is an expensive and time consuming process. The retrieval-augmented generation (RAG) process has recently emerged as a method capable of optimization of LLM responses, by referencing them to a predetermined ontology. It was shown that using a Knowledge Graph (KG) ontology for RAG improves the QA accuracy, by taking into account relevant sub-graphs that preserve the information in a structured manner. In this paper, we introduce SMART-SLIC, a highly domain-specific LLM framework, that integrates RAG with KG and a vector store (VS) that store factual domain specific information. Importantly, to avoid hallucinations in the KG, we build these highly domain-specific KGs and VSs without the use of LLMs, but via NLP, data mining, and nonnegative tensor factorization with automatic model selection. Pairing our RAG with a domain-specific: (i) KG (containing structured information), and (ii) VS (containing unstructured information) enables the development of domain-specific chat-bots that attribute the source of information, mitigate hallucinations, lessen the need for fine-tuning, and excel in highly domain-specific question answering tasks. We pair SMART-SLIC with chain-of-thought prompting agents. The framework is designed to be generalizable to adapt to any specific or specialized domain. In this paper, we demonstrate the question answering capabilities of our framework on a corpus of scientific publications on malware analysis and anomaly detection.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-03T17:40:55Z</published>
+    <arxiv:comment>9 pages 7 figures, 1 table, 1 cypher code Accepted to ICMLA 2024</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ryan C. Barron</name>
+    </author>
+    <author>
+      <name>Ves Grantcharov</name>
+    </author>
+    <author>
+      <name>Selma Wanna</name>
+    </author>
+    <author>
+      <name>Maksim E. Eren</name>
+    </author>
+    <author>
+      <name>Manish Bhattarai</name>
+    </author>
+    <author>
+      <name>Nicholas Solovyev</name>
+    </author>
+    <author>
+      <name>George Tompkins</name>
+    </author>
+    <author>
+      <name>Charles Nicholas</name>
+    </author>
+    <author>
+      <name>Kim Ø. Rasmussen</name>
+    </author>
+    <author>
+      <name>Cynthia Matuszek</name>
+    </author>
+    <author>
+      <name>Boian S. Alexandrov</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.23096v1</id>
+    <title>ChatVis: Large Language Model Agent for Generating Scientific Visualizations</title>
+    <updated>2025-07-30T20:54:18Z</updated>
+    <link href="https://arxiv.org/abs/2507.23096v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.23096v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) are rapidly increasing in capability, but they still struggle with highly specialized programming tasks such as scientific visualization. We present an LLM assistant, ChatVis, that aids the LLM to generate Python code for ParaView scientific visualization tasks, without the need for retraining or fine-tuning the LLM. ChatVis employs chain-of-thought prompt simplification, retrieval-augmented prompt generation using a vector database of documentation and code examples, and error checking with iterative prompt feedback to correct errors until a visualization is produced. An integral part of our approach is a benchmark suite of canonical visualization tasks, ParaView regression tests, and scientific use cases that includes comprehensive evaluation metrics. We evaluate our visualization assistant by comparing results with a variety of top-performing unassisted LLMs. We find that all the metrics are significantly improved with ChatVis.</summary>
+    <category term="cs.HC" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-30T20:54:18Z</published>
+    <arxiv:primary_category term="cs.HC"/>
+    <author>
+      <name>Tom Peterka</name>
+    </author>
+    <author>
+      <name>Tanwi Mallick</name>
+    </author>
+    <author>
+      <name>Orcun Yildiz</name>
+    </author>
+    <author>
+      <name>David Lenz</name>
+    </author>
+    <author>
+      <name>Cory Quammen</name>
+    </author>
+    <author>
+      <name>Berk Geveci</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.14288v2</id>
+    <title>DeepInflation: an AI agent for research and model discovery of inflation</title>
+    <updated>2026-06-17T10:02:49Z</updated>
+    <link href="https://arxiv.org/abs/2601.14288v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.14288v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We present DeepInflation, an AI agent designed for research and model discovery in inflationary cosmology. Built upon a multi-agent architecture, DeepInflation integrates Large Language Models (LLMs) with a symbolic regression (SR) engine and a retrieval-augmented generation (RAG) knowledge base. This framework enables the agent to automatically explore and verify the vast landscape of inflationary potentials while grounding its outputs in established theoretical literature. We demonstrate that DeepInflation can successfully discover simple and viable single-field slow-roll inflationary potentials consistent with the latest observations (with the ACT DR6 results taken as an example) or any given $n_s$ and $r$, and provide accurate theoretical context for obscure inflationary scenarios. DeepInflation serves as a prototype for a new generation of autonomous scientific discovery engines in cosmology, which enables researchers and non-experts alike to explore the inflationary landscape using natural language. This agent is available at https://github.com/pengzy-cosmo/DeepInflation.</summary>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="gr-qc" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="hep-th" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-14T09:41:01Z</published>
+    <arxiv:primary_category term="astro-ph.CO"/>
+    <author>
+      <name>Ze-Yu Peng</name>
+    </author>
+    <author>
+      <name>Hao-Shi Yuan</name>
+    </author>
+    <author>
+      <name>Qi Lai</name>
+    </author>
+    <author>
+      <name>Jun-Qian Jiang</name>
+    </author>
+    <author>
+      <name>Gen Ye</name>
+    </author>
+    <author>
+      <name>Jun Zhang</name>
+    </author>
+    <author>
+      <name>Yun-Song Piao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.23811v1</id>
+    <title>Generating Biomedical Fact-Checking Reports with RL-Enhanced Agentic Search</title>
+    <updated>2026-08-24T20:25:38Z</updated>
+    <link href="https://arxiv.org/abs/2608.23811v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.23811v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Automated fact-checking is essential for ensuring the reliability of public health information, yet the biomedical domain poses unique challenges. Validating biomedical claims requires rigorous interpretation of scientific literature, assessment of retrieved evidence, and comprehensive justification toward the conclusion. Although Large Language Models (LLMs) enhanced by Retrieval-Augmented Generation (RAG) and agentic search perform automated fact-checking in a retrieve-then-verify paradigm, current methods still output isolated prediction labels, lacking explanatory depth and offers limited utility for human understanding. To bridge this gap, we introduce an LLM-based agent named BioCheck Agent that generates structured biomedical fact-checking reports with agentic search. Rather than merely outputting supported or refuted labels, our agent synthesizes final conclusions with retrieved evidence and rigorous analysis. To ensure domain-specific accuracy, BioCheck Agent exclusively searches high-quality scientific literature in PubMed, utilizing advanced Boolean search operators. Recognizing that direct prompting often results in hallucinations and low-quality reports, especially for lightweight open-source models, we further propose the Evidence-Grounded Group Relative Policy Optimization (EG-GRPO) to perform reinforcement learning on BioCheck Agent with a task-specific reward that incentivizes advanced search behavior and high-quality evidence retrieval while penalizing hallucinations. Our experimental results show that compared to the base model Qwen3.5-4B, BioCheck Agent with EG-GRPO improves label prediction accuracy on SciFact by 9.95%. Furthermore, it achieves a 3.7% higher evidence quality score and a 19.63% lower evidence hallucination rate, demonstrating its ability to generate biomedical fact-checking reports with improved accuracy and quality.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-24T20:25:38Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Jiongxiao Wang</name>
+    </author>
+    <author>
+      <name>Dingli Ma</name>
+    </author>
+    <author>
+      <name>Chaoqun Ni</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.00550v1</id>
+    <title>BloClaw: An Omniscient, Multi-Modal Agentic Workspace for Next-Generation Scientific Discovery</title>
+    <updated>2026-04-01T06:47:40Z</updated>
+    <link href="https://arxiv.org/abs/2604.00550v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.00550v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The integration of Large Language Models (LLMs) into life sciences has catalyzed the development of "AI Scientists." However, translating these theoretical capabilities into deployment-ready research environments exposes profound infrastructural vulnerabilities. Current frameworks are bottlenecked by fragile JSON-based tool-calling protocols, easily disrupted execution sandboxes that lose graphical outputs, and rigid conversational interfaces inherently ill-suited for high-dimensional scientific data.We introduce BloClaw, a unified, multi-modal operating system designed for Artificial Intelligence for Science (AI4S). BloClaw reconstructs the Agent-Computer Interaction (ACI) paradigm through three architectural innovations: (1) An XML-Regex Dual-Track Routing Protocol that statistically eliminates serialization failures (0.2% error rate vs. 17.6% in JSON); (2) A Runtime State Interception Sandbox that utilizes Python monkey-patching to autonomously capture and compile dynamic data visualizations (Plotly/Matplotlib), circumventing browser CORS policies; and (3) A State-Driven Dynamic Viewport UI that morphs seamlessly between a minimalist command deck and an interactive spatial rendering engine. We comprehensively benchmark BloClaw across cheminformatics (RDKit), de novo 3D protein folding via ESMFold, molecular docking, and autonomous Retrieval-Augmented Generation (RAG), establishing a highly robust, self-evolving paradigm for computational research assistants. The open-source repository is available at https://github.com/qinheming/BloClaw.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-01T06:47:40Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yao Qin</name>
+    </author>
+    <author>
+      <name>Yangyang Yan</name>
+    </author>
+    <author>
+      <name>Jinhua Pang</name>
+    </author>
+    <author>
+      <name>Xiaoming Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.20598v1</id>
+    <title>Fine-Tuning and Prompt Engineering of LLMs, for the Creation of Multi-Agent AI for Addressing Sustainable Protein Production Challenges</title>
+    <updated>2025-06-25T16:37:46Z</updated>
+    <link href="https://arxiv.org/abs/2506.20598v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.20598v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The global demand for sustainable protein sources has accelerated the need for intelligent tools that can rapidly process and synthesise domain-specific scientific knowledge. In this study, we present a proof-of-concept multi-agent Artificial Intelligence (AI) framework designed to support sustainable protein production research, with an initial focus on microbial protein sources. Our Retrieval-Augmented Generation (RAG)-oriented system consists of two GPT-based LLM agents: (1) a literature search agent that retrieves relevant scientific literature on microbial protein production for a specified microbial strain, and (2) an information extraction agent that processes the retrieved content to extract relevant biological and chemical information. Two parallel methodologies, fine-tuning and prompt engineering, were explored for agent optimisation. Both methods demonstrated effectiveness at improving the performance of the information extraction agent in terms of transformer-based cosine similarity scores between obtained and ideal outputs. Mean cosine similarity scores were increased by up to 25%, while universally reaching mean scores of $\geq 0.89$ against ideal output text. Fine-tuning overall improved the mean scores to a greater extent (consistently of $\geq 0.94$) compared to prompt engineering, although lower statistical uncertainties were observed with the latter approach. A user interface was developed and published for enabling the use of the multi-agent AI system, alongside preliminary exploration of additional chemical safety-based search capabilities</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="eess.SY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-25T16:37:46Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Alexander D. Kalian</name>
+    </author>
+    <author>
+      <name>Jaewook Lee</name>
+    </author>
+    <author>
+      <name>Stefan P. Johannesson</name>
+    </author>
+    <author>
+      <name>Lennart Otte</name>
+    </author>
+    <author>
+      <name>Christer Hogstrand</name>
+    </author>
+    <author>
+      <name>Miao Guo</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.17795v3</id>
+    <title>What Makes AI Research Replicable? Executable Knowledge Graphs as Scientific Knowledge Representations</title>
+    <updated>2026-04-19T16:34:29Z</updated>
+    <link href="https://arxiv.org/abs/2510.17795v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.17795v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Replicating AI research is a crucial yet challenging task for large language model (LLM) agents. Existing approaches often struggle to generate executable code, primarily due to insufficient background knowledge and the limitations of retrieval-augmented generation (RAG) methods, which fail to capture latent technical details hidden in referenced papers. Furthermore, previous approaches tend to overlook valuable implementation-level code signals and lack structured knowledge representations that support multi-granular retrieval and reuse. To overcome these challenges, we propose Executable Knowledge Graphs (xKG), a pluggable, paper-centric knowledge base that automatically integrates code snippets and technical insights extracted from scientific literature. When integrated into three agent frameworks with two different LLMs, xKG shows substantial performance gains (10.9% with o3-mini) on PaperBench, demonstrating its effectiveness as a general and extensible solution for automated AI research replication. Code is available at https://github.com/zjunlp/xKG.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-20T17:53:23Z</published>
+    <arxiv:comment>ACL 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yujie Luo</name>
+    </author>
+    <author>
+      <name>Zhuoyun Yu</name>
+    </author>
+    <author>
+      <name>Xuehai Wang</name>
+    </author>
+    <author>
+      <name>Yuqi Zhu</name>
+    </author>
+    <author>
+      <name>Ningyu Zhang</name>
+    </author>
+    <author>
+      <name>Lanning Wei</name>
+    </author>
+    <author>
+      <name>Lun Du</name>
+    </author>
+    <author>
+      <name>Da Zheng</name>
+    </author>
+    <author>
+      <name>Huajun Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2410.21480v1</id>
+    <title>AiSciVision: A Framework for Specializing Large Multimodal Models in Scientific Image Classification</title>
+    <updated>2024-10-28T19:35:47Z</updated>
+    <link href="https://arxiv.org/abs/2410.21480v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.21480v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Trust and interpretability are crucial for the use of Artificial Intelligence (AI) in scientific research, but current models often operate as black boxes offering limited transparency and justifications for their outputs. We introduce AiSciVision, a framework that specializes Large Multimodal Models (LMMs) into interactive research partners and classification models for image classification tasks in niche scientific domains. Our framework uses two key components: (1) Visual Retrieval-Augmented Generation (VisRAG) and (2) domain-specific tools utilized in an agentic workflow. To classify a target image, AiSciVision first retrieves the most similar positive and negative labeled images as context for the LMM. Then the LMM agent actively selects and applies tools to manipulate and inspect the target image over multiple rounds, refining its analysis before making a final prediction. These VisRAG and tooling components are designed to mirror the processes of domain experts, as humans often compare new data to similar examples and use specialized tools to manipulate and inspect images before arriving at a conclusion. Each inference produces both a prediction and a natural language transcript detailing the reasoning and tool usage that led to the prediction. We evaluate AiSciVision on three real-world scientific image classification datasets: detecting the presence of aquaculture ponds, diseased eelgrass, and solar panels. Across these datasets, our method outperforms fully supervised models in low and full-labeled data settings. AiSciVision is actively deployed in real-world use, specifically for aquaculture research, through a dedicated web application that displays and allows the expert users to converse with the transcripts. This work represents a crucial step toward AI systems that are both interpretable and effective, advancing their use in scientific research and scientific discovery.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-28T19:35:47Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Brendan Hogan</name>
+    </author>
+    <author>
+      <name>Anmol Kabra</name>
+    </author>
+    <author>
+      <name>Felipe Siqueira Pacheco</name>
+    </author>
+    <author>
+      <name>Laura Greenstreet</name>
+    </author>
+    <author>
+      <name>Joshua Fan</name>
+    </author>
+    <author>
+      <name>Aaron Ferber</name>
+    </author>
+    <author>
+      <name>Marta Ummus</name>
+    </author>
+    <author>
+      <name>Alecsander Brito</name>
+    </author>
+    <author>
+      <name>Olivia Graham</name>
+    </author>
+    <author>
+      <name>Lillian Aoki</name>
+    </author>
+    <author>
+      <name>Drew Harvell</name>
+    </author>
+    <author>
+      <name>Alex Flecker</name>
+    </author>
+    <author>
+      <name>Carla Gomes</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2504.10147v1</id>
+    <title>A Survey of Personalization: From RAG to Agent</title>
+    <updated>2025-04-14T11:57:52Z</updated>
+    <link href="https://arxiv.org/abs/2504.10147v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2504.10147v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Personalization has become an essential capability in modern AI systems, enabling customized interactions that align with individual user preferences, contexts, and goals. Recent research has increasingly concentrated on Retrieval-Augmented Generation (RAG) frameworks and their evolution into more advanced agent-based architectures within personalized settings to enhance user satisfaction. Building on this foundation, this survey systematically examines personalization across the three core stages of RAG: pre-retrieval, retrieval, and generation. Beyond RAG, we further extend its capabilities into the realm of Personalized LLM-based Agents, which enhance traditional RAG systems with agentic functionalities, including user understanding, personalized planning and execution, and dynamic generation. For both personalization in RAG and agent-based personalization, we provide formal definitions, conduct a comprehensive review of recent literature, and summarize key datasets and evaluation metrics. Additionally, we discuss fundamental challenges, limitations, and promising research directions in this evolving field. Relevant papers and resources are continuously updated at https://github.com/Applied-Machine-Learning-Lab/Awesome-Personalized-RAG-Agent.</summary>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-04-14T11:57:52Z</published>
+    <arxiv:comment>18 pages, 5 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.IR"/>
+    <author>
+      <name>Xiaopeng Li</name>
+    </author>
+    <author>
+      <name>Pengyue Jia</name>
+    </author>
+    <author>
+      <name>Derong Xu</name>
+    </author>
+    <author>
+      <name>Yi Wen</name>
+    </author>
+    <author>
+      <name>Yingyi Zhang</name>
+    </author>
+    <author>
+      <name>Wenlin Zhang</name>
+    </author>
+    <author>
+      <name>Wanyu Wang</name>
+    </author>
+    <author>
+      <name>Yichao Wang</name>
+    </author>
+    <author>
+      <name>Zhaocheng Du</name>
+    </author>
+    <author>
+      <name>Xiangyang Li</name>
+    </author>
+    <author>
+      <name>Yong Liu</name>
+    </author>
+    <author>
+      <name>Huifeng Guo</name>
+    </author>
+    <author>
+      <name>Ruiming Tang</name>
+    </author>
+    <author>
+      <name>Xiangyu Zhao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.24937v2</id>
+    <title>The Hitchhiker's Guide to Agentic AI: From Foundations to Systems</title>
+    <updated>2026-07-27T15:17:17Z</updated>
+    <link href="https://arxiv.org/abs/2606.24937v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.24937v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The Hitchhiker's Guide to Agentic AI is a comprehensive practitioner's reference for building autonomous AI systems. The book covers the full stack from first principles to production deployment, organized around a central thesis: building great agentic systems requires understanding every layer of the pipeline, not just one. The book opens with the LLM substrate -- transformer architecture, GPU systems, training and fine-tuning (SFT, LoRA, MoE), model compression, and inference optimization -- treated as essential foundations rather than the primary focus. It then develops the alignment and reasoning layer: reinforcement learning from human feedback (RLHF), PPO, DPO and its variants, GRPO, reward modeling, and RL for large reasoning models including chain-of-thought and test-time scaling. The second half is devoted to agentic AI proper. Topics include agentic training and trajectory-based RL, retrieval-augmented generation (RAG and Agentic RAG), memory systems (in-context, external, episodic, and semantic), agent harness design and context management, loop engineering (inference-time RL, generate-verify-retry optimization, and adaptive budget control), and a taxonomy of agent design patterns. Inter-agent coordination is covered in depth: the Model Context Protocol (MCP), agent skills and tool use, the Agent-to-Agent (A2A) communication protocol, and multi-agent architectures spanning centralized, decentralized, and hierarchical topologies. The book concludes with agent development frameworks, agentic UI design, evaluation methodology for agentic tasks, and production deployment. Each chapter pairs rigorous theoretical foundations with implementation guidance, code examples, and references to the primary literature.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-22T17:48:54Z</published>
+    <arxiv:comment>version 1.3</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Haggai Roitman</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.05436v1</id>
+    <title>Ten Headache Specialists versus Artificial Intelligence for Clinical Literature Summarization: A Critical Evaluation and Comparison</title>
+    <updated>2026-06-03T20:58:43Z</updated>
+    <link href="https://arxiv.org/abs/2606.05436v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.05436v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Summarizing the latest medical literature to guide clinical decision-making is essential for evidence-based medicine and high-quality patient care. Yet clinicians face increasing challenges due to limited time with patients and a rapidly growing volume of published articles. Although retrieval-augmented large language models (LLMs) have shown promise in clinical summarization, human evaluations of their effectiveness in synthesizing broader scientific literature and direct comparisons to expert-written syntheses remain scarce. We constructed a RAG-based agentic AI framework using three state-of-the-art LLMs: Sonnet, GPT-4o, and Llama 3.1. A headache specialist created 13 questions, three for prompt optimization and ten for evaluation. Ten headache specialists across the United States and Canada each wrote a summary for one question, yielding four summaries per question (expert, Sonnet, GPT-4o, and Llama). The experts, blinded to authorship, critically evaluated the summaries, excluding the topic for which they wrote a summary, based on correctness, completeness, conciseness, and clinical utility, scoring each from 1 to 10 using standardized rubrics. They also ranked the summaries by preference and indicated whether they believed each summary was written by an expert or an LLM. Our study, comparing LLM- and expert-written literature summaries evaluated by headache specialists, showed that expert-written summaries were preferred, although experts sometimes found it challenging to distinguish between human- and AI-generated summaries. We also identified key expert-valued features beyond standard evaluation metrics that can guide future refinement of both human and AI literature summarization pipelines.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-03T20:58:43Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Alejandro Lozano</name>
+    </author>
+    <author>
+      <name>Keiko Ihara</name>
+    </author>
+    <author>
+      <name>Ping-Hao Yang</name>
+    </author>
+    <author>
+      <name>Carrie E. Robertson</name>
+    </author>
+    <author>
+      <name>Jennifer Stern</name>
+    </author>
+    <author>
+      <name>Allan Purdy</name>
+    </author>
+    <author>
+      <name>Hsiangkuo Yuan</name>
+    </author>
+    <author>
+      <name>Pengfei Zhang</name>
+    </author>
+    <author>
+      <name>Yulia Orlova</name>
+    </author>
+    <author>
+      <name>Olga Fermo</name>
+    </author>
+    <author>
+      <name>Jennifer Hranilovich</name>
+    </author>
+    <author>
+      <name>Fred Cohen</name>
+    </author>
+    <author>
+      <name>Todd J. Schwedt</name>
+    </author>
+    <author>
+      <name>Jenelle A. Jindal</name>
+    </author>
+    <author>
+      <name>Serena Yeung-Levy</name>
+    </author>
+    <author>
+      <name>Chia-Chun Chiang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2410.09252v2</id>
+    <title>DAVIS: Planning Agent with Knowledge Graph-Powered Inner Monologue</title>
+    <updated>2025-09-17T03:28:14Z</updated>
+    <link href="https://arxiv.org/abs/2410.09252v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.09252v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Designing a generalist scientific agent capable of performing tasks in laboratory settings to assist researchers has become a key goal in recent Artificial Intelligence (AI) research. Unlike everyday tasks, scientific tasks are inherently more delicate and complex, requiring agents to possess a higher level of reasoning ability, structured and temporal understanding of their environment, and a strong emphasis on safety. Existing approaches often fail to address these multifaceted requirements. To tackle these challenges, we present DAVIS. Unlike traditional retrieval-augmented generation (RAG) approaches, DAVIS incorporates structured and temporal memory, which enables model-based planning. Additionally, DAVIS implements an agentic, multi-turn retrieval system, similar to a human's inner monologue, allowing for a greater degree of reasoning over past experiences. DAVIS demonstrates substantially improved performance on the ScienceWorld benchmark comparing to previous approaches on 8 out of 9 elementary science subjects. In addition, DAVIS's World Model demonstrates competitive performance on the famous HotpotQA and MusiqueQA dataset for multi-hop question answering. To the best of our knowledge, DAVIS is the first RAG agent to employ an interactive retrieval method in a RAG pipeline.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.HC" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-11T20:58:51Z</published>
+    <arxiv:comment>Accepted to EMNLP 2025 Findings</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Minh Pham Dinh</name>
+    </author>
+    <author>
+      <name>Munira Syed</name>
+    </author>
+    <author>
+      <name>Michael G Yankoski</name>
+    </author>
+    <author>
+      <name>Trenton W. Ford</name>
+    </author>
+    <arxiv:doi>10.18653/v1/2025.findings-emnlp.895</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.18653/v1/2025.findings-emnlp.895" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.03989v2</id>
+    <title>An Agent-Oriented Pluggable Experience-RAG Skill for Experience-Driven Retrieval Strategy Orchestration</title>
+    <updated>2026-05-07T08:12:37Z</updated>
+    <link href="https://arxiv.org/abs/2605.03989v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.03989v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-augmented generation systems often assume that one fixed retrieval pipeline is sufficient across heterogeneous tasks, yet factoid question answering, multi-hop reasoning, and scientific verification exhibit different retrieval preferences. We present Experience-RAG Skill, an agent-oriented pluggable retrieval orchestration layer positioned between the agent and the retriever pool. The proposed skill analyzes the current scene, consults an experience memory, selects an appropriate retrieval strategy, and returns structured evidence to the agent. Under a fixed candidate pool, Experience-RAG Skill achieves an overall nDCG@10 of 0.8924 on BeIR/nq, BeIR/hotpotqa, and BeIR/scifact, outperforming fixed single-retriever baselines and remaining competitive with Adaptive-RAG-style routing. The results suggest that retrieval strategy selection can be productively encapsulated as a reusable agent skill rather than being hard-coded in the upper workflow.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-05T17:10:25Z</published>
+    <arxiv:comment>Preprint. 6 pages, 1 figure, 3 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Dutao Zhang</name>
+    </author>
+    <author>
+      <name>Tian Liao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.05327v1</id>
+    <title>DeepV: A Model-Agnostic Retrieval-Augmented Framework for Verilog Code Generation with a High-Quality Knowledge Base</title>
+    <updated>2025-10-06T19:47:27Z</updated>
+    <link href="https://arxiv.org/abs/2510.05327v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.05327v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As large language models (LLMs) continue to be integrated into modern technology, there has been an increased push towards code generation applications, which also naturally extends to hardware design automation. LLM-based solutions for register transfer level (RTL) code generation for intellectual property (IP) designs have grown, especially with fine-tuned LLMs, prompt engineering, and agentic approaches becoming popular in literature. However, a gap has been exposed in these techniques, as they fail to integrate novel IPs into the model's knowledge base, subsequently resulting in poorly generated code. Additionally, as general-purpose LLMs continue to improve, fine-tuned methods on older models will not be able to compete to produce more accurate and efficient designs. Although some retrieval augmented generation (RAG) techniques exist to mitigate challenges presented in fine-tuning approaches, works tend to leverage low-quality codebases, incorporate computationally expensive fine-tuning in the frameworks, or do not use RAG directly in the RTL generation step. In this work, we introduce DeepV: a model-agnostic RAG framework to generate RTL designs by enhancing context through a large, high-quality dataset without any RTL-specific training. Our framework benefits the latest commercial LLM, OpenAI's GPT-5, with a near 17% increase in performance on the VerilogEval benchmark. We host DeepV for use by the community in a Hugging Face (HF) Space: https://huggingface.co/spaces/FICS-LLM/DeepV.</summary>
+    <category term="cs.AR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-06T19:47:27Z</published>
+    <arxiv:comment>22 pages, 6 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AR"/>
+    <author>
+      <name>Zahin Ibnat</name>
+    </author>
+    <author>
+      <name>Paul E. Calzada</name>
+    </author>
+    <author>
+      <name>Rasin Mohammed Ihtemam</name>
+    </author>
+    <author>
+      <name>Sujan Kumar Saha</name>
+    </author>
+    <author>
+      <name>Jingbo Zhou</name>
+    </author>
+    <author>
+      <name>Farimah Farahmandi</name>
+    </author>
+    <author>
+      <name>Mark Tehranipoor</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2407.00466v1</id>
+    <title>BioKGBench: A Knowledge Graph Checking Benchmark of AI Agent for Biomedical Science</title>
+    <updated>2024-06-29T15:23:28Z</updated>
+    <link href="https://arxiv.org/abs/2407.00466v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2407.00466v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Pursuing artificial intelligence for biomedical science, a.k.a. AI Scientist, draws increasing attention, where one common approach is to build a copilot agent driven by Large Language Models (LLMs). However, to evaluate such systems, people either rely on direct Question-Answering (QA) to the LLM itself, or in a biomedical experimental manner. How to precisely benchmark biomedical agents from an AI Scientist perspective remains largely unexplored. To this end, we draw inspiration from one most important abilities of scientists, understanding the literature, and introduce BioKGBench. In contrast to traditional evaluation benchmark that only focuses on factual QA, where the LLMs are known to have hallucination issues, we first disentangle "Understanding Literature" into two atomic abilities, i) "Understanding" the unstructured text from research papers by performing scientific claim verification, and ii) Ability to interact with structured Knowledge-Graph Question-Answering (KGQA) as a form of "Literature" grounding. We then formulate a novel agent task, dubbed KGCheck, using KGQA and domain-based Retrieval-Augmented Generation (RAG) to identify the factual errors of existing large-scale knowledge graph databases. We collect over two thousand data for two atomic tasks and 225 high-quality annotated data for the agent task. Surprisingly, we discover that state-of-the-art agents, both daily scenarios and biomedical ones, have either failed or inferior performance on our benchmark. We then introduce a simple yet effective baseline, dubbed BKGAgent. On the widely used popular knowledge graph, we discover over 90 factual errors which provide scenarios for agents to make discoveries and demonstrate the effectiveness of our approach. The code and data are available at https://github.com/westlake-autolab/BioKGBench.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-06-29T15:23:28Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xinna Lin</name>
+    </author>
+    <author>
+      <name>Siqi Ma</name>
+    </author>
+    <author>
+      <name>Junjie Shan</name>
+    </author>
+    <author>
+      <name>Xiaojing Zhang</name>
+    </author>
+    <author>
+      <name>Shell Xu Hu</name>
+    </author>
+    <author>
+      <name>Tiannan Guo</name>
+    </author>
+    <author>
+      <name>Stan Z. Li</name>
+    </author>
+    <author>
+      <name>Kaicheng Yu</name>
+    </author>
+  </entry>
+</feed>

@@ -2,9 +2,9 @@
   "run_id": "demo",
   "source": "fixture",
   "offline": true,
-  "data_dir": "C:\\Users\\25653\\Desktop\\AI比赛\\LitAudit\\data\\fixtures",
-  "created_at": "2026-08-25T11:12:30.142539+00:00",
-  "cache_dir": "C:\\Users\\25653\\Desktop\\AI比赛\\LitAudit\\runs\\demo\\cache",
+  "data_dir": "E:\\LitAudit\\data\\fixtures",
+  "created_at": "2026-08-26T02:33:53.296805+00:00",
+  "cache_dir": "E:\\LitAudit\\runs\\demo\\cache",
   "limitations": [
     "本 run 未调用 arXiv / OpenAlex / Semantic Scholar。",
     "null 的 authors/abstract 被原样保留，未填充默认值。",
@@ -25,6 +25,6 @@
       "pending": 0
     },
     "error_count": 0,
-    "generated_at": "2026-08-25T19:12:30"
+    "generated_at": "2026-08-26T10:33:53"
   }
 }

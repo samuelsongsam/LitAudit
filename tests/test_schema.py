@@ -13,6 +13,7 @@ from src.schema import (
     ScreeningStage,
     validate_dataset,
 )
+from src.io_utils import load_dataset
 
 
 def _paper(**kwargs):
@@ -113,3 +114,13 @@ def test_evidence_can_use_url_anchor():
         }
     )
     assert evidence.locator.url_anchor.endswith("#abstract")
+
+
+def test_load_dataset_preserves_parse_errors(tmp_path):
+    (tmp_path / "search_queries.json").write_text("[]", encoding="utf-8")
+    (tmp_path / "papers.jsonl").write_text(
+        '{"paper_id":"bad","title":"Missing source"}\n', encoding="utf-8"
+    )
+    dataset = load_dataset(tmp_path)
+    assert dataset.issues
+    assert any(issue.code == "schema_error" for issue in dataset.issues)
