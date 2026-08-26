@@ -16,3 +16,4 @@ runs/*
 *.egg-info/
 dist/
 build/
+data/cache/**/*-pages.txt

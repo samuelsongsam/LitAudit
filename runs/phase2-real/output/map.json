@@ -10,10 +10,19 @@
       "doi_or_arxiv": "arXiv:2312.07559v2",
       "url": "https://arxiv.org/abs/2312.07559v2",
       "is_fixture": false,
-      "parse_status": "abstract_verified",
-      "parse_error": "全文尚未解析；本卡片的字段和证据范围限于 arXiv 摘要。",
-      "task": "科学文献全文上的问题回答与检索/综合；摘要层级核验。",
-      "method": "RAG agent；对全文文章执行信息检索，评估来源和段落相关性后生成回答。"
+      "parse_status": "pdf_partial_verified",
+      "parse_error": "已核验 PDF 第 1、2、7、9、10 页指定摘录；未完成 20 页逐页审阅，不得视为全文已读完。",
+      "task": "科学文献全文上的问题回答与检索/综合。",
+      "method": "RAG agent；对全文文章执行信息检索，评估来源和段落相关性后生成回答。",
+      "evidence_status": [
+        "verified",
+        "verified",
+        "verified",
+        "verified",
+        "verified",
+        "verified",
+        "verified"
+      ]
     },
     {
       "paper_id": "paper-002",
@@ -27,7 +36,8 @@
       "parse_status": "abstract_verified",
       "parse_error": "全文尚未解析；本卡片用于记录排除边界，不构成首期研究证据。",
       "task": "从零写作 Wikipedia-like 长文及预写作提纲。",
-      "method": "检索和多视角问题提问；对可信互联网来源进行对话式研究和信息整理。"
+      "method": "检索和多视角问题提问；对可信互联网来源进行对话式研究和信息整理。",
+      "evidence_status": []
     },
     {
       "paper_id": "paper-003",
@@ -38,10 +48,14 @@
       "doi_or_arxiv": "arXiv:2305.14259v7",
       "url": "https://arxiv.org/abs/2305.14259v7",
       "is_fixture": false,
-      "parse_status": "abstract_verified",
-      "parse_error": "全文尚未解析；后续 Claim 需区分自动科研灵感任务和科学问答任务。",
+      "parse_status": "pdf_partial_verified",
+      "parse_error": "已核验 PDF 第 1 页摘要摘录；未完成 21 页逐页审阅，未抽取完整实验表。",
       "task": "从科学文献生成新科学想法，并评价想法的新颖性。",
-      "method": "从过去科学论文检索 inspiration；迭代比较先前论文并更新 idea suggestions，显式优化 novelty。"
+      "method": "从过去科学论文检索 inspiration；迭代比较先前论文并更新 idea suggestions，显式优化 novelty。",
+      "evidence_status": [
+        "verified",
+        "verified"
+      ]
     },
     {
       "paper_id": "paper-004",
@@ -55,7 +69,8 @@
       "parse_status": "abstract_verified",
       "parse_error": "全文尚未解析；本卡片用于边界和风险对照，不构成首期纳入证据。",
       "task": "通用长答案网页浏览问答。",
-      "method": "GPT-3 在文本网页浏览环境中搜索和导航，并收集支持答案的参考文献。"
+      "method": "GPT-3 在文本网页浏览环境中搜索和导航，并收集支持答案的参考文献。",
+      "evidence_status": []
     },
     {
       "paper_id": "paper-005",
@@ -69,7 +84,8 @@
       "parse_status": "abstract_verified",
       "parse_error": "全文尚未解析；本卡片用于边界和风险对照，不构成首期纳入证据。",
       "task": "通用 API 工具调用和下游任务。",
-      "method": "语言模型自监督学习决定调用哪个 API、何时调用、传入什么参数以及如何整合结果。"
+      "method": "语言模型自监督学习决定调用哪个 API、何时调用、传入什么参数以及如何整合结果。",
+      "evidence_status": []
     },
     {
       "paper_id": "paper-006",
@@ -80,10 +96,15 @@
       "doi_or_arxiv": "arXiv:2505.04847v2",
       "url": "https://arxiv.org/abs/2505.04847v2",
       "is_fixture": false,
-      "parse_status": "abstract_verified",
-      "parse_error": "全文尚未解析；FalsificationHit 仅引用摘要原文。",
+      "parse_status": "pdf_partial_verified",
+      "parse_error": "已核验 PDF 第 1 页摘要/引言和第 7 页 Limitations；任务仍为通用 RAG，保持 exclude。",
       "task": "通用 RAG 摘要、问答和 data-to-text 的 faithfulness 基准。",
-      "method": "HHEM 幻觉检测模型和 FaithJudge LLM-as-a-judge 评测框架。"
+      "method": "HHEM 幻觉检测模型和 FaithJudge LLM-as-a-judge 评测框架。",
+      "evidence_status": [
+        "verified",
+        "verified",
+        "verified"
+      ]
     },
     {
       "paper_id": "paper-007",
@@ -94,13 +115,58 @@
       "doi_or_arxiv": "arXiv:2406.13663v4",
       "url": "https://arxiv.org/abs/2406.13663v4",
       "is_fixture": false,
-      "parse_status": "abstract_verified",
-      "parse_error": "全文尚未解析；FalsificationHit 仅引用摘要原文。",
+      "parse_status": "pdf_partial_verified",
+      "parse_error": "已核验 PDF 第 1 页摘要；未完成 17 页逐页审阅。任务仍为通用 QA，保持 exclude。",
       "task": "通用 QA 中的答案来源归因和可验证性。",
-      "method": "MIRAGE 使用模型内部信息，将上下文敏感答案 token 与影响其预测的检索文档配对。"
+      "method": "MIRAGE 使用模型内部信息，将上下文敏感答案 token 与影响其预测的检索文档配对。",
+      "evidence_status": [
+        "verified",
+        "verified"
+      ]
     }
   ],
-  "edges": [],
+  "edges": [
+    {
+      "source": "paper-001",
+      "target": "paper-006",
+      "kind": "evidence_conflict",
+      "claim_id": "claim-008",
+      "evidence_ids": [
+        "evidence-008",
+        "evidence-009"
+      ],
+      "note": "context_only vs contradicts"
+    },
+    {
+      "source": "paper-001",
+      "target": "paper-007",
+      "kind": "evidence_conflict",
+      "claim_id": "claim-008",
+      "evidence_ids": [
+        "evidence-008",
+        "evidence-010"
+      ],
+      "note": "context_only vs contradicts"
+    },
+    {
+      "source": "paper-001",
+      "target": "paper-006",
+      "kind": "falsification",
+      "claim_id": "claim-008",
+      "hit_id": "hit-001",
+      "threat": "overlap",
+      "note": "反证据命中，不是引用边"
+    },
+    {
+      "source": "paper-001",
+      "target": "paper-007",
+      "kind": "falsification",
+      "claim_id": "claim-008",
+      "hit_id": "hit-002",
+      "threat": "overlap",
+      "note": "反证据命中，不是引用边"
+    }
+  ],
   "tracks": [
     {
       "track_id": "sciqa",
@@ -128,15 +194,36 @@
       ]
     }
   ],
-  "contradictions": [],
+  "contradictions": [
+    {
+      "claim_id": "claim-008",
+      "claim_status": "pending",
+      "claim_text": "检索增强大模型智能体普遍提高自动科研回答的证据可追溯性与事实/任务质量。",
+      "support_or_context_papers": [
+        "paper-001"
+      ],
+      "contradict_papers": [
+        "paper-006",
+        "paper-007"
+      ],
+      "hit_ids": [
+        "hit-001",
+        "hit-002"
+      ],
+      "note": "同一论断上的正反证据冲突；冲突未解决时 Claim 必须 pending。"
+    }
+  ],
   "limitations": [
-    "主线来自 paper_cards.fields.task/method 的摘要级归类，不是引用图谱。",
-    "关系边和矛盾对为空：当前没有经核验的引用数据，不推断边。",
-    "parse_status=abstract_verified 不等于全文已核验，不能补造页码。"
+    "主线来自 paper_cards.fields.task/method 的归类，不是引用图谱。",
+    "关系边只来自已落盘的 Evidence.verdict 冲突和 FalsificationHit，不推断引用或共被引。",
+    "parse_status=pdf_partial_verified 表示指定摘录已核验，不等于全文逐页审阅完毕。",
+    "exclude 节点必须保留：它们是反证据来源，不是被扔掉的噪声。"
   ],
   "legend": {
     "include": "纳入",
     "exclude": "排除（保留给反证据召回）",
-    "pending": "待核验，不得当作结论"
+    "pending": "待核验，不得当作结论",
+    "evidence_conflict": "同一论断上的正反证据",
+    "falsification": "反证据命中"
   }
 }

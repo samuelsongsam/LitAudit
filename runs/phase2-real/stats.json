@@ -3,10 +3,13 @@
   "paper_count": 7,
   "fixture_paper_count": 0,
   "paper_card_count": 7,
-  "screening_count": 12,
+  "screening_count": 16,
   "claim_count": 8,
   "claim_decision_count": 8,
-  "evidence_count": 10,
+  "evidence_count": 14,
+  "verified_evidence_count": 14,
+  "abstract_only_evidence_count": 0,
+  "page_locator_count": 14,
   "falsification_count": 2,
   "retrieval_run_count": 14,
   "retrieval_failure_count": 5,
@@ -21,6 +24,12 @@
     "unsupported": 0,
     "pending": 2
   },
+  "evidence_status_counts": {
+    "verified": 14,
+    "abstract_only": 0,
+    "unverified": 0,
+    "failed": 0
+  },
   "error_count": 0,
-  "generated_at": "2026-08-26T17:34:57"
+  "generated_at": "2026-08-26T20:24:17"
 }

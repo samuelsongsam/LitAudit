@@ -1,62 +1,20 @@
 # 当前未完成事项与处理建议
 
-更新时间：2026-08-26 12:14 (+08:00)
+更新时间：2026-08-26 20:30 (+08:00)  
+综合状态以 `docs/current_delivery_report.md` 为准。本文件只保留仍未完成的限制，避免把已完成项继续当成阻塞。
 
-## 本轮已完成
+## 已完成（不再作为阻塞）
 
-- A-02：arXiv 主检索和风险检索实际返回 HTTP 200；OpenAlex 扩展检索实际返回 HTTP 200；Semantic Scholar 访问被 429 限流并已记录。
-- A-03：7 篇候选、稳定 ID、去重键和 12 条筛选日志；2 include、5 exclude、0 pending。
-- A-04：7 张摘要级 PaperCard；标题、作者、摘要、来源和解析状态已填充。
-- A-05/A-06：8 条 Claim、10 条 Evidence 和 claim_decisions；证据均保留 arXiv abstract URL anchor，主问题级强断言保持 pending。
-- A-07：2 条摘要级 FalsificationHit 和反证据规则；风险论文保留为 exclude，不从候选中删除。
-- A-08：3 个评测题目、gold fixture、指标说明和 scripts/evaluate.py；脚本可重新计算当前仓库指标。
+- 指定页 PDF 核验：paper-001/003/006/007 本地 PDF 可提取；14 条 Evidence 均为页码级 `verified`。
+- 研究地图：已由 Evidence 冲突和 FalsificationHit 生成边与矛盾对，不推断引用图。
+- 评测：`python -m src.cli evaluate` 输出仓库覆盖率与无检索可追溯性代理对照。
+- UI：漏斗 / 地图 / 证据卡 / 证伪 / 评测五屏；顶栏本地问题检索。
+- 比赛底稿：技术文档、演示脚本、提交清单已写入 docs/。
 
-## 当前不能完成或需要后续核验的事项
+## 仍未完成
 
-### 本轮已完成的可执行补充
-
-- 已检查缓存中的 `data/cache/retrieval-2026-08-26/pdf/paper-001.pdf`：20 页，20 页均可提取文本。
-- 已将 `evidence-001`、`evidence-002` 升级为 PDF 第 1 页的 `verified` Evidence，并将 `evidence-005` 升级为 PDF 第 2 页的 `verified` Evidence；Claim-001/002 的判决理由已同步更新，Claim-005 仍保持 `pending`。
-- 其他论文没有本地可核验全文，未擅自升级其摘要证据。
-
-### 1. 全文页码级证据
-
-- 状态：部分阻塞，不是研究范围排除。
-- 当前证据：10 条均为 arXiv 摘要级 Evidence，locator 为 section=abstract + URL anchor。
-- 尚未完成：PDF/HTML 全文解析、页码/章节/段落定位、全文实验表格核验。
-- 追加尝试：授权下载 arXiv PDF 时，export.arxiv.org 连接超时；arxiv.org 主域名因 Schannel 证书吊销检查离线失败（CRYPT_E_REVOCATION_OFFLINE）。
-- 处理：Claim 的 supported/partial 仅表示摘要直接支持；涉及数值、跨任务推广和因果效果的强结论保持 pending 或降级。
-
-### 2. Semantic Scholar 多源交叉核验
-
-- 状态：服务返回 HTTP 429 rate limited。
-- 已尝试：候选单篇元数据、任务限定检索、风险检索。
-- 处理：不把 429 当作零结果；当前以 arXiv 成功 XML 和 OpenAlex 成功缓存为主要来源。
-- 后续：等待限流窗口或使用 API 要求的速率/凭证后重跑，并追加 retrieval_runs 记录。
-
-### 3. OpenAlex 查询适配
-
-- 状态：主机可达，free-text 扩展检索 HTTP 200；部分按 arXiv 标识的 works 路径返回 404。
-- 处理：已保存成功的扩展和标题搜索响应；paper-001、paper-003、paper-004、paper-005 有对齐结果，paper-002 的标题搜索首条未对齐，仍以 arXiv XML 为准。
-- 后续：修正 OpenAlex external ID/filter 适配，不覆盖 arXiv 主记录。
-
-### 4. B 的完整 PaperCard 接入
-
-- 状态：未完成。
-- 原因：B 当前 pipeline 读取 papers.jsonl、claims/evidence/falsification，但尚未加载独立的 paper_cards.jsonl、claim_decisions.jsonl 和 retrieval_runs.jsonl。
-- 处理：B 应扩展读取、快照、map/UI 和 schema；A 不直接改 B 的接口实现。
-
-### 5. 评测基线和完整金标准
-
-- 状态：入口已完成，正式效果评测未完成。
-- 原因：当前只有摘要级 gold fixture，没有无检索 baseline、完整全文金标准或独立系统输出。
-- 处理：当前脚本只报告仓库覆盖率、Evidence 定位率和状态比例，不报告模型准确率、因果效果或跨任务 Recall@50。
-
-## B 当前可以继续做
-
-- 接入 data/paper_cards.jsonl，并显示 parse_status/parse_error。
-- 接入 data/claim_decisions.jsonl 和 data/retrieval_runs.jsonl。
-- 将 2 篇 include、5 篇 exclude、0 篇 pending 和理由展示到漏斗。
-- 在地图中使用 paper_cards 的 task/method/data/metrics 生成主线候选，但保留摘要级限制。
-- 在证据卡展示 10 条 abstract-only Evidence 和 8 条 Claim 状态。
-- 在证伪报告展示 hit-001/hit-002，并标注通用 RAG 任务差异。
+1. STORM / WebGPT / Toolformer 无本地 PDF，保持摘要级边界卡片。
+2. 已有 PDF 未做逐页审阅；SciMON 未抽取完整实验表。
+3. Semantic Scholar HTTP 429 与 OpenAlex 部分 external ID 适配未修复；pipeline 仍只离线读取。
+4. 评测不是闭卷 LLM 准确率，也不是正式模型效果实验。
+5. 比赛提交包（PDF、视频、ZIP）需按 `docs/submission_checklist.md` 人工导出和录屏。

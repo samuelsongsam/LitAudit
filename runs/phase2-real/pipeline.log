@@ -4,3 +4,9 @@
 2026-08-26 17:34:57,674 INFO start run_id=phase2-real source=data data_dir=E:\LitAudit\data
 2026-08-26 17:34:57,678 INFO loaded papers=7 pending=0 exclude=5 include=2 errors=0
 2026-08-26 17:34:57,688 INFO finished run_id=phase2-real output=E:\LitAudit\runs\phase2-real\output
+2026-08-26 20:23:09,850 INFO start run_id=phase2-real source=data data_dir=C:\Users\25653\Desktop\AI比赛\LitAudit\data
+2026-08-26 20:23:09,856 INFO loaded papers=7 pending=0 exclude=5 include=2 errors=0
+2026-08-26 20:23:09,870 INFO finished run_id=phase2-real output=C:\Users\25653\Desktop\AI比赛\LitAudit\runs\phase2-real\output
+2026-08-26 20:24:17,559 INFO start run_id=phase2-real source=data data_dir=C:\Users\25653\Desktop\AI比赛\LitAudit\data
+2026-08-26 20:24:17,565 INFO loaded papers=7 pending=0 exclude=5 include=2 errors=0
+2026-08-26 20:24:17,578 INFO finished run_id=phase2-real output=C:\Users\25653\Desktop\AI比赛\LitAudit\runs\phase2-real\output

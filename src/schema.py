@@ -519,6 +519,14 @@ def dataset_stats(dataset: Dataset) -> dict[str, Any]:
     claim_status_counts = {"supported": 0, "partial": 0, "unsupported": 0, "pending": 0}
     for claim in dataset.real_claims():
         claim_status_counts[claim.status.value] += 1
+    evidence_status_counts = {"verified": 0, "abstract_only": 0, "unverified": 0, "failed": 0}
+    page_locator_count = 0
+    for item in dataset.evidence:
+        if item.is_fixture:
+            continue
+        evidence_status_counts[item.extraction_status.value] += 1
+        if item.locator.page is not None:
+            page_locator_count += 1
     return {
         "query_count": len(dataset.queries),
         "paper_count": len(papers),
@@ -528,11 +536,15 @@ def dataset_stats(dataset: Dataset) -> dict[str, Any]:
         "claim_count": len(dataset.real_claims()),
         "claim_decision_count": len(dataset.claim_decisions),
         "evidence_count": sum(1 for item in dataset.evidence if not item.is_fixture),
+        "verified_evidence_count": evidence_status_counts["verified"],
+        "abstract_only_evidence_count": evidence_status_counts["abstract_only"],
+        "page_locator_count": page_locator_count,
         "falsification_count": sum(1 for item in dataset.falsification if not item.is_fixture),
         "retrieval_run_count": len(dataset.retrieval_runs),
         "retrieval_failure_count": sum(1 for run in dataset.retrieval_runs if run.is_failure),
         "decision_counts": counts,
         "claim_status_counts": claim_status_counts,
+        "evidence_status_counts": evidence_status_counts,
         "error_count": sum(1 for issue in dataset.issues if issue.level == "error"),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
     }

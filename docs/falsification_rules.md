@@ -16,7 +16,7 @@
 5. exclude 论文仍可作为反证据来源，不得从候选和日志删除。
 
 ## 当前命中
-- hit-001：paper-006 报告相关上下文下仍有 unsupported information/contradictions，打击 claim-008，威胁 overlap/high。
-- hit-002：paper-007 报告不存在来源和上下文归因失败，打击 claim-008，威胁 overlap/high。
+- hit-001：paper-006 PDF 第 1 页报告相关上下文下仍有 unsupported information/contradictions，打击 claim-008，威胁 overlap/high。
+- hit-002：paper-007 PDF 第 1 页报告不存在来源和上下文归因失败，打击 claim-008，威胁 overlap/high。
 
-两条命中均为摘要级证据，尚未完成全文页码核验；目标 Claim 因正反方向冲突保持 pending。
+两条命中均为页码级 verified 摘录，但任务仍是通用 RAG/QA，不能升级为对科学文献主问题的 fatal 反证；目标 Claim 因正反方向冲突保持 pending。

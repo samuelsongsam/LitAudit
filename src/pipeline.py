@@ -9,7 +9,21 @@ from src.config import Settings
 from src.io_utils import load_dataset, write_json, write_jsonl
 from src.logging_setup import setup_logging
 from src.map_builder import build_map
-from src.schema import Dataset, dataset_stats
+from src.schema import Dataset, ExtractionStatus, dataset_stats
+
+
+def _manifest_limitations(dataset: Dataset) -> list[str]:
+    real_evidence = [item for item in dataset.evidence if not item.is_fixture]
+    verified = sum(item.extraction_status == ExtractionStatus.verified for item in real_evidence)
+    abstract_only = sum(item.extraction_status == ExtractionStatus.abstract_only for item in real_evidence)
+    return [
+        "本 run 离线读取已落盘的检索缓存与结构化数据，不现场调用 API。",
+        "papers.jsonl 是候选主索引；paper_cards.jsonl 是结构化扩展卡片。",
+        f"Evidence: verified={verified}, abstract_only={abstract_only}。verified 只表示该摘录与页码已核验，不是整篇全文审阅完毕。",
+        "研究地图的边来自论断证据冲突和反证据命中，不是引用网络。",
+        "exclude 与 pending 均写入输出；fixture 不计入真实统计。",
+        "HTTP 429 / 连接失败保留在 retrieval_runs.jsonl，不改成零结果成功。",
+    ]
 
 
 def new_run_id() -> str:
@@ -77,13 +91,7 @@ def run_pipeline(
             "data_dir": str(data_dir),
             "created_at": datetime.now(timezone.utc).isoformat(),
             "cache_dir": str(cache.cache_dir),
-            "limitations": [
-                "本 run 离线读取 A 已落盘的检索缓存与结构化数据，不现场调用 API。",
-                "papers.jsonl 是候选主索引；paper_cards.jsonl 是摘要级扩展卡片。",
-                "Evidence 目前全部为 abstract_only，不得显示为全文已验证。",
-                "exclude 与 pending 均写入输出；fixture 不计入真实统计。",
-                "HTTP 429 / 连接失败保留在 retrieval_runs.jsonl，不改成零结果成功。",
-            ],
+            "limitations": _manifest_limitations(dataset),
             "stats": stats,
         },
     )

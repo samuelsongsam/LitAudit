@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
-from pathlib import Path
 
+from src.ask import ask
 from src.config import ROOT, load_settings
+from src.eval_metrics import evaluate
 from src.io_utils import load_dataset
 from src.pipeline import run_pipeline
 from src.replay import list_runs, load_run
@@ -82,13 +82,22 @@ def cmd_replay(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_ui(args: argparse.Namespace) -> int:
+def cmd_evaluate(_: argparse.Namespace) -> int:
+    _print(evaluate(ROOT))
+    return 0
+
+
+def cmd_ask(args: argparse.Namespace) -> int:
     settings = load_settings()
-    app = ROOT / "src" / "ui" / "app.py"
-    command = [sys.executable, "-m", "streamlit", "run", str(app), "--"]
-    if args.run_id:
-        command.extend(["--run-id", args.run_id])
-    return subprocess.call(command, cwd=settings.root)
+    dataset = load_dataset(settings.data_dir)
+    _print(ask(dataset, args.question, limit=args.limit))
+    return 0
+
+
+def cmd_ui(args: argparse.Namespace) -> int:
+    from src.ui.server import serve_ui
+
+    return serve_ui(run_id=args.run_id, port=args.port, open_browser=not args.no_browser)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -115,8 +124,18 @@ def build_parser() -> argparse.ArgumentParser:
     replay.add_argument("--list", action="store_true")
     replay.set_defaults(func=cmd_replay)
 
-    ui = sub.add_parser("ui", help="打开四屏演示界面")
+    eval_cmd = sub.add_parser("evaluate", help="计算仓库覆盖率与无检索可追溯性对照")
+    eval_cmd.set_defaults(func=cmd_evaluate)
+
+    ask_cmd = sub.add_parser("ask", help="在离线候选集上检索问题，不生成综述")
+    ask_cmd.add_argument("question")
+    ask_cmd.add_argument("--limit", type=int, default=5)
+    ask_cmd.set_defaults(func=cmd_ask)
+
+    ui = sub.add_parser("ui", help="打开勘验工作台")
     ui.add_argument("--run-id")
+    ui.add_argument("--port", type=int, default=8787)
+    ui.add_argument("--no-browser", action="store_true")
     ui.set_defaults(func=cmd_ui)
     return parser
 

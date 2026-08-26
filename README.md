@@ -2,7 +2,7 @@
 
 可核验的文献调研智能体。输入一个科研问题或 idea，输出筛选漏斗、研究地图、论断-证据卡和反证据报告，而不是一篇无法回溯的长综述。
 
-当前仓库处于 **A 摘要级证据 + B 第二轮接入**：pipeline 读取 papers 主索引、paper_cards、claim_decisions 和 retrieval_runs；四屏展示漏斗、摘要级主线、论断-证据卡和反证据。在线 API 不由 B pipeline 自动调用，摘要级证据不会伪装成全文核验。
+当前仓库是可离线回放的部分全文核验快照：pipeline 读取 papers、paper_cards、claim_decisions 和 retrieval_runs；界面展示漏斗、主线/矛盾对、论断-证据卡、反证据和评测对照。在线 API 不由 pipeline 自动调用。`verified` 只覆盖已核对的摘录，不能伪装成整篇论文读完。
 
 ## 快速开始
 
@@ -14,17 +14,25 @@ python -m venv .venv
 pip install -r requirements.txt
 python -m src.cli doctor
 python -m src.cli validate
-python -m src.cli run --offline
+python -m src.cli run --offline --run-id phase2-real
+python -m src.cli evaluate
 python -m src.cli replay --list
-python -m src.cli ui
+python -m src.cli ui --run-id phase2-real
 ```
 
-离线样例（不混入真实论文统计）：
+浏览器打开终端打印的地址，默认 [http://127.0.0.1:8787/?run=phase2-real](http://127.0.0.1:8787/?run=phase2-real)。左侧 01–05 切换漏斗、地图、证据、证伪、评测；数字键 1–5 同样可用。这是独立勘验工作台，不再使用 Streamlit。
+
+本地提问（不写综述）：
+
+```powershell
+python -m src.cli ask "检索增强是否提高科学文献问答的证据可追溯性？"
+```
+
+离线 fixture（不混入真实论文统计）：
 
 ```powershell
 python -m src.cli run --fixture --run-id demo
 python -m src.cli replay demo
-python -m src.cli ui --run-id demo
 ```
 
 测试：
@@ -33,44 +41,34 @@ python -m src.cli ui --run-id demo
 python -m pytest -q
 ```
 
-## 角色边界
-
-| 角色 | 负责 |
-|---|---|
-| A 研究与可信度 | 研究范围、检索/筛选、论断、证据、反证据规则、指标 |
-| B 产品与工程 | 数据契约落地、流水线、缓存/回放、四屏 UI、README |
-
-B 不改变 `decision` / `status` 语义，不填充 `null` 作者或摘要，不把缺失证据写成确定结论。
-
 ## 目录
 
 ```text
-data/                 A 的真实候选与筛选日志
-data/cache/           实际检索来源的原始响应缓存
-data/paper_cards.jsonl A 的摘要级论文卡片
-data/claims.jsonl     A 的 Claim
-data/evidence.jsonl   A 的摘要级 Evidence
-data/falsification.jsonl A 的反证据命中
-data/fixtures/        虚构 schema 样例，不计入真实统计
-src/schema.py         字段校验
-src/pipeline.py       离线读取 -> run_id -> JSON 落盘
-src/replay.py         回放已有 run
-src/ui/               漏斗 / 地图 / 证据卡 / 证伪报告
-runs/<run_id>/        一次可回放运行
-docs/                 范围、契约、交接
+data/                      真实候选、卡片、论断、证据、反证据
+data/cache/                检索原始响应与本地 PDF
+data/gold_standard/        小型可复核评测题
+src/schema.py              字段校验
+src/pipeline.py            离线读取 -> run_id -> JSON 落盘
+src/map_builder.py         主线 / 冲突边 / 矛盾对
+src/ask.py                 本地问题检索
+src/ui/                    勘验工作台（漏斗 / 地图 / 证据 / 证伪 / 评测）
+runs/<run_id>/             一次可回放运行
+docs/contest_technical_report.md  比赛技术文档底稿
+docs/demo_script.md        演示脚本
+docs/submission_checklist.md 提交清单
 ```
 
-## 当前数据状态（A 摘要级核验）
+## 当前数据状态
 
 - 主问题见 `docs/research_scope.md`
 - 7 篇候选：2 include，5 exclude，0 pending
-- 8 条 Claim、10 条摘要级 Evidence、2 条 FalsificationHit
-- paper_cards.jsonl 已有 7 张摘要级卡片；全文页码级证据尚未完成
-- claim-008 因正反摘要证据冲突保持 pending
+- 8 条 Claim、14 条页码级 Evidence、2 条 FalsificationHit
+- `claim-008` 因正反证据冲突保持 pending
+- 比赛材料入口：`docs/current_delivery_report.md`
 
 ## 已知限制
 
-- B pipeline 只支持 --offline / --fixture；在线检索结果需先由 A 保存为缓存和结构化数据。
-- 研究地图已接入 paper_cards.jsonl 的 task/method 主线候选；关系边仍为空，不推断引用。
-- Evidence 目前全部为 abstract_only；不能当作全文页码级证据。
-- Semantic Scholar 批量请求曾返回 HTTP 429；OpenAlex 部分 external ID 查询仍需修正。
+- pipeline 只支持 `--offline` / `--fixture`
+- 研究地图的边来自证据冲突和反证据，不是引用图谱
+- `pdf_partial_verified` 不是全文逐页审阅完毕
+- Semantic Scholar 批量请求曾返回 HTTP 429，必须显示为失败

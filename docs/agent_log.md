@@ -175,3 +175,11 @@
 - 目的：验证流水线快照、manifest 路径和 replay 可用性。
 - 输出：acceptance-data 生成成功（5 篇真实候选，pending=3、exclude=2、include=0）；demo fixture 回放成功，路径已更新为当前仓库。
 - 结果：成功。
+
+## 2026-08-26 20:30
+- 操作：不再按 A/B 分工，一次性补全可诚实完成的剩余工作。
+- 目的：升级指定页 PDF 证据、生成可回溯地图边、加入无检索可追溯性对照、完善五屏 UI 和比赛交付底稿。
+- 输入：本地 PDF paper-001/003/006/007，现有 data/、src/、docs/。
+- 输出：14 条页码级 verified Evidence；地图 contradictions/edges；evaluate 基线对照；ask 本地检索；contest_technical_report / demo_script / submission_checklist。
+- 结果：成功（部分全文）。claim-008 仍 pending；429 仍为失败；未完成逐页审阅和正式模型准确率评测。
+- 风险或备注：STORM/WebGPT/Toolformer 无本地 PDF，保持摘要级边界卡片。
