@@ -1,5 +1,6 @@
 from src.schema import (
     Claim,
+    ClaimDecision,
     ClaimSource,
     ClaimStatus,
     Dataset,
@@ -9,6 +10,7 @@ from src.schema import (
     Locator,
     PaperCard,
     PaperDecision,
+    RetrievalRun,
     ScreeningLog,
     ScreeningStage,
     validate_dataset,
@@ -124,3 +126,69 @@ def test_load_dataset_preserves_parse_errors(tmp_path):
     dataset = load_dataset(tmp_path)
     assert dataset.issues
     assert any(issue.code == "schema_error" for issue in dataset.issues)
+
+
+def test_claim_decision_must_match_claim_status():
+    dataset = Dataset(
+        papers=[_paper()],
+        screening=[
+            ScreeningLog.model_validate(
+                {
+                    "screening_id": "screen-001",
+                    "paper_id": "paper-001",
+                    "stage": ScreeningStage.title_abstract,
+                    "decision": PaperDecision.pending,
+                    "reason_code": "metadata_unverified",
+                    "reason": "无摘要",
+                    "checked_fields": ["title"],
+                    "reviewer": "test",
+                    "reviewed_at": "2026-08-22",
+                    "scope_version": "v0.1",
+                }
+            )
+        ],
+        claims=[
+            Claim.model_validate(
+                {
+                    "claim_id": "claim-001",
+                    "text": "待证论断",
+                    "source": ClaimSource.derived,
+                    "status": ClaimStatus.pending,
+                    "decision_reason": "还没有证据",
+                }
+            )
+        ],
+        claim_decisions=[
+            ClaimDecision.model_validate(
+                {
+                    "claim_id": "claim-001",
+                    "status": "supported",
+                    "evidence_ids": [],
+                    "reason": "错误地把 pending 写成 supported",
+                    "reviewer": "test",
+                    "reviewed_at": "2026-08-26",
+                    "scope_version": "v0.1",
+                }
+            )
+        ],
+    )
+    dataset = validate_dataset(dataset)
+    assert any(issue.code == "claim_status_mismatch" for issue in dataset.issues)
+
+
+def test_rate_limit_cannot_be_marked_success():
+    run = RetrievalRun.model_validate(
+        {
+            "retrieval_id": "retrieval-x",
+            "query_id": "q-003",
+            "source": "semantic_scholar",
+            "request": "https://example.invalid",
+            "retrieved_at": "2026-08-26",
+            "http_status": 429,
+            "status": "rate_limited",
+            "result_count": None,
+            "response_path": None,
+            "notes": "限流",
+        }
+    )
+    assert run.is_failure is True

@@ -2,7 +2,7 @@
 
 可核验的文献调研智能体。输入一个科研问题或 idea，输出筛选漏斗、研究地图、论断-证据卡和反证据报告，而不是一篇无法回溯的长综述。
 
-当前仓库处于 **A 摘要级证据 + B 第一轮工程骨架**：A 已保存 arXiv/OpenAlex 检索缓存、7 篇候选、PaperCard、Claim、Evidence 和反证据；B 可以离线校验、生成 run_id、回放结果，并打开四屏 Demo。在线 API 不由 B pipeline 自动调用，摘要级证据不会伪装成全文核验。
+当前仓库处于 **A 摘要级证据 + B 第二轮接入**：pipeline 读取 papers 主索引、paper_cards、claim_decisions 和 retrieval_runs；四屏展示漏斗、摘要级主线、论断-证据卡和反证据。在线 API 不由 B pipeline 自动调用，摘要级证据不会伪装成全文核验。
 
 ## 快速开始
 
@@ -71,6 +71,6 @@ docs/                 范围、契约、交接
 ## 已知限制
 
 - B pipeline 只支持 --offline / --fixture；在线检索结果需先由 A 保存为缓存和结构化数据。
-- 研究地图尚未接入独立 paper_cards.jsonl，当前节点关系和主线仍不完整。
+- 研究地图已接入 paper_cards.jsonl 的 task/method 主线候选；关系边仍为空，不推断引用。
 - Evidence 目前全部为 abstract_only；不能当作全文页码级证据。
 - Semantic Scholar 批量请求曾返回 HTTP 429；OpenAlex 部分 external ID 查询仍需修正。

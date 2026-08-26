@@ -8,10 +8,12 @@ from pydantic import BaseModel, ValidationError
 
 from src.schema import (
     Claim,
+    ClaimDecision,
     Dataset,
     Evidence,
     FalsificationHit,
     PaperCard,
+    RetrievalRun,
     ScreeningLog,
     SearchQuery,
     ValidationIssue,
@@ -61,7 +63,15 @@ def _parse_rows(model: type[T], rows: list[dict[str, Any]], issues: list[Validat
         try:
             parsed.append(model.model_validate(row))
         except ValidationError as exc:
-            object_id = str(row.get("paper_id") or row.get("claim_id") or row.get("evidence_id") or row.get("hit_id") or index)
+            object_id = str(
+                row.get("paper_id")
+                or row.get("claim_id")
+                or row.get("evidence_id")
+                or row.get("hit_id")
+                or row.get("retrieval_id")
+                or row.get("screening_id")
+                or index
+            )
             issues.append(
                 ValidationIssue(
                     level="error",
@@ -95,20 +105,30 @@ def load_dataset(data_dir: Path) -> Dataset:
         )
 
     papers = _parse_rows(PaperCard, load_optional_jsonl(data_dir / "papers.jsonl"), issues, "papers")
+    paper_cards = _parse_rows(PaperCard, load_optional_jsonl(data_dir / "paper_cards.jsonl"), issues, "paper_cards")
     screening = _parse_rows(ScreeningLog, load_optional_jsonl(data_dir / "screening_log.jsonl"), issues, "screening_log")
     claims = _parse_rows(Claim, load_optional_jsonl(data_dir / "claims.jsonl"), issues, "claims")
     evidence = _parse_rows(Evidence, load_optional_jsonl(data_dir / "evidence.jsonl"), issues, "evidence")
+    claim_decisions = _parse_rows(
+        ClaimDecision, load_optional_jsonl(data_dir / "claim_decisions.jsonl"), issues, "claim_decisions"
+    )
     falsification = _parse_rows(
         FalsificationHit, load_optional_jsonl(data_dir / "falsification.jsonl"), issues, "falsification"
+    )
+    retrieval_runs = _parse_rows(
+        RetrievalRun, load_optional_jsonl(data_dir / "retrieval_runs.jsonl"), issues, "retrieval_runs"
     )
 
     dataset = Dataset(
         queries=queries,
         papers=papers,
+        paper_cards=paper_cards,
         screening=screening,
         claims=claims,
         evidence=evidence,
+        claim_decisions=claim_decisions,
         falsification=falsification,
+        retrieval_runs=retrieval_runs,
         issues=issues,
     )
     return validate_dataset(dataset)

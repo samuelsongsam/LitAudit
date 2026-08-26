@@ -233,6 +233,36 @@ class FalsificationHit(StrictModel):
         return self.hit_id.startswith("fixture-")
 
 
+class ClaimDecision(StrictModel):
+    claim_id: str
+    status: ClaimStatus
+    evidence_ids: list[str]
+    reason: str
+    reviewer: str
+    reviewed_at: Date
+    scope_version: str
+
+
+class RetrievalRun(StrictModel):
+    retrieval_id: str
+    query_id: str
+    source: str
+    request: str
+    retrieved_at: Date
+    http_status: int | None = None
+    status: str
+    result_count: int | None = None
+    response_path: str | None = None
+    notes: str | None = None
+    total_count: int | None = None
+
+    @property
+    def is_failure(self) -> bool:
+        if self.http_status == 429:
+            return True
+        return self.status not in {"success"}
+
+
 class ValidationIssue(StrictModel):
     level: str
     code: str
@@ -243,10 +273,13 @@ class ValidationIssue(StrictModel):
 class Dataset(StrictModel):
     queries: list[SearchQuery] = Field(default_factory=list)
     papers: list[PaperCard] = Field(default_factory=list)
+    paper_cards: list[PaperCard] = Field(default_factory=list)
     screening: list[ScreeningLog] = Field(default_factory=list)
     claims: list[Claim] = Field(default_factory=list)
     evidence: list[Evidence] = Field(default_factory=list)
+    claim_decisions: list[ClaimDecision] = Field(default_factory=list)
     falsification: list[FalsificationHit] = Field(default_factory=list)
+    retrieval_runs: list[RetrievalRun] = Field(default_factory=list)
     issues: list[ValidationIssue] = Field(default_factory=list)
 
     def real_papers(self) -> list[PaperCard]:
@@ -254,6 +287,18 @@ class Dataset(StrictModel):
 
     def real_claims(self) -> list[Claim]:
         return [claim for claim in self.claims if not claim.is_fixture]
+
+    def card_by_id(self) -> dict[str, PaperCard]:
+        return {card.paper_id: card for card in self.paper_cards}
+
+
+def latest_screening_by_paper(logs: list[ScreeningLog]) -> dict[str, ScreeningLog]:
+    latest: dict[str, ScreeningLog] = {}
+    for log in logs:
+        previous = latest.get(log.paper_id)
+        if previous is None or (log.reviewed_at, log.screening_id) > (previous.reviewed_at, previous.screening_id):
+            latest[log.paper_id] = log
+    return latest
 
 
 def _unique(items: list[str], label: str) -> list[ValidationIssue]:
@@ -277,9 +322,13 @@ def validate_dataset(dataset: Dataset) -> Dataset:
     issues.extend(_unique([c.claim_id for c in dataset.claims], "claim_id"))
     issues.extend(_unique([e.evidence_id for e in dataset.evidence], "evidence_id"))
     issues.extend(_unique([h.hit_id for h in dataset.falsification], "hit_id"))
+    issues.extend(_unique([card.paper_id for card in dataset.paper_cards], "paper_cards.paper_id"))
+    issues.extend(_unique([item.claim_id for item in dataset.claim_decisions], "claim_decisions.claim_id"))
+    issues.extend(_unique([item.retrieval_id for item in dataset.retrieval_runs], "retrieval_id"))
 
     papers = {paper.paper_id: paper for paper in dataset.papers}
     claims = {claim.claim_id: claim for claim in dataset.claims}
+    evidence_ids = {item.evidence_id for item in dataset.evidence}
     screening_by_paper: dict[str, list[ScreeningLog]] = {}
     for log in dataset.screening:
         screening_by_paper.setdefault(log.paper_id, []).append(log)
@@ -396,6 +445,68 @@ def validate_dataset(dataset: Dataset) -> Dataset:
                 )
             )
 
+    for card in dataset.paper_cards:
+        if card.paper_id not in papers:
+            issues.append(
+                ValidationIssue(
+                    level="error",
+                    code="missing_paper_fk",
+                    message=f"PaperCard {card.paper_id} 不在 papers.jsonl 主索引中",
+                    object_id=card.paper_id,
+                )
+            )
+
+    for decision in dataset.claim_decisions:
+        claim = claims.get(decision.claim_id)
+        if claim is None:
+            issues.append(
+                ValidationIssue(
+                    level="error",
+                    code="missing_claim_fk",
+                    message=f"ClaimDecision 引用了不存在的 claim_id {decision.claim_id}",
+                    object_id=decision.claim_id,
+                )
+            )
+        elif decision.status != claim.status:
+            issues.append(
+                ValidationIssue(
+                    level="error",
+                    code="claim_status_mismatch",
+                    message=f"ClaimDecision {decision.claim_id} 的 status={decision.status.value} 与 Claim.status={claim.status.value} 不一致",
+                    object_id=decision.claim_id,
+                )
+            )
+        for evidence_id in decision.evidence_ids:
+            if evidence_id not in evidence_ids:
+                issues.append(
+                    ValidationIssue(
+                        level="error",
+                        code="missing_evidence_fk",
+                        message=f"ClaimDecision {decision.claim_id} 引用了不存在的 evidence_id {evidence_id}",
+                        object_id=decision.claim_id,
+                    )
+                )
+
+    for run in dataset.retrieval_runs:
+        if run.http_status == 429 and run.status == "success":
+            issues.append(
+                ValidationIssue(
+                    level="error",
+                    code="rate_limit_marked_success",
+                    message=f"RetrievalRun {run.retrieval_id} 的 HTTP 429 不能记成 success",
+                    object_id=run.retrieval_id,
+                )
+            )
+        if run.is_failure and run.result_count == 0 and run.status == "success":
+            issues.append(
+                ValidationIssue(
+                    level="error",
+                    code="failure_marked_zero_result",
+                    message=f"RetrievalRun {run.retrieval_id} 把失败写成了零结果成功",
+                    object_id=run.retrieval_id,
+                )
+            )
+
     dataset.issues = issues
     return dataset
 
@@ -405,15 +516,23 @@ def dataset_stats(dataset: Dataset) -> dict[str, Any]:
     counts = {"include": 0, "exclude": 0, "pending": 0}
     for paper in papers:
         counts[paper.decision.value] += 1
+    claim_status_counts = {"supported": 0, "partial": 0, "unsupported": 0, "pending": 0}
+    for claim in dataset.real_claims():
+        claim_status_counts[claim.status.value] += 1
     return {
         "query_count": len(dataset.queries),
         "paper_count": len(papers),
         "fixture_paper_count": sum(1 for paper in dataset.papers if paper.is_fixture),
+        "paper_card_count": sum(1 for card in dataset.paper_cards if not card.is_fixture),
         "screening_count": len(dataset.screening),
         "claim_count": len(dataset.real_claims()),
+        "claim_decision_count": len(dataset.claim_decisions),
         "evidence_count": sum(1 for item in dataset.evidence if not item.is_fixture),
         "falsification_count": sum(1 for item in dataset.falsification if not item.is_fixture),
+        "retrieval_run_count": len(dataset.retrieval_runs),
+        "retrieval_failure_count": sum(1 for run in dataset.retrieval_runs if run.is_failure),
         "decision_counts": counts,
+        "claim_status_counts": claim_status_counts,
         "error_count": sum(1 for issue in dataset.issues if issue.level == "error"),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
     }

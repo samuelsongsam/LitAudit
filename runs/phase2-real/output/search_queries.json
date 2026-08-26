@@ -1,0 +1,72 @@
+[
+  {
+    "query_id": "q-001",
+    "source": "arxiv",
+    "query": "(large language model OR LLM) AND (agent OR retrieval-augmented generation OR RAG) AND (scientific literature OR literature review OR scientific question answering)",
+    "purpose": "主要检索式",
+    "keywords": [
+      "large language model",
+      "LLM",
+      "agent",
+      "RAG",
+      "scientific literature",
+      "literature review",
+      "scientific question answering"
+    ],
+    "date": "2026-08-22",
+    "scope_version": "v0.1",
+    "notes": "2026-08-26 授权执行的可执行收窄式为 all:\"retrieval-augmented\" AND all:agent AND (all:scientific OR all:literature)，HTTP 200，返回 50 条；原始响应见 data/cache/retrieval-2026-08-26/arxiv/q-001-main.xml。"
+  },
+  {
+    "query_id": "q-002",
+    "source": "openalex",
+    "query": "(LLM OR large language model) AND (retrieval augmented OR RAG OR tool-using agent) AND (literature review OR scientific question answering)",
+    "purpose": "同义词或缩写扩展检索式",
+    "keywords": [
+      "LLM",
+      "large language model",
+      "retrieval augmented",
+      "RAG",
+      "tool-using agent",
+      "literature review",
+      "scientific question answering"
+    ],
+    "date": "2026-08-22",
+    "scope_version": "v0.1",
+    "notes": "2026-08-26 以 OpenAlex free-text search=large language model retrieval augmented scientific literature 执行，HTTP 200，返回 50/44165；结果较宽且含噪，不能单独决定纳入，原始响应见 data/cache/retrieval-2026-08-26/openalex/q-002-expanded.json。"
+  },
+  {
+    "query_id": "q-003",
+    "source": "semantic_scholar",
+    "query": "scientific question answering AND (RAG OR retrieval augmented) AND agent",
+    "purpose": "任务限定检索式",
+    "keywords": [
+      "scientific question answering",
+      "RAG",
+      "retrieval augmented",
+      "agent"
+    ],
+    "date": "2026-08-22",
+    "scope_version": "v0.1",
+    "notes": "2026-08-26 Semantic Scholar search 请求返回 HTTP 429（rate limited），未取得结果；失败记录见 data/retrieval_runs.jsonl。"
+  },
+  {
+    "query_id": "q-004",
+    "source": "arxiv",
+    "query": "(RAG OR retrieval-augmented) AND (citation hallucination OR unsupported claim OR faithfulness OR attribution OR retrieval failure) AND (LLM OR agent)",
+    "purpose": "反向或风险检索式",
+    "keywords": [
+      "RAG",
+      "citation hallucination",
+      "unsupported claim",
+      "faithfulness",
+      "attribution",
+      "retrieval failure",
+      "LLM",
+      "agent"
+    ],
+    "date": "2026-08-22",
+    "scope_version": "v0.1",
+    "notes": "2026-08-26 arXiv 风险检索 HTTP 200，返回 50 条；原始响应见 data/cache/retrieval-2026-08-26/arxiv/q-004-risk.xml。Semantic Scholar 同类请求返回 HTTP 429。"
+  }
+]

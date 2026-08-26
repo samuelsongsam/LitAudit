@@ -23,6 +23,11 @@ def cmd_doctor(_: argparse.Namespace) -> int:
         settings.data_dir / "search_queries.json",
         settings.data_dir / "papers.jsonl",
         settings.data_dir / "screening_log.jsonl",
+        settings.data_dir / "paper_cards.jsonl",
+        settings.data_dir / "claims.jsonl",
+        settings.data_dir / "evidence.jsonl",
+        settings.data_dir / "claim_decisions.jsonl",
+        settings.data_dir / "retrieval_runs.jsonl",
         settings.root / "docs" / "data_contract.md",
         settings.root / "docs" / "research_scope.md",
     ]

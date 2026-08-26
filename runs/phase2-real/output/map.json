@@ -1,0 +1,142 @@
+{
+  "run_id": "phase2-real",
+  "nodes": [
+    {
+      "paper_id": "paper-001",
+      "title": "PaperQA: Retrieval-Augmented Generative Agent for Scientific Research",
+      "year": 2023,
+      "decision": "include",
+      "reason": "arXiv XML 核验的标题、作者和摘要明确显示：LLM 驱动的 RAG agent 在科学文献全文上检索并回答问题，且报告 science QA 基准与 LitQA 评价，符合研究对象、任务和证据标准。判断基于标题、作者、摘要；全文指标仍需后续核验。",
+      "doi_or_arxiv": "arXiv:2312.07559v2",
+      "url": "https://arxiv.org/abs/2312.07559v2",
+      "is_fixture": false,
+      "parse_status": "abstract_verified",
+      "parse_error": "全文尚未解析；本卡片的字段和证据范围限于 arXiv 摘要。",
+      "task": "科学文献全文上的问题回答与检索/综合；摘要层级核验。",
+      "method": "RAG agent；对全文文章执行信息检索，评估来源和段落相关性后生成回答。"
+    },
+    {
+      "paper_id": "paper-002",
+      "title": "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models",
+      "year": 2024,
+      "decision": "exclude",
+      "reason": "arXiv 摘要核验显示 STORM 的对象是从零写作 Wikipedia-like 文章，来源是可信互联网而非科学论文/科研文献集合；虽然使用 retrieval-augmented baseline，但不满足首期主问题的科研文献综述或科学问答任务，命中排除标准 2。保留其作为风险/边界候选。",
+      "doi_or_arxiv": "arXiv:2402.14207v2",
+      "url": "https://arxiv.org/abs/2402.14207v2",
+      "is_fixture": false,
+      "parse_status": "abstract_verified",
+      "parse_error": "全文尚未解析；本卡片用于记录排除边界，不构成首期研究证据。",
+      "task": "从零写作 Wikipedia-like 长文及预写作提纲。",
+      "method": "检索和多视角问题提问；对可信互联网来源进行对话式研究和信息整理。"
+    },
+    {
+      "paper_id": "paper-003",
+      "title": "SciMON: Scientific Inspiration Machines Optimized for Novelty",
+      "year": 2023,
+      "decision": "include",
+      "reason": "arXiv 摘要核验显示 LLM 从过去科学论文检索灵感并生成/评估科学想法，属于首期范围定义的相邻自动科研信息整合任务；摘要报告了评价与局限。它不是文献综述/问答的直接对照，后续 Claim 需标注任务差异。判断基于标题、作者、摘要。",
+      "doi_or_arxiv": "arXiv:2305.14259v7",
+      "url": "https://arxiv.org/abs/2305.14259v7",
+      "is_fixture": false,
+      "parse_status": "abstract_verified",
+      "parse_error": "全文尚未解析；后续 Claim 需区分自动科研灵感任务和科学问答任务。",
+      "task": "从科学文献生成新科学想法，并评价想法的新颖性。",
+      "method": "从过去科学论文检索 inspiration；迭代比较先前论文并更新 idea suggestions，显式优化 novelty。"
+    },
+    {
+      "paper_id": "paper-004",
+      "title": "WebGPT: Browser-assisted question-answering with human feedback",
+      "year": 2021,
+      "decision": "exclude",
+      "reason": "摘要核验显示任务是 Reddit ELI5 通用长答案和网页浏览，不是科学文献/自动科研任务；命中排除标准 2。保留为引用可追溯性和通用网页问答边界的风险候选。",
+      "doi_or_arxiv": "arXiv:2112.09332v3",
+      "url": "https://arxiv.org/abs/2112.09332v3",
+      "is_fixture": false,
+      "parse_status": "abstract_verified",
+      "parse_error": "全文尚未解析；本卡片用于边界和风险对照，不构成首期纳入证据。",
+      "task": "通用长答案网页浏览问答。",
+      "method": "GPT-3 在文本网页浏览环境中搜索和导航，并收集支持答案的参考文献。"
+    },
+    {
+      "paper_id": "paper-005",
+      "title": "Toolformer: Language Models Can Teach Themselves to Use Tools",
+      "year": 2023,
+      "decision": "exclude",
+      "reason": "摘要核验显示 Toolformer 研究通用工具调用和通用下游任务，没有科学文献综述、科学问答或自动科研信息整合任务；命中排除标准 2。",
+      "doi_or_arxiv": "arXiv:2302.04761v1",
+      "url": "https://arxiv.org/abs/2302.04761v1",
+      "is_fixture": false,
+      "parse_status": "abstract_verified",
+      "parse_error": "全文尚未解析；本卡片用于边界和风险对照，不构成首期纳入证据。",
+      "task": "通用 API 工具调用和下游任务。",
+      "method": "语言模型自监督学习决定调用哪个 API、何时调用、传入什么参数以及如何整合结果。"
+    },
+    {
+      "paper_id": "paper-006",
+      "title": "Benchmarking LLM Faithfulness in RAG with Evolving Leaderboards",
+      "year": 2025,
+      "decision": "exclude",
+      "reason": "反向检索召回的 RAG 可信度风险论文；摘要关注通用摘要/问答/数据到文本，不是科学文献任务，因此不作为首期主问题纳入论文，但保留用于反证据和风险说明。",
+      "doi_or_arxiv": "arXiv:2505.04847v2",
+      "url": "https://arxiv.org/abs/2505.04847v2",
+      "is_fixture": false,
+      "parse_status": "abstract_verified",
+      "parse_error": "全文尚未解析；FalsificationHit 仅引用摘要原文。",
+      "task": "通用 RAG 摘要、问答和 data-to-text 的 faithfulness 基准。",
+      "method": "HHEM 幻觉检测模型和 FaithJudge LLM-as-a-judge 评测框架。"
+    },
+    {
+      "paper_id": "paper-007",
+      "title": "Model Internals-based Answer Attribution for Trustworthy Retrieval-Augmented Generation",
+      "year": 2024,
+      "decision": "exclude",
+      "reason": "反向检索召回的引用归因风险论文；摘要关注通用 QA 的来源可验证性，不是科学文献任务，因此不作为首期主问题纳入论文，但保留用于反证据和风险说明。",
+      "doi_or_arxiv": "arXiv:2406.13663v4",
+      "url": "https://arxiv.org/abs/2406.13663v4",
+      "is_fixture": false,
+      "parse_status": "abstract_verified",
+      "parse_error": "全文尚未解析；FalsificationHit 仅引用摘要原文。",
+      "task": "通用 QA 中的答案来源归因和可验证性。",
+      "method": "MIRAGE 使用模型内部信息，将上下文敏感答案 token 与影响其预测的检索文档配对。"
+    }
+  ],
+  "edges": [],
+  "tracks": [
+    {
+      "track_id": "sciqa",
+      "label": "科学文献问答 / RAG agent",
+      "paper_ids": [
+        "paper-001"
+      ]
+    },
+    {
+      "track_id": "boundary",
+      "label": "任务边界（exclude，保留给反证据）",
+      "paper_ids": [
+        "paper-002",
+        "paper-004",
+        "paper-005",
+        "paper-006",
+        "paper-007"
+      ]
+    },
+    {
+      "track_id": "autosci",
+      "label": "相邻自动科研信息整合",
+      "paper_ids": [
+        "paper-003"
+      ]
+    }
+  ],
+  "contradictions": [],
+  "limitations": [
+    "主线来自 paper_cards.fields.task/method 的摘要级归类，不是引用图谱。",
+    "关系边和矛盾对为空：当前没有经核验的引用数据，不推断边。",
+    "parse_status=abstract_verified 不等于全文已核验，不能补造页码。"
+  ],
+  "legend": {
+    "include": "纳入",
+    "exclude": "排除（保留给反证据召回）",
+    "pending": "待核验，不得当作结论"
+  }
+}

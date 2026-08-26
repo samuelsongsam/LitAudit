@@ -1,0 +1,41 @@
+{
+  "run_id": "phase2-real",
+  "source": "data",
+  "offline": true,
+  "data_dir": "C:\\Users\\25653\\Desktop\\AI比赛\\LitAudit\\data",
+  "created_at": "2026-08-26T06:14:09.718918+00:00",
+  "cache_dir": "C:\\Users\\25653\\Desktop\\AI比赛\\LitAudit\\runs\\phase2-real\\cache",
+  "limitations": [
+    "本 run 离线读取 A 已落盘的检索缓存与结构化数据，不现场调用 API。",
+    "papers.jsonl 是候选主索引；paper_cards.jsonl 是摘要级扩展卡片。",
+    "Evidence 目前全部为 abstract_only，不得显示为全文已验证。",
+    "exclude 与 pending 均写入输出；fixture 不计入真实统计。",
+    "HTTP 429 / 连接失败保留在 retrieval_runs.jsonl，不改成零结果成功。"
+  ],
+  "stats": {
+    "query_count": 4,
+    "paper_count": 7,
+    "fixture_paper_count": 0,
+    "paper_card_count": 7,
+    "screening_count": 12,
+    "claim_count": 8,
+    "claim_decision_count": 8,
+    "evidence_count": 10,
+    "falsification_count": 2,
+    "retrieval_run_count": 14,
+    "retrieval_failure_count": 5,
+    "decision_counts": {
+      "include": 2,
+      "exclude": 5,
+      "pending": 0
+    },
+    "claim_status_counts": {
+      "supported": 5,
+      "partial": 1,
+      "unsupported": 0,
+      "pending": 2
+    },
+    "error_count": 0,
+    "generated_at": "2026-08-26T14:14:09"
+  }
+}

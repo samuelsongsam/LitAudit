@@ -20,10 +20,13 @@ def new_run_id() -> str:
 def snapshot_dataset(dataset: Dataset, output_dir: Path) -> None:
     write_json(output_dir / "search_queries.json", [item.model_dump(mode="json") for item in dataset.queries])
     write_jsonl(output_dir / "papers.jsonl", dataset.papers)
+    write_jsonl(output_dir / "paper_cards.jsonl", dataset.paper_cards)
     write_jsonl(output_dir / "screening_log.jsonl", dataset.screening)
     write_jsonl(output_dir / "claims.jsonl", dataset.claims)
     write_jsonl(output_dir / "evidence.jsonl", dataset.evidence)
+    write_jsonl(output_dir / "claim_decisions.jsonl", dataset.claim_decisions)
     write_jsonl(output_dir / "falsification.jsonl", dataset.falsification)
+    write_jsonl(output_dir / "retrieval_runs.jsonl", dataset.retrieval_runs)
 
 
 def run_pipeline(
@@ -75,10 +78,11 @@ def run_pipeline(
             "created_at": datetime.now(timezone.utc).isoformat(),
             "cache_dir": str(cache.cache_dir),
             "limitations": [
-                "本 run 未调用 arXiv / OpenAlex / Semantic Scholar。",
-                "null 的 authors/abstract 被原样保留，未填充默认值。",
-                "exclude 与 pending 均写入输出，供 UI 展示。",
-                "fixture 记录不计入 stats.json 的真实论文统计。",
+                "本 run 离线读取 A 已落盘的检索缓存与结构化数据，不现场调用 API。",
+                "papers.jsonl 是候选主索引；paper_cards.jsonl 是摘要级扩展卡片。",
+                "Evidence 目前全部为 abstract_only，不得显示为全文已验证。",
+                "exclude 与 pending 均写入输出；fixture 不计入真实统计。",
+                "HTTP 429 / 连接失败保留在 retrieval_runs.jsonl，不改成零结果成功。",
             ],
             "stats": stats,
         },

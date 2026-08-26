@@ -11,6 +11,8 @@ runs/*
 !runs/.gitkeep
 !runs/demo/
 !runs/demo/**
+!runs/phase2-real/
+!runs/phase2-real/**
 *.egg-info/
 dist/
 build/
