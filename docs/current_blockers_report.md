@@ -13,6 +13,12 @@
 
 ## 当前不能完成或需要后续核验的事项
 
+### 本轮已完成的可执行补充
+
+- 已检查缓存中的 `data/cache/retrieval-2026-08-26/pdf/paper-001.pdf`：20 页，20 页均可提取文本。
+- 已将 `evidence-001`、`evidence-002` 升级为 PDF 第 1 页的 `verified` Evidence，并将 `evidence-005` 升级为 PDF 第 2 页的 `verified` Evidence；Claim-001/002 的判决理由已同步更新，Claim-005 仍保持 `pending`。
+- 其他论文没有本地可核验全文，未擅自升级其摘要证据。
+
 ### 1. 全文页码级证据
 
 - 状态：部分阻塞，不是研究范围排除。

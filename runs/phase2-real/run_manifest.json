@@ -2,9 +2,9 @@
   "run_id": "phase2-real",
   "source": "data",
   "offline": true,
-  "data_dir": "C:\\Users\\25653\\Desktop\\AI比赛\\LitAudit\\data",
-  "created_at": "2026-08-26T06:14:09.718918+00:00",
-  "cache_dir": "C:\\Users\\25653\\Desktop\\AI比赛\\LitAudit\\runs\\phase2-real\\cache",
+  "data_dir": "E:\\LitAudit\\data",
+  "created_at": "2026-08-26T09:34:57.688296+00:00",
+  "cache_dir": "E:\\LitAudit\\runs\\phase2-real\\cache",
   "limitations": [
     "本 run 离线读取 A 已落盘的检索缓存与结构化数据，不现场调用 API。",
     "papers.jsonl 是候选主索引；paper_cards.jsonl 是摘要级扩展卡片。",
@@ -36,6 +36,6 @@
       "pending": 2
     },
     "error_count": 0,
-    "generated_at": "2026-08-26T14:14:09"
+    "generated_at": "2026-08-26T17:34:57"
   }
 }

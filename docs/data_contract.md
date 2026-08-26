@@ -28,7 +28,7 @@
 
 可选完整字段 fields：task、method、data、metrics、claims、limitations；每项都必须带来源或显式 null。解析失败使用 parse_status=failed 和 parse_error，不能补造页码。
 
-本轮新增的 data/paper_cards.jsonl 使用同一 paper_id 和基础 PaperCard 标识，并填充 fields、parse_status、parse_error。当前内容主要来自已核验的 arXiv 摘要：parse_status=abstract_verified 不等于全文已核验；fields 中没有数值或定位时不得由流水线补写。
+本轮新增的 data/paper_cards.jsonl 使用同一 paper_id 和基础 PaperCard 标识，并填充 fields、parse_status、parse_error。多数内容来自已核验的 arXiv 摘要：parse_status=abstract_verified 不等于全文已核验；当前 paper-001 仍保留该卡片级摘要状态，而其少量 Evidence 已单独升级为 PDF 页码级 verified。fields 中没有数值或定位时不得由流水线补写。
 
 ## Claim
 字段：claim_id:string（必填且唯一）；text:string（原子、可证伪论断）；source: user_idea|paper|derived；paper_id:string/null（source=paper 时必填）；status: supported|partial|unsupported|pending；decision_reason:string（必填）。supported 只允许在至少一条有效 Evidence 且没有未解决冲突时使用；缺 Evidence 或规则/模型冲突必须降级为 pending。

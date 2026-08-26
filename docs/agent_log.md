@@ -70,6 +70,44 @@
 - 结果：成功。
 - 风险或备注：未改变研究字段语义或判决；全文证据、Semantic Scholar 和 OpenAlex external ID 适配仍待后续处理。
 
+## 2026-08-26 17:10
+- 操作：按《两人分工与交付计划》逐项审计 A-01 至 A-08、B-01 至 B-08 及固定交付阶段；使用配套 Python 重跑测试、doctor、validate 和评测脚本。
+- 目的：确认项目当前阶段、真实数据规模和未完成项，向项目负责人报告进度。
+- 输入：分工计划、README、docs、data、src、tests、runs/phase2-real/。
+- 输出：12 tests passed；doctor `ok=true`；validate `issues=[]`；评测题目 3，论文 7，Claim 8，Evidence 10。
+- 结果：A-01 至 A-08 产出齐全但全文证据仍为摘要级；B-01 至 B-04、B-07、B-08 基础能力完成，B-05/B-06 部分完成；固定阶段 1-3 已完成，阶段 4-6 已部分完成，阶段 7-8 未完成。
+- 风险或备注：系统 Python 不在 PATH，已改用 bundled Python 3.12.13；该环境问题不影响项目验收结果。
+
+## 2026-08-26 17:26
+- 操作：完成 A-01 至 A-08 逐项进度审计，并创建 `docs/a_progress_report.md`。
+- 目的：按照分工文档逐条报告 A 的已完成工作、证据层级、验收结果和未完成事项。
+- 输入：`两人分工与交付计划.md`、A 阶段交付文件、真实 data、`runs/phase2-real/`。
+- 输出：A-01 至 A-08 状态表；真实规模、校验结果和未完成清单。
+- 结果：成功；所有 A 阶段规定文件存在，12 tests passed，doctor/validate 通过。
+- 风险或备注：全文证据、跨源核验、正式 baseline 评测和端到端 UI 可信度抽查仍未完成。
+
+## 2026-08-26 17:45
+- 操作：逐项执行 A 当前可完成工作；检查本地 PaperQA PDF，并升级三条 Evidence 的定位状态。
+- 目的：在不虚构全文证据的前提下，完成当前环境可做的证据升级，并汇总剩余阻塞事项。
+- 输入：`data/cache/retrieval-2026-08-26/pdf/paper-001.pdf`、`data/evidence.jsonl`、`data/claim_decisions.jsonl`、项目分工文档。
+- 输出：`evidence-001/002/005` 改为 PDF 页码级 `verified`；Claim-001/002 理由同步更新；新增 `docs/a_remaining_work_report.md`。
+- 结果：成功；PDF 共 20 页且 20 页可提取文本；其他无全文论文未升级。
+- 风险或备注：PaperQA PDF 仅完成第 1-2 页三条证据核验；全文逐页审阅、其他论文全文、跨源限流和正式效果评测仍未完成。
+
+## 2026-08-26 17:35
+- 操作：用升级后的 Evidence 重新生成 `runs/phase2-real/` 离线快照。
+- 目的：让 B 的可回放 run 与当前数据状态一致。
+- 输出：7 papers、10 evidence、3 verified、7 abstract_only，error_count=0。
+- 结果：成功。
+
+## 2026-08-26 18:00
+- 操作：创建当前唯一综合交付报告 `docs/current_delivery_report.md`，并在之前的交接/进度/验收报告顶部标记“历史版本”。
+- 目的：避免 B 使用过期统计，统一当前数据规模、验收结果、可信度规则和未完成事项的入口。
+- 输入：最新 `data/`、`runs/phase2-real/`、`docs/a_remaining_work_report.md`、`docs/current_blockers_report.md` 和分工计划。
+- 输出：当前交付报告；旧报告保留原文但明确不作为当前统计依据。
+- 结果：成功。
+- 风险或备注：未删除任何历史记录；当前综合报告仍明确摘要级证据和全文/基线评测限制。
+
 ## 2026-08-22 14:02
 - 操作：首次并行只读命令的底层 PowerShell 进程启动失败，随后分开重试。
 - 目的：完成项目文件盘点。
