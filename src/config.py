@@ -17,6 +17,9 @@ class Settings:
     runs_dir: Path
     offline: bool
     log_level: str
+    semantic_scholar_api_key: str | None = None
+    openalex_mailto: str | None = None
+    live_limit: int = 12
 
 
 def load_settings(
@@ -36,7 +39,11 @@ def load_settings(
         resolved_fixtures = ROOT / resolved_fixtures
     if not resolved_runs.is_absolute():
         resolved_runs = ROOT / resolved_runs
-    env_offline = os.getenv("LITAUDIT_OFFLINE", "1").strip() not in {"0", "false", "False"}
+    env_offline = os.getenv("LITAUDIT_OFFLINE", "0").strip().lower() in {"1", "true", "yes"}
+    try:
+        live_limit = int(os.getenv("LITAUDIT_LIVE_LIMIT", "12"))
+    except ValueError:
+        live_limit = 12
     return Settings(
         root=ROOT,
         data_dir=resolved_data,
@@ -44,4 +51,7 @@ def load_settings(
         runs_dir=resolved_runs,
         offline=env_offline if offline is None else offline,
         log_level=os.getenv("LITAUDIT_LOG_LEVEL", "INFO"),
+        semantic_scholar_api_key=os.getenv("SEMANTIC_SCHOLAR_API_KEY") or None,
+        openalex_mailto=os.getenv("OPENALEX_MAILTO") or None,
+        live_limit=max(1, live_limit),
     )

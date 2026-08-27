@@ -6,6 +6,8 @@ from src.schema import Dataset, EvidenceVerdict, PaperDecision
 
 
 def _track_key(card) -> tuple[str, str]:
+    if card.decision == PaperDecision.pending:
+        return "pending", "待核验（仅摘要，不得当作结论）"
     task = (card.fields.task if card.fields else "") or ""
     if card.decision == PaperDecision.include:
         lowered = task.lower()

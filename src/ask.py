@@ -106,7 +106,8 @@ def ask(dataset: Dataset, question: str, *, limit: int = 5) -> dict:
         "claims": claims[:limit],
         "falsification": hits,
         "limitations": [
-            "只在当前离线候选集上做关键词重叠检索，不调用外部 API，也不生成长综述。",
+            "只在当前候选集上做关键词重叠检索，不编造论文，也不生成长综述。",
+            "在线扩候选请用 pipeline / 界面「在线检索」；本函数不调用外部 API。",
             "分数不是相关性模型，不能当成排序质量评测。",
             "命中论文仍必须经过筛选漏斗和证据卡查看，不能凭分数纳入结论。",
         ],

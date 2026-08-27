@@ -9,8 +9,9 @@ from src.schema import Dataset
 def list_runs(runs_dir: Path) -> list[str]:
     if not runs_dir.exists():
         return []
-    run_ids = [path.name for path in runs_dir.iterdir() if path.is_dir() and (path / "run_manifest.json").exists()]
-    return sorted(run_ids, reverse=True)
+    dirs = [path for path in runs_dir.iterdir() if path.is_dir() and (path / "run_manifest.json").exists()]
+    dirs.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+    return [path.name for path in dirs]
 
 
 def load_run(runs_dir: Path, run_id: str) -> dict:

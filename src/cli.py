@@ -17,6 +17,16 @@ def _print(payload: object) -> None:
     print(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
 
 
+def _offline_from_args(args: argparse.Namespace) -> bool | None:
+    if getattr(args, "offline", False) and getattr(args, "online", False):
+        raise SystemExit("不能同时使用 --offline 和 --online")
+    if getattr(args, "offline", False):
+        return True
+    if getattr(args, "online", False):
+        return False
+    return None
+
+
 def cmd_doctor(_: argparse.Namespace) -> int:
     settings = load_settings()
     required = [
@@ -62,9 +72,15 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    settings = load_settings(offline=True)
+    settings = load_settings(offline=_offline_from_args(args))
     source = "fixture" if args.fixture else "data"
-    result = run_pipeline(settings, source=source, run_id=args.run_id, allow_errors=args.allow_errors)
+    result = run_pipeline(
+        settings,
+        source=source,
+        run_id=args.run_id,
+        allow_errors=args.allow_errors,
+        question=args.question,
+    )
     _print(result)
     return 0
 
@@ -88,9 +104,18 @@ def cmd_evaluate(_: argparse.Namespace) -> int:
 
 
 def cmd_ask(args: argparse.Namespace) -> int:
-    settings = load_settings()
-    dataset = load_dataset(settings.data_dir)
-    _print(ask(dataset, args.question, limit=args.limit))
+    settings = load_settings(offline=_offline_from_args(args))
+    if settings.offline:
+        dataset = load_dataset(settings.data_dir)
+        _print(ask(dataset, args.question, limit=args.limit))
+        return 0
+    result = run_pipeline(settings, source="data", question=args.question)
+    dataset = load_run(settings.runs_dir, result["run_id"])["dataset"]
+    payload = ask(dataset, args.question, limit=args.limit)
+    payload["run_id"] = result["run_id"]
+    payload["live"] = result.get("live")
+    payload["mode"] = "live_retrieve_then_local_overlap"
+    _print(payload)
     return 0
 
 
@@ -100,8 +125,13 @@ def cmd_ui(args: argparse.Namespace) -> int:
     return serve_ui(run_id=args.run_id, port=args.port, open_browser=not args.no_browser)
 
 
+def _add_online_flags(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--offline", action="store_true", help="只读本地金标/快照，不调用检索 API")
+    parser.add_argument("--online", action="store_true", help="调用 arXiv / OpenAlex / Semantic Scholar")
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="litaudit", description="LitAudit 离线校验、流水线与回放")
+    parser = argparse.ArgumentParser(prog="litaudit", description="LitAudit 在线检索、离线回放与勘验工作台")
     sub = parser.add_subparsers(dest="command", required=True)
 
     doctor = sub.add_parser("doctor", help="检查必要文件与数据契约")
@@ -112,10 +142,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--fixture", action="store_true")
     validate.set_defaults(func=cmd_validate)
 
-    run = sub.add_parser("run", help="离线读取数据并生成 run_id")
-    run.add_argument("--offline", action="store_true", default=True, help="离线模式（当前唯一支持的模式）")
+    run = sub.add_parser("run", help="运行流水线；默认在线检索，--offline 只快照金标")
+    _add_online_flags(run)
     run.add_argument("--fixture", action="store_true", help="使用 data/fixtures，不混入真实统计")
     run.add_argument("--run-id")
+    run.add_argument("--question", help="科研问题或 idea，在线检索时写入检索式")
     run.add_argument("--allow-errors", action="store_true")
     run.set_defaults(func=cmd_run)
 
@@ -127,9 +158,10 @@ def build_parser() -> argparse.ArgumentParser:
     eval_cmd = sub.add_parser("evaluate", help="计算仓库覆盖率与无检索可追溯性对照")
     eval_cmd.set_defaults(func=cmd_evaluate)
 
-    ask_cmd = sub.add_parser("ask", help="在离线候选集上检索问题，不生成综述")
+    ask_cmd = sub.add_parser("ask", help="检索问题：默认仅本地；--online 先在线扩候选再匹配")
     ask_cmd.add_argument("question")
     ask_cmd.add_argument("--limit", type=int, default=5)
+    _add_online_flags(ask_cmd)
     ask_cmd.set_defaults(func=cmd_ask)
 
     ui = sub.add_parser("ui", help="打开勘验工作台")
