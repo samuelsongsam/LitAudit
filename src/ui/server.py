@@ -6,13 +6,15 @@ import os
 import socket
 import threading
 import webbrowser
+from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 from src.config import load_settings
+from src.conversation import build_chat_response, classify_intent, delete_conversation, list_conversations, load_conversation, rename_conversation, save_message
 from src.pipeline import run_pipeline
-from src.ui.payload import ask_payload, build_payload, list_runs_for_ui
+from src.ui.payload import ask_payload, build_audit_report, build_payload, list_runs_for_ui
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -38,10 +40,22 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             return
         if path.startswith("/api/run/"):
             run_id = path.split("/api/run/", 1)[1].strip("/")
+            if run_id.endswith("/report"):
+                run_id = run_id[: -len("/report")].rstrip("/")
+                try:
+                    content, filename = build_audit_report(self.settings.runs_dir, run_id)
+                    self._json({"run_id": run_id, "filename": filename, "content": content})
+                except FileNotFoundError as exc:
+                    self._json({"error": str(exc)}, status=404)
+                except ValueError as exc:
+                    self._json({"error": str(exc)}, status=400)
+                return
             try:
                 self._json(build_payload(self.settings.runs_dir, run_id))
             except FileNotFoundError as exc:
                 self._json({"error": str(exc)}, status=404)
+            except ValueError as exc:
+                self._json({"error": str(exc)}, status=400)
             return
         if path == "/api/ask":
             run_id = (query.get("run_id") or [self.default_run_id])[0]
@@ -50,6 +64,19 @@ class LitAuditHandler(BaseHTTPRequestHandler):
                 self._json({"error": "缺少 run_id"}, status=400)
                 return
             self._json(ask_payload(self.settings.runs_dir, run_id, question))
+            return
+        if path.startswith("/api/chat/"):
+            run_id = path.split("/api/chat/", 1)[1].strip("/")
+            if not run_id:
+                self._json({"error": "缺少 run_id"}, status=400)
+                return
+            try:
+                self._json(load_conversation(self.settings.runs_dir, run_id))
+            except Exception as exc:
+                self._json({"error": str(exc)}, status=500)
+            return
+        if path == "/api/conversations":
+            self._json({"conversations": list_conversations(self.settings.runs_dir)})
             return
         if path == "/api/live":
             question = (query.get("q") or query.get("question") or [""])[0]
@@ -69,6 +96,9 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             return
         if path in {"/api/live", "/api/search"}:
             self._live(body)
+            return
+        if path == "/api/chat":
+            self._chat(body)
             return
         if path != "/api/run":
             self._json({"error": f"not found ({self.command} {path})"}, status=404)
@@ -92,6 +122,42 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             return
         self._json(result)
 
+    def do_DELETE(self) -> None:
+        parsed = urlparse(self.path)
+        path = unquote(parsed.path).rstrip("/")
+        if not path.startswith("/api/chat/"):
+            self._json({"error": f"not found ({self.command} {path})"}, status=404)
+            return
+        run_id = path.split("/api/chat/", 1)[1].strip("/")
+        if not run_id:
+            self._json({"error": "缺少 run_id"}, status=400)
+            return
+        try:
+            deleted = delete_conversation(self.settings.runs_dir, run_id)
+        except ValueError as exc:
+            self._json({"error": str(exc)}, status=400)
+            return
+        self._json({"run_id": run_id, "deleted": deleted})
+
+    def do_PATCH(self) -> None:
+        parsed = urlparse(self.path)
+        path = unquote(parsed.path).rstrip("/")
+        if not path.startswith("/api/chat/"):
+            self._json({"error": f"not found ({self.command} {path})"}, status=404)
+            return
+        run_id = path.split("/api/chat/", 1)[1].strip("/")
+        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            body = json.loads((self.rfile.read(length) if length else b"{}").decode("utf-8"))
+            result = rename_conversation(self.settings.runs_dir, run_id, str(body.get("title") or ""))
+        except json.JSONDecodeError:
+            self._json({"error": "invalid json"}, status=400)
+            return
+        except (FileNotFoundError, ValueError) as exc:
+            self._json({"error": str(exc)}, status=400)
+            return
+        self._json(result)
+
     def _live(self, body: dict) -> None:
         question = str(body.get("question") or "").strip()
         if not question:
@@ -108,12 +174,62 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             return
         self._json(result)
 
+    def _chat(self, body: dict) -> None:
+        message = str(body.get("message") or body.get("question") or "").strip()
+        if not message:
+            self._json({"error": "缺少 message"}, status=400)
+            return
+        requested_run = str(body.get("run_id") or "").strip() or None
+        settings = load_settings(offline=False)
+        try:
+            current_payload = build_payload(settings.runs_dir, requested_run) if requested_run else None
+            intent = classify_intent(message, current_payload, settings, body.get("clarification_context") or [], body.get("clarification_topic"))
+            if intent.route_error:
+                response = build_chat_response(current_payload or {"run_id": None, "papers": []}, message, intent, settings)
+                self._json({"conversation_id": None, "run_id": None, "status": "llm_unavailable", "response": response})
+                return
+            if intent.direct_answer or intent.needs_clarification:
+                response = build_chat_response(current_payload or {"run_id": None, "papers": []}, message, intent, settings)
+                if response.get("overview_mode") == "llm_error":
+                    self._json({"conversation_id": requested_run, "run_id": requested_run, "status": "llm_unavailable", "action": "reuse_run" if requested_run else "no_run", "response": response})
+                    return
+                if intent.direct_answer and requested_run:
+                    save_message(settings.runs_dir, requested_run, "user", message)
+                    save_message(settings.runs_dir, requested_run, "assistant", response["overview"], response)
+                response_run = requested_run if intent.direct_answer else None
+                self._json({"conversation_id": response_run, "run_id": response_run, "status": "completed" if intent.direct_answer else "needs_clarification", "action": "reuse_run" if response_run else "no_run", "response": response})
+                return
+            if current_payload is None or intent.needs_retrieval:
+                result = run_pipeline(settings, source="data", question=intent.expanded_query or message, live=True)
+                run_id = result["run_id"]
+                current_payload = build_payload(settings.runs_dir, run_id)
+                for previous in body.get("conversation_context") or []:
+                    if isinstance(previous, dict) and previous.get("role") in {"user", "assistant"} and isinstance(previous.get("content"), str):
+                        save_message(settings.runs_dir, run_id, previous["role"], previous["content"], previous.get("response"))
+            else:
+                run_id = requested_run
+            response = build_chat_response(current_payload, message, intent, settings)
+            if intent.needs_clarification:
+                self._json({"conversation_id": None, "run_id": None, "status": "needs_clarification", "response": response})
+                return
+            save_message(settings.runs_dir, run_id, "user", message)
+            save_message(settings.runs_dir, run_id, "assistant", response["overview"], response)
+            if not run_id:
+                raise RuntimeError("检索完成但未生成可回放的 run")
+            self._json({"conversation_id": run_id, "run_id": run_id, "status": "completed", "action": "new_run" if intent.needs_retrieval else "reuse_run", "response": response})
+        except FileNotFoundError as exc:
+            self._json({"error": str(exc)}, status=404)
+        except Exception as exc:
+            self._json({"error": str(exc)}, status=500)
+
     def _static(self, path: str) -> None:
         if path in {"/", "/index.html"}:
             target = STATIC_DIR / "index.html"
         elif path.startswith("/static/"):
             target = (STATIC_DIR / path[len("/static/") :]).resolve()
-            if not str(target).startswith(str(STATIC_DIR.resolve())):
+            try:
+                target.relative_to(STATIC_DIR.resolve())
+            except ValueError:
                 self._json({"error": "forbidden"}, status=403)
                 return
         elif path == "/favicon.svg":

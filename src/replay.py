@@ -4,6 +4,7 @@ from pathlib import Path
 
 from src.io_utils import load_dataset, read_json
 from src.schema import Dataset
+from src.run_paths import resolve_run_dir
 
 
 def list_runs(runs_dir: Path) -> list[str]:
@@ -15,7 +16,7 @@ def list_runs(runs_dir: Path) -> list[str]:
 
 
 def load_run(runs_dir: Path, run_id: str) -> dict:
-    run_dir = runs_dir / run_id
+    run_dir = resolve_run_dir(runs_dir, run_id)
     if not (run_dir / "run_manifest.json").exists():
         raise FileNotFoundError(f"找不到可回放的 run: {run_id}")
     output_dir = run_dir / "output"

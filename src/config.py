@@ -20,6 +20,9 @@ class Settings:
     semantic_scholar_api_key: str | None = None
     openalex_mailto: str | None = None
     live_limit: int = 12
+    llm_api_key: str | None = None
+    llm_base_url: str = "https://api.openai.com/v1"
+    llm_model: str = "gpt-4o-mini"
 
 
 def load_settings(
@@ -54,4 +57,7 @@ def load_settings(
         semantic_scholar_api_key=os.getenv("SEMANTIC_SCHOLAR_API_KEY") or None,
         openalex_mailto=os.getenv("OPENALEX_MAILTO") or None,
         live_limit=max(1, live_limit),
+        llm_api_key=os.getenv("LITAUDIT_LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or None,
+        llm_base_url=os.getenv("LITAUDIT_LLM_BASE_URL", "https://api.openai.com/v1"),
+        llm_model=os.getenv("LITAUDIT_LLM_MODEL", "gpt-4o-mini"),
     )

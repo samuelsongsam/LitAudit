@@ -10,3 +10,9 @@
 2026-08-26 20:24:17,559 INFO start run_id=phase2-real source=data data_dir=C:\Users\25653\Desktop\AI比赛\LitAudit\data
 2026-08-26 20:24:17,565 INFO loaded papers=7 pending=0 exclude=5 include=2 errors=0
 2026-08-26 20:24:17,578 INFO finished run_id=phase2-real output=C:\Users\25653\Desktop\AI比赛\LitAudit\runs\phase2-real\output
+2026-08-29 12:13:09,318 INFO start run_id=phase2-real source=data offline=True data_dir=E:\LitAudit\data question=
+2026-08-29 12:13:09,322 INFO loaded papers=7 pending=0 exclude=5 include=2 errors=0
+2026-08-29 12:13:09,331 INFO finished run_id=phase2-real output=E:\LitAudit\runs\phase2-real\output
+2026-08-30 17:41:31,622 INFO start run_id=phase2-real source=data offline=True data_dir=E:\LitAudit\data question=
+2026-08-30 17:41:31,627 INFO loaded papers=7 pending=0 exclude=5 include=2 errors=0
+2026-08-30 17:41:31,636 INFO finished run_id=phase2-real output=E:\LitAudit\runs\phase2-real\output

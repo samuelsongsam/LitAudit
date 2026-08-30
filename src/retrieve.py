@@ -38,6 +38,20 @@ STOP = {
     "whether",
 }
 ZH_MAP = (
+    ("现代GPU微架构", "modern GPU microarchitecture"),
+    ("GPU微架构", "GPU microarchitecture"),
+    ("微架构", "microarchitecture"),
+    ("性能对比", "performance comparison"),
+    ("架构图", "architecture"),
+    ("指令集", "instruction set"),
+    ("技术细节", "architecture details"),
+    ("理性", "reason rationality"),
+    ("自由", "freedom liberty"),
+    ("绝对精神", "absolute spirit"),
+    ("哲学", "philosophy"),
+    ("核心概念", "core concepts"),
+    ("经典", "classical"),
+    ("当代", "contemporary"),
     ("检索增强", "retrieval-augmented"),
     ("可追溯", "traceability provenance"),
     ("文献综述", "literature review"),
@@ -92,6 +106,21 @@ def retrieval_status(http_status: int | None, error: str | None = None) -> str:
 
 def expand_question(question: str) -> str:
     text = (question or "").strip()
+    # Remove conversational instructions before sending the research topic to providers.
+    text = re.sub(
+        r"(?:请)?(?:检索|搜索|查找|找些?|寻找|帮我看看|开始检索)\s*",
+        " ",
+        text,
+        flags=re.I,
+    )
+    text = re.sub(
+        r"(?:输出|返回|给出)(?:论文列表|研究分支|争议点|结果|综述).*?$|(?:比较|对比|限定|优先)(?:人工审查|有无检索增强|近五年|CCFA类会议论文|论文|来源).*?(?=，|。|$)",
+        " ",
+        text,
+        flags=re.I,
+    )
+    text = re.sub(r"[，。；;、]+", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
     extras = [english for chinese, english in ZH_MAP if chinese in text]
     if extras:
         text = f"{text} {' '.join(extras)}"
@@ -105,6 +134,8 @@ def to_arxiv_query(text: str) -> str:
     if "all:" in raw or "ti:" in raw:
         return raw
     low = raw.lower()
+    if "gpu" in low and any(term in low for term in ("microarchitecture", "hopper", "ada", "rdna", "cdna")):
+        return '(all:gpu OR all:nvidia OR all:amd) AND (all:hopper OR all:h100 OR all:ada OR all:rdna OR all:cdna)'
     parts: list[str] = []
     for phrase in (
         "retrieval-augmented",
@@ -129,22 +160,38 @@ def to_arxiv_query(text: str) -> str:
     return " AND ".join(parts)
 
 
+def to_provider_query(text: str) -> str:
+    """Keep a concise English query for providers whose search endpoints handle natural text."""
+    stop = STOP | {
+        "modern", "specific", "technical", "details", "detail", "including", "include",
+        "analysis", "deep", "comparison", "such", "like", "architecture",
+    }
+    tokens: list[str] = []
+    for token in re.findall(r"[A-Za-z][A-Za-z0-9+.-]{1,}", text or ""):
+        lowered = token.lower()
+        if lowered in stop or lowered in tokens:
+            continue
+        tokens.append(lowered)
+        if len(tokens) >= 14:
+            break
+    return " ".join(tokens)
+
+
 def build_query_plan(question: str | None) -> list[QuerySpec]:
     english = expand_question(question or "")
     user_arxiv = to_arxiv_query(english)
-    specs = [QuerySpec("q-live-arxiv", "arxiv", DEFAULT_ARXIV, "范围主检索")]
-    if user_arxiv and user_arxiv != DEFAULT_ARXIV:
-        specs.append(QuerySpec("q-live-arxiv-user", "arxiv", user_arxiv, "用户问题检索"))
-    specs.append(QuerySpec("q-live-openalex", "openalex", english or DEFAULT_OPENALEX, "OpenAlex 扩展"))
+    provider_query = to_provider_query(english)
+    specs = [QuerySpec("q-live-arxiv-user", "arxiv", user_arxiv or DEFAULT_ARXIV, "用户问题检索")] if question else [QuerySpec("q-live-arxiv", "arxiv", DEFAULT_ARXIV, "范围主检索")]
+    specs.append(QuerySpec("q-live-openalex", "openalex", provider_query or english or DEFAULT_OPENALEX, "OpenAlex 扩展"))
     specs.append(
         QuerySpec(
             "q-live-s2",
             "semantic_scholar",
-            english or DEFAULT_S2,
+            provider_query or english or DEFAULT_S2,
             "Semantic Scholar",
         )
     )
-    if len(specs) < 4:
+    if not question and len(specs) < 4:
         specs.append(QuerySpec("q-live-risk", "arxiv", RISK_ARXIV, "反向风险检索"))
     return specs[:4]
 

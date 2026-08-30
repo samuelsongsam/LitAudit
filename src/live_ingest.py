@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.cache import FileCache
 from src.config import Settings
-from src.retrieve import LiveHit, hit_keys, search_all, title_key
+from src.retrieve import LiveHit, expand_question, hit_keys, search_all, title_key
 from src.schema import (
     Claim,
     ClaimDecision,
@@ -151,9 +151,10 @@ def ingest_live(
         kwargs["sleep_s"] = 0.0
     bundle = search_all(question, **kwargs)
     unique_hits, skipped = _unique_hits(bundle.hits, dataset)
+    research_query = expand_question(question or "") if question else None
     screened: list[tuple[LiveHit, object]] = []
     for hit in unique_hits:
-        result = screen_title_abstract(hit.title, hit.abstract, hit.year)
+        result = screen_title_abstract(hit.title, hit.abstract, hit.year, research_query=research_query)
         screened.append((hit, result))
     screened.sort(key=lambda item: (RANK[item[1].decision], item[0].title.lower()))
     screened = screened[: settings.live_limit]

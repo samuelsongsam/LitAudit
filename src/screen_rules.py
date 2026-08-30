@@ -41,6 +41,11 @@ SCIENCE_NEGATION = (
 )
 YEAR_MIN = 2019
 YEAR_MAX = 2026
+TOPIC_STOP = {
+    "the", "and", "for", "with", "from", "that", "this", "into", "using", "use",
+    "modern", "specific", "technical", "details", "detail", "analysis", "including",
+    "include", "comparison", "performance", "architecture", "research", "paper",
+}
 
 
 @dataclass(frozen=True)
@@ -83,9 +88,81 @@ def _has_science(text: str) -> bool:
     return _has_any(text, SCIENCE)
 
 
-def screen_title_abstract(title: str | None, abstract: str | None, year: int | None = None) -> ScreenResult:
+def _topic_terms(query: str | None) -> set[str]:
+    return {
+        token.lower()
+        for token in re.findall(r"[A-Za-z][A-Za-z0-9+.-]{2,}", query or "")
+        if token.lower() not in TOPIC_STOP
+    }
+
+
+def screen_title_abstract(
+    title: str | None,
+    abstract: str | None,
+    year: int | None = None,
+    *,
+    research_query: str | None = None,
+) -> ScreenResult:
     """规则筛选标题+摘要。明显符合 include，明显排除 exclude，否则 pending。"""
     text = _blob(title, abstract)
+    if research_query:
+        terms = _topic_terms(research_query)
+        matched = {term for term in terms if term in text}
+        gpu_topic = "gpu" in terms and bool(terms & {"hopper", "ada", "rdna", "cdna", "microarchitecture"})
+        if gpu_topic:
+            model_signal = any(term in text for term in ("hopper", "h100", "ada", "lovelace", "rdna", "cdna", "mi200", "mi300"))
+            title_text = (title or "").lower()
+            title_architecture_signal = any(
+                term in title_text
+                for term in (
+                    "gpu architecture", "hopper architecture", "microarchitect", "instruction set",
+                    "global load", "memory architecture", "matrix accelerator", "automotive gpu",
+                    "cuda tile", "kernel fusion",
+                )
+            )
+            architecture_signal_count = sum(
+                term in text
+                for term in (
+                    "microarchitect", "instruction set", " isa ", "cache", "memory hierarchy",
+                    "tensor core", "compute unit", "shared memory", "distributed shared memory",
+                    "tensor memory accelerator", " wgmma", " dpx",
+                )
+            )
+            architecture_signal = title_architecture_signal or architecture_signal_count >= 2
+            if model_signal and architecture_signal:
+                return ScreenResult(
+                    PaperDecision.include,
+                    "custom_gpu_architecture_match",
+                    "标题/摘要同时命中现代 GPU 型号与微架构、指令或存储层级信号。仅完成摘要级相关性筛选，尚未全文核验。",
+                )
+            if model_signal:
+                return ScreenResult(
+                    PaperDecision.pending,
+                    "custom_gpu_model_only",
+                    "标题/摘要命中目标 GPU 型号，但微架构技术信号不足，暂列待定。",
+                )
+            return ScreenResult(
+                PaperDecision.exclude,
+                "custom_gpu_application_only",
+                "论文涉及 GPU 应用，但未命中本轮指定的现代 GPU 微架构型号。",
+            )
+        if len(matched) >= 2:
+            return ScreenResult(
+                PaperDecision.include,
+                "custom_topic_match",
+                "标题/摘要与本轮自定义研究主题有明确词项重叠。仅完成摘要级相关性筛选，尚未做全文与页码核验。",
+            )
+        if matched:
+            return ScreenResult(
+                PaperDecision.pending,
+                "custom_topic_uncertain",
+                "标题/摘要与本轮主题只有弱匹配，暂列待定，需进一步阅读摘要或全文。",
+            )
+        return ScreenResult(
+            PaperDecision.exclude,
+            "custom_topic_mismatch",
+            "标题/摘要未显示与本轮自定义研究主题的直接相关性。",
+        )
     if year is not None and (year < YEAR_MIN or year > YEAR_MAX):
         return ScreenResult(
             PaperDecision.exclude,

@@ -328,7 +328,8 @@ def validate_dataset(dataset: Dataset) -> Dataset:
 
     papers = {paper.paper_id: paper for paper in dataset.papers}
     claims = {claim.claim_id: claim for claim in dataset.claims}
-    evidence_ids = {item.evidence_id for item in dataset.evidence}
+    evidence_by_id = {item.evidence_id: item for item in dataset.evidence}
+    evidence_ids = set(evidence_by_id)
     screening_by_paper: dict[str, list[ScreeningLog]] = {}
     for log in dataset.screening:
         screening_by_paper.setdefault(log.paper_id, []).append(log)
@@ -350,6 +351,19 @@ def validate_dataset(dataset: Dataset) -> Dataset:
                     code="missing_screening",
                     message=f"论文 {paper.paper_id} 没有筛选日志",
                     object_id=paper.paper_id,
+                )
+            )
+
+    latest_screening = latest_screening_by_paper(dataset.screening)
+    for paper_id, log in latest_screening.items():
+        paper = papers.get(paper_id)
+        if paper is not None and paper.decision != log.decision:
+            issues.append(
+                ValidationIssue(
+                    level="error",
+                    code="paper_screening_mismatch",
+                    message=f"论文 {paper_id} 的 decision={paper.decision.value} 与最新筛选记录 decision={log.decision.value} 不一致",
+                    object_id=paper_id,
                 )
             )
 
@@ -483,6 +497,15 @@ def validate_dataset(dataset: Dataset) -> Dataset:
                         level="error",
                         code="missing_evidence_fk",
                         message=f"ClaimDecision {decision.claim_id} 引用了不存在的 evidence_id {evidence_id}",
+                        object_id=decision.claim_id,
+                    )
+                )
+            elif evidence_by_id[evidence_id].claim_id != decision.claim_id:
+                issues.append(
+                    ValidationIssue(
+                        level="error",
+                        code="decision_evidence_claim_mismatch",
+                        message=f"ClaimDecision {decision.claim_id} 引用的 Evidence {evidence_id} 属于 claim_id {evidence_by_id[evidence_id].claim_id}",
                         object_id=decision.claim_id,
                     )
                 )

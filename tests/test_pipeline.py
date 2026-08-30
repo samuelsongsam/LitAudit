@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from src.ask import ask
 from src.config import load_settings
 from src.eval_metrics import evaluate
@@ -39,6 +41,12 @@ def test_real_data_keeps_pending_and_exclude(tmp_path: Path):
     assert limited.result_count is None
     claim_008 = next(item for item in dataset.claims if item.claim_id == "claim-008")
     assert claim_008.status.value == "pending"
+
+
+def test_pipeline_rejects_path_traversal_run_id(tmp_path: Path):
+    settings = load_settings(runs_dir=tmp_path, offline=True)
+    with pytest.raises(ValueError, match="run_id"):
+        run_pipeline(settings, source="fixture", run_id="../outside")
 
 
 def test_fixture_run_is_offline_and_replayable(tmp_path: Path):

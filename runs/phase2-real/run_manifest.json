@@ -2,13 +2,15 @@
   "run_id": "phase2-real",
   "source": "data",
   "offline": true,
-  "data_dir": "C:\\Users\\25653\\Desktop\\AI比赛\\LitAudit\\data",
-  "created_at": "2026-08-26T12:24:17.577909+00:00",
-  "cache_dir": "C:\\Users\\25653\\Desktop\\AI比赛\\LitAudit\\runs\\phase2-real\\cache",
+  "question": null,
+  "data_dir": "E:\\LitAudit\\data",
+  "created_at": "2026-08-30T09:41:31.635638+00:00",
+  "cache_dir": "E:\\LitAudit\\runs\\phase2-real\\cache",
   "limitations": [
     "本 run 离线读取已落盘的检索缓存与结构化数据，不现场调用 API。",
     "papers.jsonl 是候选主索引；paper_cards.jsonl 是结构化扩展卡片。",
     "Evidence: verified=14, abstract_only=0。verified 只表示该摘录与页码已核验，不是整篇全文审阅完毕。",
+    "在线新论文只做标题+摘要规则筛选；拿不准标 pending。不会自动生成页码级 Evidence，也不会把 claim-008 改为 supported。",
     "研究地图的边来自论断证据冲突和反证据命中，不是引用网络。",
     "exclude 与 pending 均写入输出；fixture 不计入真实统计。",
     "HTTP 429 / 连接失败保留在 retrieval_runs.jsonl，不改成零结果成功。"
@@ -46,6 +48,7 @@
       "failed": 0
     },
     "error_count": 0,
-    "generated_at": "2026-08-26T20:24:17"
-  }
+    "generated_at": "2026-08-30T17:41:31"
+  },
+  "live": null
 }

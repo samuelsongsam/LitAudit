@@ -9,6 +9,7 @@ from src.config import Settings
 from src.io_utils import load_dataset, write_json, write_jsonl
 from src.logging_setup import setup_logging
 from src.map_builder import build_map
+from src.run_paths import resolve_run_dir
 from src.schema import Dataset, ExtractionStatus, dataset_stats
 
 PROTECTED_RUNS = {"phase2-real", "demo"}
@@ -74,7 +75,7 @@ def run_pipeline(
     else:
         run_id = run_id or new_run_id("run")
 
-    run_dir = settings.runs_dir / run_id
+    run_dir = resolve_run_dir(settings.runs_dir, run_id)
     run_dir.mkdir(parents=True, exist_ok=True)
     logger = setup_logging(settings.log_level, run_dir / "pipeline.log")
     logger.info(

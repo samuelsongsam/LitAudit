@@ -4,6 +4,7 @@ from src.config import ROOT, load_settings
 from src.http_fetch import FetchResult
 from src.io_utils import load_dataset
 from src.live_ingest import ingest_live
+from src.retrieve import build_query_plan, expand_question
 from src.pipeline import run_pipeline
 from src.retrieve import parse_arxiv, retrieval_status
 from src.schema import PaperDecision, dataset_stats
@@ -132,6 +133,65 @@ def test_live_ingest_merges_new_paper_and_records_429(tmp_path: Path):
     assert all(item["status"] == "rate_limited" for item in limited)
     assert all(item["result_count"] is None for item in limited)
     assert any(item.decision.value == "exclude" for item in merged.papers)
+
+
+def test_expand_question_removes_chat_instructions():
+    expanded = expand_question("请检索 ai agent 中自审查 debug 对 vibe coding 质量的影响，比较人工审查，限定 CCFA 类会议论文，输出论文列表")
+    assert "请检索" not in expanded
+    assert "输出论文列表" not in expanded
+    assert "ai agent" in expanded
+    assert "vibe coding" in expanded
+
+
+def test_custom_topic_does_not_add_default_rag_query():
+    specs = build_query_plan("核心概念：理性、自由、绝对精神")
+    assert specs[0].query_id == "q-live-arxiv-user"
+    assert all("retrieval-augmented" not in spec.query for spec in specs)
+    assert all(spec.query_id != "q-live-risk" for spec in specs)
+    assert "reason" in specs[0].query
+    assert "freedom" in specs[0].query
+
+
+def test_gpu_topic_uses_broad_english_provider_queries():
+    specs = build_query_plan("现代GPU微架构（如NVIDIA Hopper/Ada、AMD RDNA/CDNA）的技术细节与性能对比")
+    arxiv = next(spec for spec in specs if spec.source == "arxiv")
+    openalex = next(spec for spec in specs if spec.source == "openalex")
+    assert " OR " in arxiv.query
+    assert "all:hopper" in arxiv.query
+    assert "all:rdna" in arxiv.query
+    assert "all:microarchitecture" not in arxiv.query
+    assert "现代" not in openalex.query
+    assert "gpu" in openalex.query
+    assert "hopper" in openalex.query
+
+
+def test_custom_gpu_screening_does_not_require_rag_terms():
+    result = screen_title_abstract(
+        "Dissecting the NVIDIA Hopper GPU Architecture",
+        "We analyze the H100 GPU microarchitecture, tensor cores, and memory hierarchy.",
+        2024,
+        research_query="modern GPU microarchitecture NVIDIA Hopper AMD RDNA CDNA",
+    )
+    assert result.decision == PaperDecision.include
+    assert result.reason_code == "custom_gpu_architecture_match"
+
+    unrelated = screen_title_abstract(
+        "Air pollution modelling using a graphics processing unit with CUDA",
+        "A general CUDA implementation on an NVIDIA GPU accelerates simulation.",
+        2024,
+        research_query="modern GPU microarchitecture NVIDIA Hopper AMD RDNA CDNA",
+    )
+    assert unrelated.decision == PaperDecision.exclude
+    assert unrelated.reason_code == "custom_gpu_application_only"
+
+    hardware_usage_only = screen_title_abstract(
+        "A Deep Learning Pipeline for Epilepsy Genomic Analysis Using NVIDIA H100",
+        "The workload runs on an NVIDIA H100 Tensor Core GPU based on Hopper architecture.",
+        2025,
+        research_query="modern GPU microarchitecture NVIDIA Hopper AMD RDNA CDNA",
+    )
+    assert hardware_usage_only.decision == PaperDecision.pending
+    assert hardware_usage_only.reason_code == "custom_gpu_model_only"
 
 
 def test_online_run_does_not_overwrite_phase2_real(tmp_path: Path, monkeypatch):
