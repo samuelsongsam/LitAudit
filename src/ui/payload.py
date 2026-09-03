@@ -5,9 +5,10 @@ from datetime import datetime
 from pathlib import Path
 
 from src.ask import ask
-from src.config import ROOT
+from src.config import ROOT, load_settings
 from src.eval_metrics import evaluate
 from src.io_utils import read_json
+from src.map_builder import build_map
 from src.replay import list_runs, load_run
 from src.run_paths import resolve_run_dir
 from src.schema import dataset_stats, latest_screening_by_paper
@@ -95,6 +96,61 @@ def describe_run(runs_dir: Path, run_id: str) -> dict:
         "offline": bool(manifest.get("offline", True)),
         "paper_count": paper_count,
         "verified_evidence_count": verified,
+    }
+
+
+def _retrieval_status_label(run) -> str:
+    if run.http_status == 429 or run.status == "rate_limited":
+        return "Semantic Scholar 暂时限流（未取得该源结果）" if run.source == "semantic_scholar" else "文献库暂时限流（未取得该源结果）"
+    if run.status == "success":
+        return "成功"
+    return "该源请求失败"
+
+
+def _retrieval_note(run) -> str:
+    if run.http_status == 429 or run.status == "rate_limited":
+        return "未取得结果，不能当成零篇成功。"
+    if run.notes:
+        return run.notes
+    if run.status != "success":
+        return "该源请求失败，其他成功源的结果仍可使用。"
+    return ""
+
+
+def _retrieval_summary(dataset, manifest: dict) -> dict:
+    settings = load_settings()
+    live = manifest.get("live") or {}
+    live_ids = {item.get("retrieval_id") for item in live.get("retrieval", []) if item.get("retrieval_id")}
+    is_live = not manifest.get("offline", True) and bool(live)
+    if is_live and live_ids:
+        round_runs = [run for run in dataset.retrieval_runs if run.retrieval_id in live_ids]
+        history_runs = [run for run in dataset.retrieval_runs if run.retrieval_id not in live_ids]
+    else:
+        round_runs = list(dataset.retrieval_runs)
+        history_runs = []
+
+    round_failures = [run for run in round_runs if run.is_failure]
+    hints: list[str] = []
+    if any(run.source == "semantic_scholar" and run.is_failure for run in round_runs) and not settings.semantic_scholar_api_key:
+        hints.append("Semantic Scholar 未配置 API Key，容易触发 429；可在 .env 填写 SEMANTIC_SCHOLAR_API_KEY。")
+    if round_failures and any(not run.is_failure for run in round_runs):
+        hints.append("部分检索源失败不代表整次检索失败；成功源返回的论文仍可使用。")
+    if is_live:
+        hints.append("本轮仅为摘要筛选，主问题不会被自动标为已支持。")
+
+    def _serialize(run) -> dict:
+        payload = _dump(run)
+        payload["status_label"] = _retrieval_status_label(run)
+        payload["note_text"] = _retrieval_note(run)
+        return payload
+
+    return {
+        "round_runs": [_serialize(run) for run in round_runs],
+        "history_runs": [_serialize(run) for run in history_runs],
+        "round_failure_count": len(round_failures),
+        "round_success_count": sum(1 for run in round_runs if not run.is_failure),
+        "semantic_scholar_key_configured": bool(settings.semantic_scholar_api_key),
+        "hints": hints,
     }
 
 
@@ -236,8 +292,9 @@ def build_payload(runs_dir, run_id: str) -> dict:
     manifest = loaded.get("manifest") or {}
     display = describe_run(runs_dir, run_id)
     stats = loaded.get("stats") or dataset_stats(dataset)
-    map_payload = _visible_live_map(loaded.get("map") or {}, manifest)
+    map_payload = _visible_live_map(build_map(dataset, run_id), manifest)
     context = _workspace_context(dataset, manifest, display, stats, map_payload)
+    retrieval_summary = _retrieval_summary(dataset, manifest)
     return {
         "run_id": run_id,
         "display": display,
@@ -249,6 +306,7 @@ def build_payload(runs_dir, run_id: str) -> dict:
         "stats": stats,
         "map": map_payload,
         "workspace": context,
+        "retrieval_summary": retrieval_summary,
         "eval": evaluate(ROOT),
         "papers": papers,
         "claims": [_dump(item) for item in dataset.claims],
@@ -279,7 +337,7 @@ def build_audit_report(runs_dir: Path, run_id: str) -> tuple[str, str]:
     dataset = loaded["dataset"]
     manifest = loaded.get("manifest") or {}
     stats = loaded.get("stats") or dataset_stats(dataset)
-    map_payload = loaded.get("map") or {}
+    map_payload = _visible_live_map(build_map(dataset, run_id), manifest)
     display = describe_run(runs_dir, run_id)
     context = _workspace_context(dataset, manifest, display, stats, map_payload)
     counts = stats.get("decision_counts", {})

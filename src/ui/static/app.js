@@ -9,7 +9,7 @@ const VIEWS = [
 
 const LABELS = {
   decision: { include: "纳入", exclude: "排除", pending: "待定" },
-  claim: { supported: "已支持", partial: "部分支持", unsupported: "不支持", pending: "待核验" },
+  claim: { supported: "已支持", partial: "部分支持", unsupported: "证据不足/不支持该表述", pending: "待核验" },
   parse: {
     pdf_partial_verified: "已核验摘录",
     abstract_verified: "仅摘要",
@@ -60,6 +60,9 @@ const state = {
   graphRunId: "",
   graphTransform: { x: 0, y: 0, scale: 1 },
   graphSimulation: null,
+  graphLayouts: {},
+  chatGraphMaps: {},
+  activeGraphId: "",
   moreOpen: false,
 };
 
@@ -472,7 +475,7 @@ function renderView() {
       };
     });
   });
-  if (state.view === "map" || stage.querySelector("#paper-graph")) setupGraphInteractions();
+  if (state.view === "map" || stage.querySelector(".paper-graph")) setupGraphInteractions();
   else stopGraphSimulation();
 }
 
@@ -485,7 +488,7 @@ function chatView() {
       <p>我会先检索并组织研究现状，再把论文和可核验关系放回当前 run。你可以继续追问某篇论文、某条分支，或要求重新检索。</p>
     </div>
     <div class="chat-thread">
-      ${messages.length ? messages.map(chatMessage).join("") : `<div class="chat-empty">输入一个科研问题，开始一次可回放的研究对话。</div>`}
+      ${messages.length ? messages.map((item, index) => chatMessage(item, index)).join("") : `<div class="chat-empty">输入一个科研问题，开始一次可回放的研究对话。</div>`}
     </div>
     <form class="search chat-compose" id="search-form">
       <input name="q" value="" autocomplete="off" placeholder="继续追问论文、证据或研究分支…" />
@@ -504,7 +507,7 @@ function conversationHistoryView() {
   </div>`;
 }
 
-function chatMessage(item) {
+function chatMessage(item, messageIndex = 0) {
   if (item.role === "user") return `<div class="chat-message user"><div class="chat-role">你</div><div class="chat-bubble">${esc(item.content)}</div></div>`;
   const response = item.response || {};
   if (response.overview_mode === "llm_error") return `<div class="chat-message assistant"><div class="chat-role">勘文 AI · 服务状态</div><article class="chat-bubble assistant-bubble"><div class="chat-error">AI 未生成本轮内容，请重试。</div></article></div>`;
@@ -524,11 +527,11 @@ function chatMessage(item) {
       <h3>总论概览</h3>
       <div class="chat-overview rich-text">${renderMarkdown(item.content)}</div>
       <h3>本轮相关论文</h3>
-      ${response.paper_selection?.retrieval_status === "all_failed" ? `<div class="chat-retrieval-warning">本轮在线检索未成功：${(response.paper_selection.retrieval_failures || []).map((item) => `${esc(item.source)}（${esc(item.status)}）`).join("、")}。不能据此判断没有相关论文。</div>` : response.paper_selection?.retrieval_status === "partial_failed" ? `<div class="chat-retrieval-warning">部分检索源失败；以下结果不是完整召回，不能据此判断没有相关论文。</div>` : ""}
+      ${response.paper_selection?.retrieval_status === "all_failed" ? `<div class="chat-retrieval-warning">本轮在线检索未成功：${(response.paper_selection.retrieval_failures || []).map((item) => `${esc(labelOf("source", item.source, item.source))}（${esc(labelOf("retrievalStatus", item.status, item.status))}）`).join("、")}。不能据此判断没有相关论文。</div>` : response.paper_selection?.retrieval_status === "partial_failed" ? `<div class="chat-retrieval-warning">部分检索源失败（例如 Semantic Scholar 限流）；成功源返回的论文仍可使用，以下结果不是完整召回。本轮仅为摘要筛选，主问题不会被自动标为已支持。</div>` : ""}
       <div class="chat-result-note">${esc(response.paper_selection?.message || "仅显示本轮问题匹配的论文。")}${response.paper_selection ? ` 本轮展示 ${esc(response.paper_selection.matched_count)} 篇 · 在线新增 ${esc(response.paper_selection.added_count)} 篇 · 审计 run 共 ${esc(response.paper_selection.total_run_count)} 篇。` : ""}</div>
       <div class="chat-papers">${papers.length ? papers.map(chatPaper).join("") : "<span class=\"muted\">本轮没有匹配到足够相关的论文。</span>"}</div>
       <h3>研究地图</h3>
-      <div class="chat-map">${response.map?.nodes ? mapView() : "当前结果尚未形成结构化关系图。"}</div>
+      <div class="chat-map">${response.map?.nodes?.length ? mapView(response.map, { embed: true, graphId: `chat-map-${messageIndex}` }) : "当前结果尚未形成结构化关系图。"}</div>
       <h3>后续核验模块</h3>
       <div class="chat-actions">${(response.actions || []).filter((action) => ["evidence", "falsify", "eval"].includes(action.kind)).map((action) => `<button class="chat-action" type="button" data-chat-action="${esc(action.kind)}"><strong>${esc(action.label)}</strong><span>原有页面保留 · 本轮不展开</span></button>`).join("")}</div>
     </article>
@@ -602,8 +605,53 @@ async function chatTurn(message) {
   }
 }
 
+function retrievalFailureCount() {
+  const summary = state.data.retrieval_summary;
+  if (summary && typeof summary.round_failure_count === "number") return summary.round_failure_count;
+  return state.data.stats?.retrieval_failure_count ?? 0;
+}
+
+function retrievalRoundRuns() {
+  const summary = state.data.retrieval_summary;
+  if (summary?.round_runs?.length) return summary.round_runs;
+  return state.data.retrieval_runs || [];
+}
+
+function retrievalHistoryRuns() {
+  return state.data.retrieval_summary?.history_runs || [];
+}
+
+function retrievalStatusLabel(run) {
+  if (run.status_label) return run.status_label;
+  if (run.http_status === 429) return "文献库暂时限流";
+  return labelOf("retrievalStatus", run.status, run.status);
+}
+
+function retrievalNote(run) {
+  if (run.note_text) return run.note_text;
+  if (run.http_status === 429) return "未取得结果，不能当成零篇成功。";
+  return run.notes || "";
+}
+
+function retrievalTableRows(runs) {
+  return runs
+    .map((run) => {
+      const fail = run.http_status === 429 || run.status !== "success";
+      return `<tr class="${fail ? "fail" : ""}">
+        <td>${esc(labelOf("source", run.source, run.source))}</td>
+        <td>${esc(retrievalStatusLabel(run))}</td>
+        <td>${esc(run.result_count ?? "—")}</td>
+        <td>${esc(retrievalNote(run))}</td>
+      </tr>`;
+    })
+    .join("");
+}
+
 function funnelView() {
-  const { stats, papers, retrieval_runs: runs, screening } = state.data;
+  const { stats, papers, screening } = state.data;
+  const roundRuns = retrievalRoundRuns();
+  const historyRuns = retrievalHistoryRuns();
+  const hints = state.data.retrieval_summary?.hints || [];
   const counts = stats.decision_counts || {};
   const hits = hitIds();
   const include = papers.filter((item) => item.decision === "include");
@@ -611,12 +659,13 @@ function funnelView() {
   const exclude = papers.filter((item) => item.decision === "exclude");
   return `
     <p class="view-hint">先筛哪些论文该看：纳入、排除与待定都会保留，方便后续查证据和反证。</p>
+    ${hints.length ? `<div class="banner">${hints.map((item) => esc(item)).join("<br />")}</div>` : ""}
     <div class="metrics">
       ${metric("候选论文", stats.paper_count, "")}
       ${metric("纳入", counts.include, "include")}
       ${metric("排除", counts.exclude, "exclude")}
       ${metric("待定", counts.pending, "pending")}
-      ${metric("检索异常", stats.retrieval_failure_count, "warn")}
+      ${metric("本轮检索异常", retrievalFailureCount(), "warn")}
     </div>
     <div class="banner">被排除的论文也会留下，后面反证还要用。拿不准的标为待定，不会当成结论。</div>
     <div class="workspace">
@@ -630,31 +679,28 @@ function funnelView() {
       </div>
       ${inspector()}
     </div>
-    <details>
-      <summary>检索日志（${runs.length} 条，含限流失败记录）</summary>
+    <details open>
+      <summary>本轮检索（${roundRuns.length} 条）</summary>
       <div class="table-wrap">
         <table>
           <thead><tr><th>来源</th><th>结果</th><th>篇数</th><th>说明</th></tr></thead>
-          <tbody>
-            ${runs
-              .map((run) => {
-                const fail = run.http_status === 429 || run.status !== "success";
-                const statusLabel =
-                  run.http_status === 429
-                    ? "文献库暂时限流"
-                    : labelOf("retrievalStatus", run.status, run.status);
-                return `<tr class="${fail ? "fail" : ""}">
-                  <td>${esc(labelOf("source", run.source, run.source))}</td>
-                  <td>${esc(statusLabel)}</td>
-                  <td>${esc(run.result_count ?? "—")}</td>
-                  <td>${esc(run.http_status === 429 ? "未取得结果，不能当成零篇成功。" : run.notes || "")}</td>
-                </tr>`;
-              })
-              .join("")}
-          </tbody>
+          <tbody>${roundRuns.length ? retrievalTableRows(roundRuns) : `<tr><td colspan="4" class="muted">暂无本轮检索记录。</td></tr>`}</tbody>
         </table>
       </div>
     </details>
+    ${
+      historyRuns.length
+        ? `<details>
+            <summary>历史检索记录（${historyRuns.length} 条，含金标 run 继承记录）</summary>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>来源</th><th>结果</th><th>篇数</th><th>说明</th></tr></thead>
+                <tbody>${retrievalTableRows(historyRuns)}</tbody>
+              </table>
+            </div>
+          </details>`
+        : ""
+    }
     <details>
       <summary>筛选明细（${screening.length} 条，含内部编号）</summary>
       <div class="table-wrap">
@@ -716,18 +762,56 @@ function inspector() {
   `;
 }
 
-function mapView() {
-  const map = state.data.map || {};
+function getGraphContext(graphId) {
+  if (!state.graphLayouts[graphId]) {
+    state.graphLayouts[graphId] = { positions: {}, transform: { x: 0, y: 0, scale: 1 }, runId: "" };
+  }
+  return state.graphLayouts[graphId];
+}
+
+function getGraphMap(graphId) {
+  if (state.chatGraphMaps[graphId]) return state.chatGraphMaps[graphId];
+  return state.data?.map || {};
+}
+
+function graphMarkerId(graphId, kind) {
+  return `${graphId}-${kind}`;
+}
+
+function positionsFor(graphId) {
+  return getGraphContext(graphId).positions;
+}
+
+function mapView(mapOverride = null, options = {}) {
+  const map = mapOverride || state.data?.map || {};
+  const embed = Boolean(options.embed);
+  const graphId = options.graphId || `map-${state.data?.run_id || "main"}`;
+  if (mapOverride) state.chatGraphMaps[graphId] = map;
   const contradiction = (map.contradictions || [])[0];
   const nodes = map.nodes || [];
   const edges = map.edges || [];
-  ensureGraphPositions(nodes, map);
-  const selectedEdge = edges.find((edge, index) => edgeKey(edge, index) === state.selectedEdgeKey);
+  ensureGraphPositions(nodes, map, graphId);
+  const selectedEdge = !embed && edges.find((edge, index) => edgeKey(edge, index) === state.selectedEdgeKey);
   const edgeSummary = `${edges.length} 条有向关系`;
+  const evidenceEdgeCount = edges.filter((edge) => edge.kind === "evidence_conflict" || edge.kind === "falsification").length;
+  const heuristicEdgeCount = edges.length - evidenceEdgeCount;
+  const legendBlock = embed
+    ? `<div class="graph-legend chat-graph-legend">
+        <span class="legend-group"><i class="legend-line heuristic"></i>摘要启发边 ${heuristicEdgeCount}</span>
+        <span class="legend-group"><i class="legend-line conflict"></i>证据边 ${evidenceEdgeCount}</span>
+      </div>`
+    : `<div class="graph-legend">
+        <span class="legend-group"><i class="legend-node include"></i>纳入</span>
+        <span class="legend-group"><i class="legend-node exclude"></i>排除</span>
+        <span class="legend-group"><i class="legend-node pending"></i>待定</span>
+        <span class="legend-group"><i class="legend-line conflict"></i>证据冲突</span>
+        <span class="legend-group"><i class="legend-line falsification"></i>反证命中</span>
+        <span class="legend-group"><i class="legend-line heuristic"></i>摘要启发边</span>
+      </div>`;
   return `
-    <p class="view-hint">论文用方框表示，箭头来自已落盘的证据冲突与反证关系；拖动节点可整理布局，不代表新增证据。</p>
+    ${embed ? "" : `<p class="view-hint">论文用方框表示；实线为证据/反证边，虚线为摘要级启发边。拖动节点可整理布局，不代表新增证据。</p>`}
     ${
-      contradiction
+      !embed && contradiction
         ? `<div class="banner pending">
             主问题相关论断仍待核验：${esc(contradiction.claim_text)}<br />
             支持侧：${(contradiction.support_or_context_papers || []).map(titleOf).join(" / ")}
@@ -735,59 +819,56 @@ function mapView() {
           </div>`
         : ""
     }
-    <div class="workspace">
+    <div class="workspace ${embed ? "graph-embed" : ""}">
       <div class="col">
         <div class="graph-toolbar">
           <div class="graph-toolbar-copy">
             <strong>论文关系图</strong>
-            <span>${nodes.length} 篇论文 · ${edgeSummary} · 当前只展示证据关系</span>
+            <span>${nodes.length} 篇论文 · ${edgeSummary} · 证据边 ${evidenceEdgeCount} · 启发边 ${heuristicEdgeCount}</span>
            </div>
-          <div class="graph-controls">
-            <button class="ghost tiny-btn" type="button" data-graph-action="relayout">重新布局</button>
-            <button class="ghost tiny-btn" type="button" data-graph-action="fit">适配视图</button>
-            <button class="ghost tiny-btn" type="button" data-graph-action="reset">重置位置</button>
-          </div>
+          ${embed ? "" : `<div class="graph-controls">
+            <button class="ghost tiny-btn" type="button" data-graph-action="relayout" data-graph-id="${esc(graphId)}">重新布局</button>
+            <button class="ghost tiny-btn" type="button" data-graph-action="fit" data-graph-id="${esc(graphId)}">适配视图</button>
+            <button class="ghost tiny-btn" type="button" data-graph-action="reset" data-graph-id="${esc(graphId)}">重置位置</button>
+          </div>`}
         </div>
-        <div class="graph-wrap">
-          <svg id="paper-graph" class="paper-graph" viewBox="0 0 1200 680" role="img" aria-label="论文关系图">
+        <div class="graph-wrap ${embed ? "graph-wrap-embed" : ""}">
+          <svg id="${esc(graphId)}" class="paper-graph ${embed ? "paper-graph-embed" : ""}" data-graph-id="${esc(graphId)}" viewBox="0 0 1200 680" role="img" aria-label="论文关系图">
             <defs>
-              <marker id="arrow-evidence-conflict" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <marker id="${graphMarkerId(graphId, "arrow-evidence-conflict")}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path class="arrow-head conflict" d="M 0 0 L 10 5 L 0 10 z"></path>
               </marker>
-              <marker id="arrow-falsification" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <marker id="${graphMarkerId(graphId, "arrow-falsification")}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path class="arrow-head falsification" d="M 0 0 L 10 5 L 0 10 z"></path>
               </marker>
-              <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <marker id="${graphMarkerId(graphId, "arrow-default")}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path class="arrow-head default" d="M 0 0 L 10 5 L 0 10 z"></path>
+              </marker>
+              <marker id="${graphMarkerId(graphId, "arrow-heuristic")}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path class="arrow-head heuristic" d="M 0 0 L 10 5 L 0 10 z"></path>
               </marker>
             </defs>
             <rect class="graph-surface" x="0" y="0" width="1200" height="680"></rect>
-            <g id="graph-viewport" class="graph-viewport">
-              <g id="graph-edges" class="graph-edges">
-                ${edges.map((edge, index) => graphEdge(edge, index, nodes)).join("")}
+            <g class="graph-viewport" data-graph-viewport="${esc(graphId)}">
+              <g class="graph-edges">
+                ${edges.map((edge, index) => graphEdge(edge, index, nodes, edges, graphId)).join("")}
               </g>
-              <g id="graph-nodes" class="graph-nodes">
-                ${nodes.map((node) => graphNode(node, nodes, edges)).join("")}
+              <g class="graph-nodes">
+                ${nodes.map((node) => graphNode(node, nodes, edges, graphId)).join("")}
               </g>
             </g>
           </svg>
-          <div class="graph-hint">拖动画布可平移 · 滚轮可缩放 · 拖动方框整理布局</div>
+          ${embed ? "" : `<div class="graph-hint">拖动画布可平移 · 滚轮可缩放 · 拖动方框整理布局</div>`}
         </div>
-        <div class="graph-legend">
-          <span class="legend-group"><i class="legend-node include"></i>纳入</span>
-          <span class="legend-group"><i class="legend-node exclude"></i>排除</span>
-          <span class="legend-group"><i class="legend-node pending"></i>待定</span>
-          <span class="legend-group"><i class="legend-line conflict"></i>证据冲突</span>
-          <span class="legend-group"><i class="legend-line falsification"></i>反证命中</span>
-        </div>
-        <details>
+        ${legendBlock}
+        ${embed ? "" : `<details>
           <summary>关系明细（${edges.length} 条）</summary>
           <div class="edge-list">
             ${edges.map((edge, index) => `<div data-edge="${esc(edgeKey(edge, index))}">${esc(titleOf(edge.source))} → ${esc(titleOf(edge.target))} · ${esc(edgeKindLabel(edge.kind))}</div>`).join("")}
           </div>
-        </details>
+        </details>`}
       </div>
-      ${selectedEdge ? relationInspector(selectedEdge) : inspector()}
+      ${!embed && selectedEdge ? relationInspector(selectedEdge) : embed ? "" : inspector()}
     </div>
   `;
 }
@@ -795,8 +876,27 @@ function mapView() {
 function edgeKindLabel(kind) {
   if (kind === "evidence_conflict") return "证据冲突";
   if (kind === "falsification") return "反证命中";
+  if (kind === "decision_boundary") return "纳入→排除边界";
+  if (kind === "track_affinity") return "同主线弱关联";
+  if (kind === "pending_review") return "纳入→待定提醒";
   if (kind === "citation") return "引用关系";
   return kind || "关系";
+}
+
+function graphEdgeClass(kind) {
+  if (kind === "evidence_conflict") return "conflict";
+  if (kind === "falsification") return "falsification";
+  if (kind === "decision_boundary" || kind === "track_affinity" || kind === "pending_review") return "heuristic";
+  return "default";
+}
+
+function graphEdgeMarker(kind, graphId = "") {
+  const relationClass = graphEdgeClass(kind);
+  const prefix = graphId ? `${graphId}-` : "";
+  if (relationClass === "conflict") return `${prefix}arrow-evidence-conflict`;
+  if (relationClass === "falsification") return `${prefix}arrow-falsification`;
+  if (relationClass === "heuristic") return `${prefix}arrow-heuristic`;
+  return `${prefix}arrow-default`;
 }
 
 function edgeKey(edge, index) {
@@ -830,26 +930,35 @@ function seededGraphPosition(node, index, map) {
   };
 }
 
-function ensureGraphPositions(nodes, map) {
-  if (state.graphRunId !== state.data.run_id) {
-    state.graphRunId = state.data.run_id;
-    state.selectedEdgeKey = "";
-    state.graphTransform = { x: 0, y: 0, scale: 1 };
-    let saved = {};
-    try {
-      saved = JSON.parse(localStorage.getItem(`litaudit:graph-layout:${state.graphRunId}`) || "{}");
-    } catch {
-      saved = {};
+function ensureGraphPositions(nodes, map, graphId = `map-${state.data?.run_id || "main"}`) {
+  const ctx = getGraphContext(graphId);
+  const runKey = map.run_id || state.data?.run_id || graphId;
+  if (ctx.runId !== runKey) {
+    ctx.runId = runKey;
+    ctx.positions = {};
+    ctx.transform = { x: 0, y: 0, scale: 1 };
+    if (!graphId.startsWith("chat-map-")) {
+      try {
+        ctx.positions = JSON.parse(localStorage.getItem(`litaudit:graph-layout:${runKey}`) || "{}");
+      } catch {
+        ctx.positions = {};
+      }
     }
-    state.graphPositions = saved;
   }
   nodes.forEach((node, index) => {
-    if (!state.graphPositions[node.paper_id]) state.graphPositions[node.paper_id] = seededGraphPosition(node, index, map);
+    if (!ctx.positions[node.paper_id]) ctx.positions[node.paper_id] = seededGraphPosition(node, index, map);
   });
+  if (!graphId.startsWith("chat-map-")) {
+    state.graphRunId = runKey;
+    state.graphPositions = ctx.positions;
+    state.graphTransform = ctx.transform;
+    state.activeGraphId = graphId;
+  }
 }
 
-function graphNode(node, nodes, edges) {
-  const position = state.graphPositions[node.paper_id];
+function graphNode(node, nodes, edges, graphId = state.activeGraphId) {
+  const layout = positionsFor(graphId);
+  const position = layout[node.paper_id];
   const selected = node.paper_id === state.selectedPaper ? "selected" : "";
   const neighbor = state.selectedEdgeKey && edges.some((edge, index) => {
     if (edgeKey(edge, index) !== state.selectedEdgeKey) return false;
@@ -866,15 +975,16 @@ function graphNode(node, nodes, edges) {
   </g>`;
 }
 
-function graphEdge(edge, index, nodes) {
-  const source = state.graphPositions[edge.source] || { x: 100, y: 100 };
-  const target = state.graphPositions[edge.target] || { x: 700, y: 300 };
+function graphEdge(edge, index, nodes, edges, graphId = state.activeGraphId) {
+  const layout = positionsFor(graphId);
+  const source = layout[edge.source] || { x: 100, y: 100 };
+  const target = layout[edge.target] || { x: 700, y: 300 };
   const sourceNode = nodes.find((node) => node.paper_id === edge.source);
   const targetNode = nodes.find((node) => node.paper_id === edge.target);
   const selected = edgeKey(edge, index) === state.selectedEdgeKey ? "selected" : "";
-  const relationClass = edge.kind === "evidence_conflict" ? "conflict" : edge.kind === "falsification" ? "falsification" : "default";
-  const marker = `arrow-${relationClass === "conflict" ? "evidence-conflict" : relationClass}`;
-  const parallel = graphParallelRank(edge, index, nodes, state.data.map.edges || []);
+  const relationClass = graphEdgeClass(edge.kind);
+  const marker = graphEdgeMarker(edge.kind, graphId);
+  const parallel = graphParallelRank(edge, index, nodes, edges || []);
   const path = graphEdgePath(source, target, parallel);
   const midpoint = graphEdgeMidpoint(source, target, parallel);
   return `<circle class="graph-edge-hit" data-edge="${esc(edgeKey(edge, index))}" cx="${midpoint.x.toFixed(1)}" cy="${midpoint.y.toFixed(1)}" r="22"></circle><path class="graph-edge ${relationClass} ${selected}" data-edge="${esc(edgeKey(edge, index))}" data-source="${esc(sourceNode?.paper_id || edge.source)}" data-target="${esc(targetNode?.paper_id || edge.target)}" marker-end="url(#${marker})" d="${path}"><title>${esc(edgeKindLabel(edge.kind))}：${esc(titleOf(edge.source))} → ${esc(titleOf(edge.target))}</title></path>`;
@@ -928,13 +1038,13 @@ function relationInspector(edge) {
   const claim = state.data.claims.find((item) => item.claim_id === edge.claim_id);
   const hit = state.data.falsification.find((item) => item.hit_id === edge.hit_id);
   return `<aside class="inspector relation-inspector">
-    <div class="stamps"><span class="stamp ${esc(edge.kind === "falsification" ? "falsification" : "contradicts")}">${esc(edgeKindLabel(edge.kind))}</span></div>
+    <div class="stamps"><span class="stamp ${esc(edge.kind === "falsification" ? "falsification" : edge.kind === "evidence_conflict" ? "contradicts" : "info")}">${esc(edgeKindLabel(edge.kind))}</span></div>
     <h3>${esc(edgeKindLabel(edge.kind))}</h3>
     <p class="tiny">${esc(titleOf(edge.source))} → ${esc(titleOf(edge.target))}</p>
     ${claim ? `<p><strong>关联论断</strong><br />${esc(claim.text)}</p>` : ""}
     ${edge.evidence_ids?.length ? `<p class="tiny">Evidence：${edge.evidence_ids.map((id) => esc(id)).join("、")}</p>` : ""}
     ${edge.hit_id ? `<p class="tiny">反证命中：${esc(edge.hit_id)} · 威胁 ${esc(hit?.threat || edge.threat || "—")}</p>` : ""}
-    <p>${esc(edge.note || "该关系来自当前 run 的结构化记录，不是引用网络推断。")}</p>
+    <p>${esc(edge.note || (graphEdgeClass(edge.kind) === "heuristic" ? "摘要级启发边，不是页码证据或引用关系。" : "该关系来自当前 run 的结构化记录，不是引用网络推断。"))}</p>
     <details class="tiny"><summary>内部关系编号</summary><p>${esc(edgeKey(edge, state.data.map.edges.indexOf(edge)))}</p></details>
   </aside>`;
 }
@@ -945,28 +1055,36 @@ function stopGraphSimulation() {
   state.graphDragging = "";
 }
 
-function applyGraphTransform() {
-  const viewport = document.getElementById("graph-viewport");
+function applyGraphTransform(svg = null, graphId = state.activeGraphId) {
+  const targetSvg = svg || document.getElementById(graphId);
+  if (!targetSvg) return;
+  const ctx = getGraphContext(graphId);
+  const viewport = targetSvg.querySelector(`[data-graph-viewport="${graphId}"]`) || targetSvg.querySelector(".graph-viewport");
   if (!viewport) return;
-  const transform = state.graphTransform;
+  const transform = ctx.transform;
   viewport.setAttribute("transform", `translate(${transform.x.toFixed(1)} ${transform.y.toFixed(1)}) scale(${transform.scale.toFixed(3)})`);
+  if (!svg) {
+    state.graphTransform = transform;
+  }
 }
 
-function updateGraphGeometry() {
-  const viewport = document.getElementById("graph-viewport");
-  if (!viewport) return;
-  const nodes = state.data.map.nodes || [];
-  const edges = state.data.map.edges || [];
-  viewport.querySelectorAll(".graph-node").forEach((element) => {
-    const position = state.graphPositions[element.dataset.paper];
+function updateGraphGeometry(svg = null, graphId = state.activeGraphId) {
+  const targetSvg = svg || document.getElementById(graphId);
+  if (!targetSvg) return;
+  const map = getGraphMap(graphId);
+  const nodes = map.nodes || [];
+  const edges = map.edges || [];
+  const layout = positionsFor(graphId);
+  targetSvg.querySelectorAll(".graph-node").forEach((element) => {
+    const position = layout[element.dataset.paper];
     if (position) element.setAttribute("transform", `translate(${position.x.toFixed(1)} ${position.y.toFixed(1)})`);
   });
-  viewport.querySelectorAll(".graph-edge, .graph-edge-hit").forEach((element) => {
+  targetSvg.querySelectorAll(".graph-edge, .graph-edge-hit").forEach((element) => {
     const index = edges.findIndex((edge, edgeIndex) => edgeKey(edge, edgeIndex) === element.dataset.edge);
     if (index < 0) return;
     const edge = edges[index];
-    const source = state.graphPositions[edge.source];
-    const target = state.graphPositions[edge.target];
+    const source = layout[edge.source];
+    const target = layout[edge.target];
     if (source && target) {
       const parallel = graphParallelRank(edge, index, nodes, edges);
       if (element.tagName.toLowerCase() === "circle") {
@@ -978,23 +1096,26 @@ function updateGraphGeometry() {
       }
     }
   });
-  applyGraphTransform();
+  applyGraphTransform(targetSvg, graphId);
 }
 
-function graphPoint(svg, event) {
+function graphPoint(svg, event, graphId = svg?.dataset?.graphId || state.activeGraphId) {
+  const ctx = getGraphContext(graphId);
   const bounds = svg.getBoundingClientRect();
   const canvasX = ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * 1200;
   const canvasY = ((event.clientY - bounds.top) / Math.max(1, bounds.height)) * 680;
   return {
-    x: (canvasX - state.graphTransform.x) / state.graphTransform.scale,
-    y: (canvasY - state.graphTransform.y) / state.graphTransform.scale,
+    x: (canvasX - ctx.transform.x) / ctx.transform.scale,
+    y: (canvasY - ctx.transform.y) / ctx.transform.scale,
   };
 }
 
-function fitGraph() {
-  const nodes = state.data.map.nodes || [];
+function fitGraphFor(svg, graphId, map = getGraphMap(graphId)) {
+  const nodes = map.nodes || [];
   if (!nodes.length) return;
-  const positions = nodes.map((node) => state.graphPositions[node.paper_id]).filter(Boolean);
+  const layout = positionsFor(graphId);
+  const positions = nodes.map((node) => layout[node.paper_id]).filter(Boolean);
+  if (!positions.length) return;
   const minX = Math.min(...positions.map((position) => position.x));
   const maxX = Math.max(...positions.map((position) => position.x + 208));
   const minY = Math.min(...positions.map((position) => position.y));
@@ -1002,12 +1123,18 @@ function fitGraph() {
   const width = Math.max(208, maxX - minX);
   const height = Math.max(88, maxY - minY);
   const scale = Math.min(1.05, Math.max(0.55, Math.min(1120 / width, 600 / height)));
-  state.graphTransform = {
+  const ctx = getGraphContext(graphId);
+  ctx.transform = {
     scale,
     x: (1200 - width * scale) / 2 - minX * scale,
     y: (680 - height * scale) / 2 - minY * scale,
   };
-  applyGraphTransform();
+  if (!graphId.startsWith("chat-map-")) state.graphTransform = ctx.transform;
+  applyGraphTransform(svg, graphId);
+}
+
+function fitGraph() {
+  fitGraphFor(document.getElementById(state.activeGraphId), state.activeGraphId);
 }
 
 function saveGraphPositions() {
@@ -1060,14 +1187,15 @@ function resolveGraphCollisions(nodes, positions, fixedId = "", passes = 4) {
   }
 }
 
-function startGraphSimulation(nodes, edges) {
+function startGraphSimulation(nodes, edges, svg, graphId) {
   stopGraphSimulation();
+  const layout = positionsFor(graphId);
   const velocities = Object.fromEntries(nodes.map((node) => [node.paper_id, { x: 0, y: 0 }]));
-  const simulation = { nodes, edges, velocities, frame: 0, ticks: 0 };
+  const simulation = { nodes, edges, velocities, frame: 0, ticks: 0, svg, graphId };
   state.graphSimulation = simulation;
   const tick = () => {
-    if (state.graphSimulation !== simulation || !document.getElementById("paper-graph")) return;
-    const positions = state.graphPositions;
+    if (state.graphSimulation !== simulation || !document.getElementById(graphId)) return;
+    const positions = layout;
     const activeNodes = nodes.filter((node) => node.paper_id !== state.graphDragging);
     for (let leftIndex = 0; leftIndex < activeNodes.length; leftIndex += 1) {
       const left = activeNodes[leftIndex];
@@ -1138,79 +1266,65 @@ function startGraphSimulation(nodes, edges) {
       position.y = Math.max(24, Math.min(568, position.y + velocity.y));
     });
     resolveGraphCollisions(nodes, positions, state.graphDragging, 5);
-    updateGraphGeometry();
+    updateGraphGeometry(svg, graphId);
     simulation.ticks += 1;
     if (simulation.ticks < 220) simulation.frame = requestAnimationFrame(tick);
     else {
       resolveGraphCollisions(nodes, positions, state.graphDragging, 40);
-      updateGraphGeometry();
+      updateGraphGeometry(svg, graphId);
       simulation.frame = 0;
-      saveGraphPositions();
+      if (!graphId.startsWith("chat-map-")) {
+        state.graphPositions = layout;
+        saveGraphPositions();
+      }
     }
   };
   simulation.frame = requestAnimationFrame(tick);
 }
 
-function setupGraphInteractions() {
-  const svg = document.getElementById("paper-graph");
-  if (!svg) return;
-  const nodes = state.data.map.nodes || [];
-  const edges = state.data.map.edges || [];
-  applyGraphTransform();
-  startGraphSimulation(nodes, edges);
-
-  document.querySelectorAll("[data-graph-action]").forEach((button) => {
-    button.onclick = () => {
-      const action = button.dataset.graphAction;
-      if (action === "relayout") {
-        state.graphPositions = {};
-        try {
-          localStorage.removeItem(`litaudit:graph-layout:${state.graphRunId}`);
-        } catch {
-          // Ignore storage errors; relayout still works for the current page.
-        }
-        ensureGraphPositions(nodes, state.data.map);
-        state.graphTransform = { x: 0, y: 0, scale: 1 };
-        renderView();
-      } else if (action === "fit") {
-        fitGraph();
-      } else if (action === "reset") {
-        state.graphPositions = {};
-        state.graphTransform = { x: 0, y: 0, scale: 1 };
-        try {
-          localStorage.removeItem(`litaudit:graph-layout:${state.graphRunId}`);
-        } catch {
-          // Ignore storage errors; the reset is still visible in this render.
-        }
-        renderView();
-      }
-    };
-  });
+function setupSingleGraph(svg) {
+  const graphId = svg.dataset.graphId || svg.id;
+  const map = getGraphMap(graphId);
+  const nodes = map.nodes || [];
+  const edges = map.edges || [];
+  state.activeGraphId = graphId;
+  state.graphPositions = positionsFor(graphId);
+  state.graphTransform = getGraphContext(graphId).transform;
+  applyGraphTransform(svg, graphId);
+  if (graphId.startsWith("chat-map-")) {
+    fitGraphFor(svg, graphId, map);
+    return;
+  }
+  startGraphSimulation(nodes, edges, svg, graphId);
 
   let pan = null;
   svg.addEventListener("wheel", (event) => {
     event.preventDefault();
+    const ctx = getGraphContext(graphId);
     const factor = event.deltaY < 0 ? 1.08 : 0.92;
-    const previousScale = state.graphTransform.scale;
+    const previousScale = ctx.transform.scale;
     const nextScale = Math.max(0.45, Math.min(1.8, previousScale * factor));
-    const point = graphPoint(svg, event);
-    state.graphTransform.scale = nextScale;
-    state.graphTransform.x += point.x * (previousScale - nextScale);
-    state.graphTransform.y += point.y * (previousScale - nextScale);
-    applyGraphTransform();
+    const point = graphPoint(svg, event, graphId);
+    ctx.transform.scale = nextScale;
+    ctx.transform.x += point.x * (previousScale - nextScale);
+    ctx.transform.y += point.y * (previousScale - nextScale);
+    if (!graphId.startsWith("chat-map-")) state.graphTransform = ctx.transform;
+    applyGraphTransform(svg, graphId);
   }, { passive: false });
   svg.addEventListener("pointerdown", (event) => {
     if (event.target.closest(".graph-node") || event.target.closest(".graph-edge, .graph-edge-hit")) return;
-    pan = { x: event.clientX, y: event.clientY, transform: { ...state.graphTransform } };
+    pan = { x: event.clientX, y: event.clientY, transform: { ...getGraphContext(graphId).transform } };
     svg.setPointerCapture(event.pointerId);
   });
   svg.addEventListener("pointermove", (event) => {
     if (!pan) return;
+    const ctx = getGraphContext(graphId);
     const bounds = svg.getBoundingClientRect();
     const factor = 1200 / Math.max(1, bounds.width);
-    state.graphTransform.x = pan.transform.x + (event.clientX - pan.x) * factor;
-    state.graphTransform.y = pan.transform.y + (event.clientY - pan.y) * factor;
-    applyGraphTransform();
+    ctx.transform.x = pan.transform.x + (event.clientX - pan.x) * factor;
+    ctx.transform.y = pan.transform.y + (event.clientY - pan.y) * factor;
+    if (!graphId.startsWith("chat-map-")) state.graphTransform = ctx.transform;
+    applyGraphTransform(svg, graphId);
   });
   svg.addEventListener("pointerup", () => { pan = null; });
 
@@ -1218,8 +1332,8 @@ function setupGraphInteractions() {
     let drag = null;
     nodeElement.addEventListener("pointerdown", (event) => {
       event.stopPropagation();
-      const point = graphPoint(svg, event);
-      const position = state.graphPositions[nodeElement.dataset.paper];
+      const point = graphPoint(svg, event, graphId);
+      const position = positionsFor(graphId)[nodeElement.dataset.paper];
       drag = { offsetX: point.x - position.x, offsetY: point.y - position.y, moved: false };
       state.graphDragging = nodeElement.dataset.paper;
       nodeElement.classList.add("dragging");
@@ -1227,19 +1341,22 @@ function setupGraphInteractions() {
     });
     nodeElement.addEventListener("pointermove", (event) => {
       if (!drag) return;
-      const point = graphPoint(svg, event);
-      const position = state.graphPositions[nodeElement.dataset.paper];
+      const point = graphPoint(svg, event, graphId);
+      const position = positionsFor(graphId)[nodeElement.dataset.paper];
       position.x = Math.max(24, Math.min(968, point.x - drag.offsetX));
       position.y = Math.max(24, Math.min(568, point.y - drag.offsetY));
       drag.moved = true;
-      updateGraphGeometry();
+      updateGraphGeometry(svg, graphId);
     });
     nodeElement.addEventListener("pointerup", () => {
       if (!drag) return;
       if (drag.moved) {
         nodeElement.dataset.dragged = "true";
         window.setTimeout(() => delete nodeElement.dataset.dragged, 0);
-        saveGraphPositions();
+        if (!graphId.startsWith("chat-map-")) {
+          state.graphPositions = positionsFor(graphId);
+          saveGraphPositions();
+        }
       }
       drag = null;
       state.graphDragging = "";
@@ -1267,7 +1384,43 @@ function setupGraphInteractions() {
       renderView();
     };
   });
-  document.querySelectorAll("[data-edge]").forEach((edgeElement) => {
+}
+
+function setupGraphInteractions() {
+  stopGraphSimulation();
+  document.getElementById("stage")?.querySelectorAll("svg.paper-graph").forEach((svg) => setupSingleGraph(svg));
+  document.querySelectorAll("[data-graph-action]").forEach((button) => {
+    button.onclick = () => {
+      const action = button.dataset.graphAction;
+      const targetGraphId = button.dataset.graphId || state.activeGraphId;
+      const map = getGraphMap(targetGraphId);
+      const nodes = map.nodes || [];
+      if (action === "relayout") {
+        getGraphContext(targetGraphId).positions = {};
+        try {
+          localStorage.removeItem(`litaudit:graph-layout:${state.graphRunId}`);
+        } catch {
+          // Ignore storage errors; relayout still works for the current page.
+        }
+        ensureGraphPositions(nodes, map, targetGraphId);
+        getGraphContext(targetGraphId).transform = { x: 0, y: 0, scale: 1 };
+        renderView();
+      } else if (action === "fit") {
+        state.activeGraphId = targetGraphId;
+        fitGraphFor(document.getElementById(targetGraphId), targetGraphId, map);
+      } else if (action === "reset") {
+        getGraphContext(targetGraphId).positions = {};
+        getGraphContext(targetGraphId).transform = { x: 0, y: 0, scale: 1 };
+        try {
+          localStorage.removeItem(`litaudit:graph-layout:${state.graphRunId}`);
+        } catch {
+          // Ignore storage errors; the reset is still visible in this render.
+        }
+        renderView();
+      }
+    };
+  });
+  document.querySelectorAll(".edge-list [data-edge]").forEach((edgeElement) => {
     edgeElement.onclick = () => {
       state.selectedEdgeKey = edgeElement.dataset.edge;
       renderView();

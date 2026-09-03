@@ -19,13 +19,46 @@ def test_payload_keeps_conflict_and_rate_limit():
     assert claim["status"] == "pending"
     assert payload["map"]["edges"]
     assert payload["map"]["contradictions"]
+    evidence_kinds = {edge["kind"] for edge in payload["map"]["edges"]}
+    assert "evidence_conflict" in evidence_kinds
+    assert {"decision_boundary", "track_affinity", "pending_review"} & evidence_kinds
     limited = next(item for item in payload["retrieval_runs"] if item["retrieval_id"] == "retrieval-010")
     assert limited["http_status"] == 429
+    summary = payload["retrieval_summary"]
+    assert "round_failure_count" in summary
+    assert summary["round_runs"]
     paper = next(item for item in payload["papers"] if item["paper_id"] == "paper-001")
     assert paper["parse_status"] == "pdf_partial_verified"
     assert payload["workspace"]["scope_version"] == "v0.1"
     assert payload["workspace"]["question"] == payload["question"]
     assert payload["workspace"]["review_item_count"] >= 2
+
+
+def test_live_retrieval_summary_counts_current_round_only():
+    live_runs = [item for item in list_runs_for_ui(ROOT / "runs") if item["kind"] == "live"]
+    if not live_runs:
+        return
+    payload = build_payload(ROOT / "runs", live_runs[0]["id"])
+    summary = payload["retrieval_summary"]
+    assert summary["round_runs"]
+    assert summary["round_failure_count"] <= len(payload["retrieval_runs"])
+    assert summary["round_failure_count"] == sum(1 for run in summary["round_runs"] if run["status"] != "success" or run.get("http_status") == 429)
+    if any(run["source"] == "semantic_scholar" and run["status"] != "success" for run in summary["round_runs"]):
+        assert any("SEMANTIC_SCHOLAR_API_KEY" in hint for hint in summary["hints"])
+    assert any("摘要筛选" in hint for hint in summary["hints"])
+
+
+def test_live_map_has_heuristic_edges_for_added_papers():
+    live_runs = [item for item in list_runs_for_ui(ROOT / "runs") if item["kind"] == "live"]
+    if not live_runs:
+        return
+    payload = build_payload(ROOT / "runs", live_runs[0]["id"])
+    edges = payload["map"]["edges"]
+    assert edges
+    kinds = {edge["kind"] for edge in edges}
+    assert {"decision_boundary", "track_affinity", "pending_review"} & kinds
+    assert all(edge["source"] in {node["paper_id"] for node in payload["map"]["nodes"]} for edge in edges)
+    assert all(edge["target"] in {node["paper_id"] for node in payload["map"]["nodes"]} for edge in edges)
 
 
 def test_live_map_hides_inherited_baseline_papers():
@@ -75,7 +108,13 @@ def test_static_shell_exists():
     assert ".history-bar" in css
     assert "检索文献" in js
     assert "基准核验结果" in js
+    assert "本轮检索异常" in js
+    assert "证据不足/不支持该表述" in js
+    assert "摘要启发边" in js
     assert "paper-graph" in js
+    assert "chat-map-" in js
+    assert "data-graph-id" in js
+    assert "mapView(response.map" in js
     assert "requestAnimationFrame" in js
     assert "marker-end" in js
     assert "拖动画布可平移" in js

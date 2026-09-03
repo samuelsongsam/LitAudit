@@ -37,7 +37,8 @@ STOP = {
     "can",
     "whether",
 }
-ZH_MAP = (
+# Chinese terms translated into provider queries (exclude intent-only words like 综述/经典).
+ZH_SEARCH_MAP = (
     ("现代GPU微架构", "modern GPU microarchitecture"),
     ("GPU微架构", "GPU microarchitecture"),
     ("微架构", "microarchitecture"),
@@ -50,20 +51,42 @@ ZH_MAP = (
     ("绝对精神", "absolute spirit"),
     ("哲学", "philosophy"),
     ("核心概念", "core concepts"),
-    ("经典", "classical"),
     ("当代", "contemporary"),
     ("检索增强", "retrieval-augmented"),
     ("可追溯", "traceability provenance"),
-    ("文献综述", "literature review"),
     ("科学问答", "scientific question answering"),
     ("智能体", "agent"),
+    ("多智能体", "multi-agent"),
+    ("多代理", "multi-agent"),
+    ("辩论", "debate"),
+    ("框架设计", "framework design"),
+    ("逻辑推理", "logical reasoning"),
     ("幻觉", "hallucination"),
     ("证据", "evidence"),
     ("科研", "scientific research"),
     ("大模型", "large language model"),
-    ("综述", "literature review"),
     ("问答", "question answering"),
 )
+GENERIC_QUERY_STOP = STOP | {
+    "literature",
+    "review",
+    "classical",
+    "survey",
+    "method",
+    "methods",
+    "design",
+    "theory",
+    "paper",
+    "papers",
+    "principles",
+    "reasoning",
+    "framework",
+    "logic",
+    "mathematical",
+    "classic",
+    "overview",
+    "surveying",
+}
 ARXIV_ID = re.compile(r"(\d{4}\.\d{4,5})(?:v\d+)?")
 
 
@@ -121,10 +144,31 @@ def expand_question(question: str) -> str:
     )
     text = re.sub(r"[，。；;、]+", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
-    extras = [english for chinese, english in ZH_MAP if chinese in text]
+    extras = [english for chinese, english in ZH_SEARCH_MAP if chinese in text]
     if extras:
         text = f"{text} {' '.join(extras)}"
     return text
+
+
+def _distinctive_tokens(text: str) -> list[str]:
+    raw = (text or "").strip().lower()
+    tokens: list[str] = []
+    if "multi-agent" in raw or "multi agent" in raw:
+        tokens.append("multi-agent")
+    if "retrieval-augmented" in raw or "retrieval augmented" in raw:
+        tokens.append("retrieval-augmented")
+    for token in re.findall(r"[A-Za-z][A-Za-z0-9\-]{2,}", text or ""):
+        lowered = token.lower()
+        if lowered in GENERIC_QUERY_STOP or lowered in tokens:
+            continue
+        if lowered == "multi" and "multi-agent" in tokens:
+            continue
+        if lowered == "agent" and "multi-agent" in tokens:
+            continue
+        tokens.append(lowered)
+        if len(tokens) >= 6:
+            break
+    return tokens
 
 
 def to_arxiv_query(text: str) -> str:
@@ -136,43 +180,43 @@ def to_arxiv_query(text: str) -> str:
     low = raw.lower()
     if "gpu" in low and any(term in low for term in ("microarchitecture", "hopper", "ada", "rdna", "cdna")):
         return '(all:gpu OR all:nvidia OR all:amd) AND (all:hopper OR all:h100 OR all:ada OR all:rdna OR all:cdna)'
-    parts: list[str] = []
-    for phrase in (
-        "retrieval-augmented",
-        "retrieval augmented",
-        "large language model",
-        "literature review",
-        "question answering",
-        "scientific literature",
-    ):
-        if phrase in low:
-            normalized = "retrieval-augmented" if phrase == "retrieval augmented" else phrase
-            token = f'all:"{normalized}"'
-            if token not in parts:
-                parts.append(token)
-    for token in re.findall(r"[A-Za-z][A-Za-z0-9\-]{2,}", raw):
-        lowered = token.lower()
-        if lowered in STOP or any(lowered in part.lower() for part in parts):
-            continue
-        parts.append(f"all:{lowered}")
-        if len(parts) >= 6:
-            break
-    return " AND ".join(parts)
+    if ("multi-agent" in low or "multi agent" in low or "multiagent" in low) and "debate" in low:
+        return '(all:"multi-agent" OR all:multiagent OR all:"multi agent") AND (all:debate OR all:"llm debate")'
+    tokens = _distinctive_tokens(raw)
+    if "retrieval-augmented" in low and ("agent" in tokens or "rag" in tokens):
+        return 'all:"retrieval-augmented" AND (all:agent OR all:rag OR all:"question answering")'
+    if len(tokens) >= 2:
+        return f"all:{tokens[0]} AND all:{tokens[1]}"
+    if tokens:
+        return f"all:{tokens[0]}"
+    return ""
+
+
+def to_arxiv_fallback_query(text: str) -> str:
+    raw = expand_question(text or "")
+    low = raw.lower()
+    if ("multi-agent" in low or "multi agent" in low or "multiagent" in low) and "debate" in low:
+        return '(all:"multi-agent" OR all:multiagent) AND all:debate'
+    tokens = _distinctive_tokens(raw)
+    if len(tokens) >= 2:
+        return f"all:{tokens[0]} AND all:{tokens[1]}"
+    if tokens:
+        return f"all:{tokens[0]}"
+    return ""
 
 
 def to_provider_query(text: str) -> str:
     """Keep a concise English query for providers whose search endpoints handle natural text."""
-    stop = STOP | {
+    stop = GENERIC_QUERY_STOP | {
         "modern", "specific", "technical", "details", "detail", "including", "include",
         "analysis", "deep", "comparison", "such", "like", "architecture",
     }
     tokens: list[str] = []
-    for token in re.findall(r"[A-Za-z][A-Za-z0-9+.-]{1,}", text or ""):
-        lowered = token.lower()
-        if lowered in stop or lowered in tokens:
+    for token in _distinctive_tokens(text or ""):
+        if token in stop or token in tokens:
             continue
-        tokens.append(lowered)
-        if len(tokens) >= 14:
+        tokens.append(token)
+        if len(tokens) >= 8:
             break
     return " ".join(tokens)
 
@@ -447,7 +491,7 @@ def _fetch_with_fallback(
         if result.status == 200:
             return result
         if result.status == 429:
-            time.sleep(1.2)
+            time.sleep(3.0)
             retry = fetch(url, headers=headers, timeout=timeout, mailto=mailto)
             if retry.status == 200:
                 retry.notes = [*result.notes, *retry.notes, "retried_once"]
@@ -542,4 +586,66 @@ def search_all(
         )
         if status == "success":
             hits.extend(parsed)
+        if (
+            spec.source == "arxiv"
+            and status == "success"
+            and len(parsed) == 0
+            and question
+        ):
+            fallback_query = to_arxiv_fallback_query(question)
+            if fallback_query and fallback_query != spec.query:
+                time.sleep(sleep_s)
+                fallback_spec = QuerySpec("q-live-arxiv-fallback", "arxiv", fallback_query, "arXiv 零结果回退检索")
+                fallback_urls = _source_urls(fallback_spec, limit=limit_per_source, mailto=mailto)
+                fallback_result = _fetch_with_fallback(
+                    fallback_urls,
+                    fetch=fetch,
+                    headers=None,
+                    mailto=mailto,
+                    timeout=timeout,
+                )
+                fallback_status = retrieval_status(fallback_result.status, fallback_result.error)
+                fallback_parsed: list[LiveHit] = []
+                fallback_total = None
+                fallback_path = cache_dir / f"{fallback_spec.query_id}.xml"
+                if fallback_result.body:
+                    fallback_path.write_bytes(fallback_result.body)
+                if fallback_status == "success":
+                    try:
+                        fallback_parsed, fallback_total = _parse("arxiv", fallback_result.body)
+                    except (ET.ParseError, ValueError, TypeError) as exc:
+                        fallback_status = "failed"
+                        notes.append(f"{fallback_spec.query_id} 解析失败: {exc}")
+                fallback_notes = list(fallback_result.notes)
+                if fallback_result.error:
+                    fallback_notes.append(fallback_result.error)
+                queries.append(
+                    SearchQuery(
+                        query_id=fallback_spec.query_id,
+                        source=fallback_spec.source,
+                        query=fallback_spec.query,
+                        purpose=fallback_spec.purpose,
+                        date=today,
+                        scope_version="v0.1",
+                        notes="arXiv 零结果后回退检索式",
+                    )
+                )
+                runs.append(
+                    RetrievalRun(
+                        retrieval_id=f"live-{fallback_spec.query_id}",
+                        query_id=fallback_spec.query_id,
+                        source=fallback_spec.source,
+                        request=fallback_result.url or fallback_urls[0],
+                        retrieved_at=today,
+                        http_status=fallback_result.status,
+                        status=fallback_status,
+                        result_count=len(fallback_parsed) if fallback_status == "success" else None,
+                        response_path=str(fallback_path),
+                        notes="; ".join(fallback_notes) if fallback_notes else "arxiv_zero_result_fallback",
+                        total_count=fallback_total if fallback_status == "success" else None,
+                    )
+                )
+                if fallback_status == "success" and fallback_parsed:
+                    hits.extend(fallback_parsed)
+                    notes.append(f"arXiv 首次零结果，回退检索返回 {len(fallback_parsed)} 条。")
     return SearchBundle(queries=queries, runs=runs, hits=hits, notes=notes)

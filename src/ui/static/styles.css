@@ -541,11 +541,14 @@ tr.fail td { background: #f8ece8; }
 .chat-paper:hover, .chat-paper:focus-visible { border-color: var(--ink); }
 .chat-paper strong { font-family: var(--serif); font-size: 13px; line-height: 1.35; }
 .chat-map { min-width: 0; }
-.chat-map .view-hint, .chat-map > .banner, .chat-map > .graph-legend, .chat-map > details { display: none; }
+.chat-map .view-hint, .chat-map > .banner, .chat-map > details { display: none; }
+.chat-map .graph-legend:not(.chat-graph-legend) { display: none; }
+.chat-map .chat-graph-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 8px; }
 .chat-map .workspace { grid-template-columns: 1fr; }
 .chat-map .inspector { display: none; }
-.chat-map .graph-wrap { min-height: 400px; }
-.chat-map .paper-graph { height: 430px; }
+.chat-map .graph-wrap-embed { min-height: 420px; }
+.chat-map .paper-graph-embed { height: 460px; width: 100%; }
+.chat-map .graph-edge.heuristic { stroke-width: 3; opacity: 0.92; }
 .chat-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .chat-action { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--line); background: #fffdf7; text-align: left; }
 .chat-action strong { font-family: var(--serif); font-size: 13px; }
@@ -608,6 +611,7 @@ tr.fail td { background: #f8ece8; }
 .arrow-head.conflict { fill: var(--exclude); }
 .arrow-head.falsification { fill: var(--seal); }
 .arrow-head.default { fill: var(--info); }
+.arrow-head.heuristic { fill: var(--pending); }
 .graph-edge.conflict {
   stroke: var(--exclude);
   marker-end: url(#arrow-evidence-conflict);
@@ -616,6 +620,12 @@ tr.fail td { background: #f8ece8; }
   stroke: var(--seal);
   stroke-dasharray: 7 5;
   marker-end: url(#arrow-falsification);
+}
+.graph-edge.heuristic {
+  stroke: var(--pending);
+  stroke-dasharray: 4 6;
+  opacity: 0.72;
+  marker-end: url(#arrow-heuristic);
 }
 .graph-edge.default {
   stroke: var(--info);
@@ -690,6 +700,7 @@ tr.fail td { background: #f8ece8; }
 }
 .legend-line.conflict { border-color: var(--exclude); }
 .legend-line.falsification { border-color: var(--seal); border-top-style: dashed; }
+.legend-line.heuristic { border-color: var(--pending); border-top-style: dotted; }
 .relation-inspector { border-top: 3px solid var(--seal); }
 
 .claim-layout {

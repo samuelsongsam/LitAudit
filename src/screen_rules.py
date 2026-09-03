@@ -45,7 +45,10 @@ TOPIC_STOP = {
     "the", "and", "for", "with", "from", "that", "this", "into", "using", "use",
     "modern", "specific", "technical", "details", "detail", "analysis", "including",
     "include", "comparison", "performance", "architecture", "research", "paper",
+    "literature", "review", "survey", "classical", "method", "framework", "design",
+    "theory", "papers", "logic", "reasoning", "mathematical", "principles", "classic",
 }
+ANCHOR_HINTS = {"rag", "qa", "llm", "gpu", "debate", "agent", "hopper", "rdna", "cdna", "ada"}
 
 
 @dataclass(frozen=True)
@@ -96,6 +99,18 @@ def _topic_terms(query: str | None) -> set[str]:
     }
 
 
+def _topic_anchor_terms(query: str | None) -> tuple[set[str], set[str]]:
+    terms = _topic_terms(query)
+    anchors = {
+        term
+        for term in terms
+        if len(term) >= 5 or "-" in term or term in ANCHOR_HINTS
+    }
+    if not anchors:
+        anchors = set(terms)
+    return terms, anchors
+
+
 def screen_title_abstract(
     title: str | None,
     abstract: str | None,
@@ -106,8 +121,9 @@ def screen_title_abstract(
     """规则筛选标题+摘要。明显符合 include，明显排除 exclude，否则 pending。"""
     text = _blob(title, abstract)
     if research_query:
-        terms = _topic_terms(research_query)
+        terms, anchors = _topic_anchor_terms(research_query)
         matched = {term for term in terms if term in text}
+        matched_anchors = {term for term in anchors if term in text}
         gpu_topic = "gpu" in terms and bool(terms & {"hopper", "ada", "rdna", "cdna", "microarchitecture"})
         if gpu_topic:
             model_signal = any(term in text for term in ("hopper", "h100", "ada", "lovelace", "rdna", "cdna", "mi200", "mi300"))
@@ -146,13 +162,13 @@ def screen_title_abstract(
                 "custom_gpu_application_only",
                 "论文涉及 GPU 应用，但未命中本轮指定的现代 GPU 微架构型号。",
             )
-        if len(matched) >= 2:
+        if len(matched_anchors) >= 2 or (matched_anchors and len(matched) >= 2):
             return ScreenResult(
                 PaperDecision.include,
                 "custom_topic_match",
                 "标题/摘要与本轮自定义研究主题有明确词项重叠。仅完成摘要级相关性筛选，尚未做全文与页码核验。",
             )
-        if matched:
+        if matched_anchors or matched:
             return ScreenResult(
                 PaperDecision.pending,
                 "custom_topic_uncertain",

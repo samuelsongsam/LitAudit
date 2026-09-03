@@ -4,7 +4,7 @@ from src.config import ROOT, load_settings
 from src.http_fetch import FetchResult
 from src.io_utils import load_dataset
 from src.live_ingest import ingest_live
-from src.retrieve import build_query_plan, expand_question
+from src.retrieve import build_query_plan, expand_question, to_arxiv_query, to_provider_query
 from src.pipeline import run_pipeline
 from src.retrieve import parse_arxiv, retrieval_status
 from src.schema import PaperDecision, dataset_stats
@@ -148,8 +148,10 @@ def test_custom_topic_does_not_add_default_rag_query():
     assert specs[0].query_id == "q-live-arxiv-user"
     assert all("retrieval-augmented" not in spec.query for spec in specs)
     assert all(spec.query_id != "q-live-risk" for spec in specs)
-    assert "reason" in specs[0].query
-    assert "freedom" in specs[0].query
+    arxiv = next(spec for spec in specs if spec.source == "arxiv")
+    openalex = next(spec for spec in specs if spec.source == "openalex")
+    assert "reason" in arxiv.query or "rationality" in arxiv.query
+    assert "freedom" in openalex.query or "reason" in openalex.query
 
 
 def test_gpu_topic_uses_broad_english_provider_queries():
@@ -192,6 +194,45 @@ def test_custom_gpu_screening_does_not_require_rag_terms():
     )
     assert hardware_usage_only.decision == PaperDecision.pending
     assert hardware_usage_only.reason_code == "custom_gpu_model_only"
+
+
+def test_multi_agent_debate_query_avoids_generic_review_terms():
+    question = "multi-agent debate 综述 经典论文 方法原理 数学逻辑推理 框架设计"
+    expanded = expand_question(question)
+    assert "literature review" not in expanded
+    assert "classical" not in expanded
+    specs = build_query_plan(question)
+    arxiv = next(spec for spec in specs if spec.source == "arxiv")
+    provider = next(spec for spec in specs if spec.source == "openalex")
+    assert "literature review" not in arxiv.query.lower()
+    assert "classical" not in arxiv.query.lower()
+    assert "debate" in arxiv.query.lower()
+    assert "debate" in provider.query
+    assert "multi-agent" in provider.query or "multi" in provider.query
+
+
+def test_unrelated_literature_review_excluded_for_debate_topic():
+    research_query = expand_question("multi-agent debate 综述 经典论文")
+    unrelated = screen_title_abstract(
+        "Erdheim-Chester Disease: review of the literature",
+        "We review the published literature on this rare histiocytic disorder.",
+        2013,
+        research_query=research_query,
+    )
+    assert unrelated.decision == PaperDecision.exclude
+    assert unrelated.reason_code == "custom_topic_mismatch"
+
+
+def test_debate_paper_included_for_debate_topic():
+    research_query = expand_question("multi-agent debate 方法原理 框架设计")
+    debate_paper = screen_title_abstract(
+        "Multi-Agent Debate for LLM Reasoning and Verification",
+        "We propose a multi-agent debate framework where language models argue and refine answers.",
+        2024,
+        research_query=research_query,
+    )
+    assert debate_paper.decision == PaperDecision.include
+    assert debate_paper.reason_code == "custom_topic_match"
 
 
 def test_online_run_does_not_overwrite_phase2_real(tmp_path: Path, monkeypatch):
