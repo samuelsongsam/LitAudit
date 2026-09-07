@@ -51,29 +51,87 @@ def _coerce_expanded_query(value) -> str:
     return " ".join(parts)
 
 
-def _normalize_llm_route(result) -> tuple[dict | None, str | None]:
+def _parse_llm_json(content):
+    if isinstance(content, dict):
+        return content
+    if not isinstance(content, str):
+        raise TypeError("llm_content_not_json")
+    text = content.strip()
+    fenced = re.match(r"^```(?:json)?\s*([\s\S]*?)\s*```$", text)
+    if fenced:
+        text = fenced.group(1)
+    return json.loads(text)
+
+
+def _coerce_clarification_questions(raw) -> list[dict] | None:
+    """Accept nearby LLM shapes and normalize to exactly 3 questions × 3 options."""
+    if not isinstance(raw, list):
+        return None
+    normalized: list[dict] = []
+    for item in raw:
+        if isinstance(item, str) and item.strip():
+            normalized.append({"question": item.strip(), "options": ["综述与经典论文", "方法原理与框架", "实验对比与评测"]})
+            continue
+        if not isinstance(item, dict):
+            continue
+        question = item.get("question") or item.get("q") or item.get("prompt") or item.get("title")
+        if not isinstance(question, str) or not question.strip():
+            continue
+        options = item.get("options") or item.get("choices") or item.get("answers") or []
+        if isinstance(options, str):
+            options = [part.strip() for part in re.split(r"[|/；;、]", options) if part.strip()]
+        if not isinstance(options, list):
+            continue
+        cleaned = []
+        for option in options:
+            if isinstance(option, str) and option.strip():
+                cleaned.append(option.strip())
+            elif isinstance(option, dict):
+                label = option.get("label") or option.get("text") or option.get("option")
+                if isinstance(label, str) and label.strip():
+                    cleaned.append(label.strip())
+        # Deduplicate while preserving order.
+        seen: set[str] = set()
+        unique = []
+        for option in cleaned:
+            if option in seen:
+                continue
+            seen.add(option)
+            unique.append(option)
+        if len(unique) < 3:
+            for filler in ("综述与经典论文", "方法原理与框架", "实验对比与评测", "应用场景", "风险与局限"):
+                if filler not in seen:
+                    unique.append(filler)
+                    seen.add(filler)
+                if len(unique) >= 3:
+                    break
+        if len(unique) < 3:
+            continue
+        normalized.append({"question": question.strip(), "options": unique[:3]})
+        if len(normalized) == 3:
+            return normalized
+    return normalized if len(normalized) == 3 else None
+
+
+def _normalize_llm_route(result, fallback_query: str = "") -> tuple[dict | None, str | None]:
     if not isinstance(result, dict) or result.get("action") not in {"direct_answer", "clarify", "retrieve"}:
         return None, "invalid_llm_route"
     if result["action"] == "clarify":
-        questions = result.get("questions") or []
-        if (
-            not isinstance(questions, list)
-            or len(questions) != 3
-            or any(
-                not isinstance(item, dict)
-                or not isinstance(item.get("question"), str)
-                or not item["question"].strip()
-                or not isinstance(item.get("options"), list)
-                or len(item["options"]) != 3
-                or any(not isinstance(option, str) or not option.strip() for option in item["options"])
-                for item in questions
-            )
-        ):
-            return None, "invalid_llm_questions"
+        questions = _coerce_clarification_questions(result.get("questions") or result.get("clarification_questions"))
+        if questions is None:
+            # Prefer continuing with retrieval over failing the whole turn.
+            query = _coerce_expanded_query(result.get("expanded_query")) or (fallback_query or "").strip()
+            if query:
+                result["action"] = "retrieve"
+                result["expanded_query"] = query
+            else:
+                return None, "invalid_llm_questions"
+        else:
+            result["questions"] = questions
     if result["action"] == "direct_answer" and not isinstance(result.get("answer"), (str, type(None))):
         result["answer"] = None
     if result["action"] == "retrieve":
-        expanded_query = _coerce_expanded_query(result.get("expanded_query"))
+        expanded_query = _coerce_expanded_query(result.get("expanded_query")) or (fallback_query or "").strip()
         if not expanded_query:
             return None, "missing_expanded_query"
         result["expanded_query"] = expanded_query
@@ -94,19 +152,20 @@ def _llm_route(message: str, payload: dict | None, settings, clarification_conte
         "temperature": 0.1,
         "response_format": {"type": "json_object"},
         "messages": [
-            {"role": "system", "content": "你是 LitAudit 的研究请求路由器，遵守 skills/conversational-research-routing/SKILL.md。只返回 JSON。必须返回 action 和 kind；action 只能是 direct_answer、clarify、retrieve，kind 只能是 follow_up、paper_explore、branch_deepen、requery、new_topic。追问当前结果且现有数据足够时用 direct_answer；询问某篇论文时用 paper_explore 并返回 target_paper_id；沿某分支补充文献时用 retrieve+branch_deepen 并返回 branch；明确重新检索时用 retrieve+requery；无关主题用 new_topic。用户要求直接回答时必须 direct_answer。clarify 时必须返回 questions 数组，恰好 3 题，每题恰好 3 个针对当前主题的 options。retrieve 时必须返回包含原始主题、选择和范围的 expanded_query。不得编造论文。"},
+            {"role": "system", "content": "你是 LitAudit 的研究请求路由器，遵守 skills/conversational-research-routing/SKILL.md。只返回 JSON。必须返回 action 和 kind；action 只能是 direct_answer、clarify、retrieve，kind 只能是 follow_up、paper_explore、branch_deepen、requery、new_topic。追问当前结果且现有 papers/claims/evidence 足够时才用 direct_answer。当前 run 为空、新建对话、或 available_papers 为空时，禁止 direct_answer，研究问题必须 retrieve 或 clarify，不得回答“没有数据请先检索”。询问某篇论文时用 paper_explore 并返回 target_paper_id；沿某分支补充文献时用 retrieve+branch_deepen 并返回 branch；明确重新检索时用 retrieve+requery；新主题或无关主题用 retrieve+new_topic。clarify 时必须返回 questions 数组，恰好 3 题，每题恰好 3 个针对当前主题的 options。retrieve 时必须返回包含原始主题、选择和范围的 expanded_query。不得编造论文。"},
             {"role": "user", "content": json.dumps({"message": message, "original_topic": clarification_topic, "previous_choices": clarification_context or [], "current_question": (payload or {}).get("question"), "available_papers": [{"paper_id": p.get("paper_id"), "title": p.get("title")} for p in (payload or {}).get("papers", [])], "available_claims": [{"claim_id": c.get("claim_id"), "text": c.get("text"), "status": c.get("status")} for c in (payload or {}).get("claims", [])]}, ensure_ascii=False)},
         ],
     }
-    request = Request(settings.llm_base_url.rstrip("/") + "/chat/completions", data=json.dumps(request_body, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json", "Authorization": f"Bearer {settings.llm_api_key}"}, method="POST")
     last_error = "llm_request_failed:UnknownError"
+    payload_bytes = json.dumps(request_body, ensure_ascii=False).encode("utf-8")
     for attempt in range(2):
+        request = Request(settings.llm_base_url.rstrip("/") + "/chat/completions", data=payload_bytes, headers={"Content-Type": "application/json", "Authorization": f"Bearer {settings.llm_api_key}"}, method="POST")
         try:
-            with urlopen(request, timeout=30) as response:
+            with urlopen(request, timeout=45) as response:
                 data = json.loads(response.read().decode("utf-8"))
             content = data["choices"][0]["message"]["content"]
-            result = json.loads(content) if isinstance(content, str) else content
-            normalized, validation_error = _normalize_llm_route(result)
+            result = _parse_llm_json(content)
+            normalized, validation_error = _normalize_llm_route(result, message)
             if normalized is not None:
                 return normalized
             last_error = validation_error or "invalid_llm_route"
@@ -114,11 +173,25 @@ def _llm_route(message: str, payload: dict | None, settings, clarification_conte
                 time.sleep(0.4)
                 continue
             return {"action": "error", "error": last_error}
-        except (HTTPError, URLError, TimeoutError, OSError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+        except HTTPError as exc:
+            last_error = f"llm_request_failed:HTTPError:{exc.code}"
+            try:
+                exc.read()
+            except Exception:
+                pass
+            if attempt == 0:
+                time.sleep(0.4)
+        except (URLError, TimeoutError, OSError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
             last_error = f"llm_request_failed:{type(exc).__name__}"
             if attempt == 0:
                 time.sleep(0.4)
     return {"action": "error", "error": last_error}
+
+
+def _payload_has_research_data(payload: dict | None) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    return bool(payload.get("papers") or payload.get("claims") or payload.get("evidence"))
 
 
 def classify_intent(message: str, payload: dict | None = None, settings=None, clarification_context: list[str] | None = None, clarification_topic: str | None = None) -> Intent:
@@ -127,6 +200,18 @@ def classify_intent(message: str, payload: dict | None = None, settings=None, cl
     action = llm_route["action"]
     if action == "error":
         return Intent("llm_error", 1.0, "DeepSeek 路由未成功", False, route_source="llm", route_error=llm_route.get("error"))
+    if action == "direct_answer" and not _payload_has_research_data(payload):
+        query = (_coerce_expanded_query(llm_route.get("expanded_query")) or text).strip()
+        return Intent(
+            llm_route.get("kind") or "new_topic",
+            0.95,
+            "当前 run 无结构化数据，改为检索",
+            True,
+            target_paper_id=llm_route.get("target_paper_id"),
+            branch=llm_route.get("branch"),
+            expanded_query=query or text,
+            route_source="llm",
+        )
     if action == "direct_answer":
         return Intent(llm_route.get("kind") or ("follow_up" if payload else "new_topic"), 0.95, "LLM 判断现有上下文足以回答", False, target_paper_id=llm_route.get("target_paper_id"), branch=llm_route.get("branch"), direct_answer=True, answer=llm_route.get("answer"), route_source="llm")
     if action == "clarify":

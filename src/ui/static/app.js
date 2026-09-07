@@ -507,10 +507,24 @@ function conversationHistoryView() {
   </div>`;
 }
 
+function llmErrorText(response) {
+  const code = String(response?.error || "");
+  const reasons = {
+    missing_llm_api_key: "未配置 LLM API 密钥。",
+    missing_expanded_query: "模型未给出检索词。",
+    invalid_llm_route: "模型返回格式不符合约定。",
+    invalid_llm_questions: "澄清问题格式不合规。",
+    llm_direct_answer_failed: "直接回答生成失败。",
+    llm_overview_failed: "总论生成失败。",
+  };
+  const extra = reasons[code] || (code.startsWith("llm_request_failed:") ? "无法完成对 DeepSeek 的调用（网络、超时或接口错误）。" : "");
+  return extra ? `AI 未生成本轮内容，请重试。${extra}` : "AI 未生成本轮内容，请重试。";
+}
+
 function chatMessage(item, messageIndex = 0) {
   if (item.role === "user") return `<div class="chat-message user"><div class="chat-role">你</div><div class="chat-bubble">${esc(item.content)}</div></div>`;
   const response = item.response || {};
-  if (response.overview_mode === "llm_error") return `<div class="chat-message assistant"><div class="chat-role">勘文 AI · 服务状态</div><article class="chat-bubble assistant-bubble"><div class="chat-error">AI 未生成本轮内容，请重试。</div></article></div>`;
+  if (response.overview_mode === "llm_error") return `<div class="chat-message assistant"><div class="chat-role">勘文 AI · 服务状态</div><article class="chat-bubble assistant-bubble"><div class="chat-error">${esc(llmErrorText(response))}</div></article></div>`;
   if (response.overview_mode === "clarification") return `<div class="chat-message assistant">
     <div class="chat-role">勘文 AI · 研究范围确认</div>
     <article class="chat-bubble assistant-bubble clarification-bubble">

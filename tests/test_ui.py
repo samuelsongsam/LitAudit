@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 
 from src.config import ROOT
 from src.ui.payload import build_audit_report, build_payload, describe_run, list_runs_for_ui
-from src.conversation import Intent, build_chat_response, classify_intent, _coerce_expanded_query, _visible_messages
+from src.conversation import Intent, build_chat_response, classify_intent, _coerce_expanded_query, _normalize_llm_route, _visible_messages
 from src.ui.server import STATIC_DIR, make_server
 
 
@@ -114,7 +114,8 @@ def test_static_shell_exists():
     assert "paper-graph" in js
     assert "chat-map-" in js
     assert "data-graph-id" in js
-    assert "mapView(response.map" in js
+    assert "llmErrorText" in js
+    assert "AI 未生成本轮内容，请重试。" in js
     assert "requestAnimationFrame" in js
     assert "marker-end" in js
     assert "拖动画布可平移" in js
@@ -453,13 +454,40 @@ def test_llm_route_retries_one_invalid_response(monkeypatch, tmp_path):
             {"question": "Q3", "options": ["A", "B", "C"]},
         ],
     }
-    responses = iter([FakeResponse({"action": "clarify", "questions": []}), FakeResponse(valid)])
+    responses = iter([FakeResponse({"action": "unknown"}), FakeResponse(valid)])
     settings = replace(load_settings(runs_dir=tmp_path, offline=False), llm_api_key="test-key")
     monkeypatch.setattr("src.conversation.urlopen", lambda *args, **kwargs: next(responses))
     monkeypatch.setattr("src.conversation.time.sleep", lambda *_: None)
     intent = classify_intent("房地产", settings=settings)
     assert intent.needs_clarification is True
     assert intent.route_error is None
+
+
+def test_malformed_clarify_falls_back_to_retrieve():
+    result, error = _normalize_llm_route({"action": "clarify", "questions": []}, "RAG")
+    assert error is None
+    assert result["action"] == "retrieve"
+    assert result["expanded_query"] == "RAG"
+
+
+def test_clarify_questions_are_coerced_to_three_by_three():
+    result, error = _normalize_llm_route(
+        {
+            "action": "clarify",
+            "questions": [
+                {"question": "关注哪一面？", "options": ["原理", "应用"]},
+                {"q": "输出类型？", "choices": ["综述", {"label": "方法"}, "评测", "多余"]},
+                "希望覆盖的时间范围？",
+            ],
+        },
+        "RAG",
+    )
+    assert error is None
+    assert result["action"] == "clarify"
+    assert len(result["questions"]) == 3
+    assert all(len(item["options"]) == 3 for item in result["questions"])
+    assert result["questions"][0]["options"] == ["原理", "应用", "综述与经典论文"]
+    assert result["questions"][2]["question"] == "希望覆盖的时间范围？"
 
 
 def test_llm_router_may_delegate_direct_answer_generation(monkeypatch, tmp_path):
@@ -479,10 +507,56 @@ def test_llm_router_may_delegate_direct_answer_generation(monkeypatch, tmp_path)
 
     monkeypatch.setattr(conversation, "urlopen", lambda *args, **kwargs: FakeResponse())
     settings = replace(load_settings(runs_dir=tmp_path, offline=False), llm_api_key="test-key")
-    intent = classify_intent("解释 paper-001", {"question": "q", "papers": []}, settings)
+    intent = classify_intent("解释 paper-001", {"question": "q", "papers": [{"paper_id": "paper-001", "title": "PaperQA"}]}, settings)
     assert intent.direct_answer is True
     assert intent.kind == "paper_explore"
     assert intent.target_paper_id == "paper-001"
+    assert intent.route_error is None
+
+
+def test_empty_run_direct_answer_is_converted_to_retrieval(monkeypatch):
+    monkeypatch.setattr(
+        "src.conversation._llm_route",
+        lambda *args, **kwargs: {
+            "action": "direct_answer",
+            "kind": "follow_up",
+            "answer": "当前 run 尚无任何结构化数据（papers、claims、evidence 均为空），因此无法基于现有信息回答。",
+        },
+    )
+    intent = classify_intent("RAG")
+    assert intent.needs_retrieval is True
+    assert intent.direct_answer is False
+    assert intent.expanded_query == "RAG"
+    assert "无结构化数据" in intent.reason
+
+
+def test_retrieve_without_expanded_query_uses_user_message():
+    result, error = _normalize_llm_route({"action": "retrieve", "kind": "new_topic"}, "RAG 综述")
+    assert error is None
+    assert result["expanded_query"] == "RAG 综述"
+    assert result["action"] == "retrieve"
+
+
+def test_llm_route_retrieve_without_query_uses_message(monkeypatch, tmp_path):
+    from src.config import load_settings
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            content = json.dumps({"action": "retrieve"})
+            return json.dumps({"choices": [{"message": {"content": content}}]}).encode("utf-8")
+
+    settings = replace(load_settings(runs_dir=tmp_path, offline=False), llm_api_key="test-key")
+    monkeypatch.setattr("src.conversation.urlopen", lambda *args, **kwargs: FakeResponse())
+    intent = classify_intent("RAG", settings=settings)
+    assert intent.needs_retrieval is True
+    assert intent.direct_answer is False
+    assert intent.expanded_query == "RAG"
     assert intent.route_error is None
 
 

@@ -24,9 +24,9 @@ Return a structured intent with `kind`, `confidence`, `reason`, `needs_retrieval
 
 For every new topic or expanded keyword, send the user's wording and the relevant conversation context to the configured LLM before choosing an action. The LLM must decide among:
 
-- `direct_answer`: the user asks for an answer or explanation without retrieval; answer through the LLM and do not search.
+- `direct_answer`: the current run already has papers/claims/evidence that can answer the follow-up; answer through the LLM and do not search. Never use this when the run is empty, this is a new conversation, or `available_papers` is empty.
 - `clarify`: the topic needs scope decisions; return exactly three questions, each with exactly three topic-specific options.
-- `retrieve`: the brief is sufficiently specified; return an expanded query that includes the original topic and the user's choices.
+- `retrieve`: the brief is sufficiently specified, or the user asked a research topic with no loaded literature; return an expanded query that includes the original topic and the user's choices. Do not tell the user to retrieve first — retrieve.
 
 The local Skill supplies the routing rules and output contract; it must not replace LLM-generated answers or questions with a fixed topic list. If the LLM is unavailable, return an AI-service error with no answer, questions, options, or retrieval. Never search merely because the LLM call failed.
 
@@ -54,6 +54,6 @@ For every post-retrieval message, infer one concrete operation before producing 
 - `paper_explore`: resolve the mentioned title to `target_paper_id`, then answer only from that paper's current metadata, abstract, claims, and evidence. Retrieve only when the requested detail is absent.
 - `branch_deepen`: set `branch`, expand that branch with the current research scope, and create a new live run.
 - `requery`: honor an explicit request to search again, broaden, narrow, compare, or refresh, and create a new live run.
-- `new_topic`: detach from the current run; clarify if underspecified, otherwise create a new live run.
+- `new_topic`: detach from the current run; if the run is empty, retrieve (or clarify if underspecified). Never answer that there is no data instead of searching.
 
 Return both the coarse `action` (`direct_answer`, `clarify`, or `retrieve`) and the operation `kind`. A completed `direct_answer` may legitimately reuse the current run and must never trigger a request for a null run. A completed retrieval must always return a non-empty replayable run ID. Do not mechanically ask questions when the current run already contains enough information to answer.
