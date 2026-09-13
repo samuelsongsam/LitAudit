@@ -1,3 +1,4 @@
 pydantic>=2.7
 python-dotenv>=1.0
+pypdf>=5.0
 pytest>=8.0

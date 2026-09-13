@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, datetime, timezone
+from hashlib import sha256
 from pathlib import Path
 
 from src.cache import FileCache
@@ -16,8 +17,13 @@ from src.schema import (
     PaperCard,
     PaperDecision,
     PaperFields,
+    QueryPlan,
+    QueryPlanStatus,
+    ResearchQuestion,
     ScreeningLog,
     ScreeningStage,
+    SnapshotStatus,
+    SourceSnapshot,
     validate_dataset,
 )
 from src.screen_rules import screen_title_abstract
@@ -130,6 +136,63 @@ def _maybe_user_claim(dataset: Dataset, question: str | None) -> tuple[list[Clai
     return [claim], [decision]
 
 
+def _audit_objects(dataset: Dataset, question: str, queries, retrieval_runs) -> tuple[list, list, list]:
+    now = datetime.now(timezone.utc)
+    question_id = next_numeric_id("rq", [item.question_id for item in dataset.research_questions])
+    research_question = ResearchQuestion(
+        question_id=question_id,
+        text=question,
+        domain_boundary="由本轮对话范围确认结果限定；未提供的结构化边界保持空值。",
+        scope_version="v0.2",
+    )
+    query_plan_id = next_numeric_id("qp", [item.query_plan_id for item in dataset.query_plans])
+    query_plan = QueryPlan(
+        query_plan_id=query_plan_id,
+        question_id=question_id,
+        query_ids=[item.query_id for item in queries],
+        reverse_terms=[item.query for item in queries if "风险" in (item.purpose or "") or "反" in (item.purpose or "")],
+        status=QueryPlanStatus.executed,
+        scope_version="v0.2",
+        created_at=now,
+    )
+    snapshot_ids = [item.snapshot_id for item in dataset.source_snapshots]
+    snapshots: list[SourceSnapshot] = []
+    for run in retrieval_runs:
+        response_path = Path(run.response_path) if run.response_path else None
+        response_exists = bool(response_path and response_path.is_file())
+        if run.http_status == 429 or run.status == "rate_limited":
+            status = SnapshotStatus.rate_limited
+            error_code = "http_429"
+        elif run.status != "success":
+            status = SnapshotStatus.failed
+            error_code = f"retrieval_{run.status}"
+        elif run.result_count == 0:
+            status = SnapshotStatus.zero_results
+            error_code = None
+        elif not response_exists:
+            status = SnapshotStatus.failed
+            error_code = "snapshot_file_missing"
+        else:
+            status = SnapshotStatus.success
+            error_code = None
+        snapshot_id = next_numeric_id("snapshot", snapshot_ids)
+        snapshot_ids.append(snapshot_id)
+        snapshots.append(
+            SourceSnapshot(
+                snapshot_id=snapshot_id,
+                retrieval_id=run.retrieval_id,
+                source=run.source,
+                status=status,
+                retrieved_at=now,
+                response_path=str(response_path) if response_exists else None,
+                content_sha256=sha256(response_path.read_bytes()).hexdigest() if response_exists else None,
+                error_code=error_code,
+                error_message=run.notes if status in {SnapshotStatus.failed, SnapshotStatus.rate_limited} else None,
+            )
+        )
+    return [research_question], [query_plan], snapshots
+
+
 def ingest_live(
     dataset: Dataset,
     settings: Settings,
@@ -188,14 +251,22 @@ def ingest_live(
         )
 
     retrieval_runs = list(dataset.retrieval_runs)
+    new_retrieval_runs = []
     for run in bundle.runs:
         retrieval_id = next_numeric_id("retrieval", retrieval_ids)
         retrieval_ids.append(retrieval_id)
-        retrieval_runs.append(run.model_copy(update={"retrieval_id": retrieval_id}))
+        remapped = run.model_copy(update={"retrieval_id": retrieval_id})
+        retrieval_runs.append(remapped)
+        new_retrieval_runs.append(remapped)
 
     new_claims, new_decisions = _maybe_user_claim(dataset, question)
+    audit_questions, audit_plans, source_snapshots = _audit_objects(
+        dataset, question or SCOPE_QUESTION, bundle.queries, new_retrieval_runs
+    )
     merged = dataset.model_copy(
         update={
+            "research_questions": [*dataset.research_questions, *audit_questions],
+            "query_plans": [*dataset.query_plans, *audit_plans],
             "queries": [*dataset.queries, *bundle.queries],
             "papers": [*dataset.papers, *new_papers],
             "paper_cards": [*dataset.paper_cards, *new_papers],
@@ -203,6 +274,7 @@ def ingest_live(
             "claims": [*dataset.claims, *new_claims],
             "claim_decisions": [*dataset.claim_decisions, *new_decisions],
             "retrieval_runs": retrieval_runs,
+            "source_snapshots": [*dataset.source_snapshots, *source_snapshots],
         }
     )
     merged = validate_dataset(merged)

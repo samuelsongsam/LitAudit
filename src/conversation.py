@@ -9,6 +9,7 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from src.answer_audit import audit_answer_statements, audit_overview_statements, scoped_payload
 from src.ui.payload import build_payload, ask_payload
 from src.run_paths import resolve_run_dir
 
@@ -223,9 +224,10 @@ def _clarification_overview(message: str, intent: Intent) -> str:
     return ""
 
 
-def _llm_direct_answer(payload: dict, message: str, intent: Intent, settings) -> str | None:
+def _llm_direct_answer(payload: dict, message: str, intent: Intent, settings) -> tuple[str, dict] | None:
     if not settings.llm_api_key:
         return None
+    payload = scoped_payload(payload)
     compact = {
         "message": message,
         "question": payload.get("question"),
@@ -234,27 +236,39 @@ def _llm_direct_answer(payload: dict, message: str, intent: Intent, settings) ->
         "branch": intent.branch,
         "papers": [{k: p.get(k) for k in ("paper_id", "title", "year", "decision", "reason", "abstract", "parse_status")} for p in payload.get("papers", [])],
         "claims": [{k: c.get(k) for k in ("claim_id", "text", "status", "decision_reason")} for c in payload.get("claims", [])],
-        "evidence": [{k: e.get(k) for k in ("evidence_id", "claim_id", "paper_id", "verdict", "locator", "quote", "extraction_status")} for e in payload.get("evidence", [])],
+        "evidence": [{k: e.get(k) for k in ("evidence_id", "claim_id", "paper_id", "verdict", "locator", "snippet", "extraction_status")} for e in payload.get("evidence", [])],
         "falsification": payload.get("falsification", []),
     }
     system = ("你是勘文 LitAudit 的研究助手。根据当前 run 的结构化数据直接回答用户追问，不要重新检索。"
               "若指定 target_paper_id，只聚焦该论文。不得编造论文、证据、页码或结论；摘要级信息与页码级证据必须明确区分；冲突和 pending 必须保留。"
-              "只输出回答正文，不添加固定的总论、论文列表或研究地图格式。先给出一句直接结论，再按信息层级分段；论文较多时使用 Markdown 有序列表，每项只保留标题、年份、核验层级和一项最关键内容。"
-              "不要把十余篇论文压成一个长段落，不重复用户问题，不罗列与问题无关的排除论文；默认控制在 800 至 1400 个中文字符，除非用户明确要求更详细。")
-    request_body = {"model": settings.llm_model, "temperature": 0.2, "messages": [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(compact, ensure_ascii=False)}]}
+              "只返回 JSON：{\"statements\":[{\"text\":\"...\",\"claim_id\":\"claim-...\",\"evidence_ids\":[\"evidence-...\"],\"certainty\":\"verified|qualified|uncertain\"}]}。"
+              "每条陈述只表达一项事实并绑定一个现有 Claim；verified/qualified 必须绑定该 Claim 的支持性 Evidence。pending、冲突或无证据 Claim 只能写 uncertain。"
+              "不要输出未绑定 Claim 的研究事实，不添加固定总论或研究地图格式；默认控制在 4 至 10 条陈述。")
+    system += ('若只有摘要，可返回 {"paper_id":"论文编号","quote":"摘要连续原文摘录",'
+               '"certainty":"abstract_only"}；quote 不可改写或翻译。')
+    request_body = {"model": settings.llm_model, "temperature": 0.1, "response_format": {"type": "json_object"}, "messages": [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(compact, ensure_ascii=False)}]}
     request = Request(settings.llm_base_url.rstrip("/") + "/chat/completions", data=json.dumps(request_body, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json", "Authorization": f"Bearer {settings.llm_api_key}"}, method="POST")
+    last_audit = None
     for attempt in range(2):
         try:
+            request.data = json.dumps(request_body, ensure_ascii=False).encode("utf-8")
             with urlopen(request, timeout=45) as response:
                 data = json.loads(response.read().decode("utf-8"))
-            answer = data["choices"][0]["message"]["content"].strip()
-            if answer:
-                return answer
+            content = data["choices"][0]["message"]["content"]
+            result = _parse_llm_json(content)
+            audit = audit_overview_statements(payload, result.get("statements") if isinstance(result, dict) else None)
+            last_audit = audit
+            if audit["ok"]:
+                return audit["answer"], audit
+            request_body["messages"].extend([
+                {"role": "assistant", "content": content},
+                {"role": "user", "content": "引用检查失败，请修正后重发 JSON。每条陈述只能引用 claim_id 完全相同的 Evidence，不能合并不同 Claim。错误：" + json.dumps(audit["errors"], ensure_ascii=False)},
+            ])
         except (HTTPError, URLError, TimeoutError, OSError, KeyError, IndexError, AttributeError, json.JSONDecodeError):
             pass
         if attempt == 0:
             time.sleep(0.4)
-    return None
+    return ("", last_audit) if last_audit is not None else None
 
 
 def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
@@ -289,9 +303,9 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
     compact = {
         "question": payload.get("question"),
         "stats": overview_stats,
-        "papers": [{k: p.get(k) for k in ("paper_id", "title", "year", "decision", "reason", "parse_status")} for p in papers],
+        "papers": [{k: p.get(k) for k in ("paper_id", "title", "year", "decision", "reason", "parse_status", "abstract")} for p in papers],
         "claims": [{k: c.get(k) for k in ("claim_id", "text", "status", "decision_reason")} for c in claims],
-        "evidence": [{k: e.get(k) for k in ("evidence_id", "claim_id", "paper_id", "verdict", "locator", "extraction_status")} for e in evidence],
+        "evidence": [{k: e.get(k) for k in ("evidence_id", "claim_id", "paper_id", "verdict", "locator", "extraction_status", "snippet")} for e in evidence],
         "falsification": falsification,
         "intent": asdict(intent),
     }
@@ -299,19 +313,50 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
               "当前 intent 已由系统判定：follow_up 只解释当前 run，paper_explore 聚焦目标论文，branch_deepen 或 requery 表示需要新检索，new_topic 表示新主题。"
               "只根据提供的结构化数据写中文总论，不能补造论文、数字、证据或因果结论。"
               "明确区分摘要级筛选和页码级核验；存在 pending 或冲突时必须说仍待核验。"
-              "不能把关键词匹配、引用邻近或纳入状态当成证据。输出 3-5 段纯文本，不写 Markdown 标题。")
+              "不能把关键词匹配、引用邻近或纳入状态当成证据。"
+              '只返回 JSON {"statements": [...]}，最多 5 条。论断格式为 '
+              '{"text":"中文陈述", "claim_id":"现有Claim编号", "evidence_ids":["现有Evidence编号"], "certainty":"verified|qualified|uncertain"}。'
+              "确定事实必须绑定支持证据；pending 或冲突只能用 uncertain。"
+              "每条陈述仅绑定一个 Claim；evidence_ids 中每条 Evidence 的 claim_id 必须与该陈述的 claim_id 完全一致。不要把不同 Claim 合并到一条陈述。"
+              '摘要线索格式为 {"paper_id":"现有论文编号", "quote":"摘要中逐字连续摘录", "certainty":"abstract_only"}，quote 不得翻译、改写或省略。'
+              "没有可用证据时展示摘要线索，不生成未绑定引用的科学结论。")
+    if not papers and not claims:
+        payload["answer_audit"] = {"ok": True, "errors": [], "citations": [], "kind": "retrieval_status_only"}
+        failures = [r for r in live.get("retrieval", []) if r.get("status") != "success"]
+        return ("本轮没有新增候选论文。存在检索失败或限流，不能据此判断没有相关研究。" if failures else "本轮没有新增候选论文，尚无可核验的研究结论。"), "retrieval_status"
     request_body = {"model": settings.llm_model, "temperature": 0.2, "messages": [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(compact, ensure_ascii=False)}]}
     request = Request(settings.llm_base_url.rstrip("/") + "/chat/completions", data=json.dumps(request_body, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json", "Authorization": f"Bearer {settings.llm_api_key}"}, method="POST")
     for attempt in range(2):
         try:
+            request.data = json.dumps(request_body, ensure_ascii=False).encode("utf-8")
             with urlopen(request, timeout=45) as response:
                 data = json.loads(response.read().decode("utf-8"))
             content = data["choices"][0]["message"]["content"].strip()
-            return content, "llm"
+            result = _parse_llm_json(content)
+            audit = audit_overview_statements(payload, result.get("statements") if isinstance(result, dict) else None)
+            payload["answer_audit"] = audit
+            if audit["ok"]:
+                return audit["answer"], "llm"
+            request_body["messages"].extend([
+                {"role": "assistant", "content": content},
+                {"role": "user", "content": "引用检查失败，请修正后重发 JSON。只能引用同一 Claim 的证据，无法核验则保留 uncertain 或逐字摘要线索。错误：" + json.dumps(audit["errors"], ensure_ascii=False)},
+            ])
         except (HTTPError, URLError, TimeoutError, OSError, KeyError, IndexError, AttributeError, json.JSONDecodeError):
             if attempt == 0:
                 time.sleep(0.4)
     return "", "llm_error"
+
+
+def _answer_error(payload: dict, intent: Intent, audit: dict | None, error: str) -> dict:
+    visible = scoped_payload(payload)
+    return {"overview": "", "overview_mode": "llm_error", "intent": asdict(intent),
+            "error": "answer_audit_rejected" if audit and audit.get("errors") else error,
+            "answer_audit": audit, "papers": visible.get("papers", []),
+            "run_id": payload.get("run_id"), "actions": [], "map": {}, "ask": {"papers": []},
+            "paper_selection": {"mode": "llm_error", "matched_count": len(visible.get("papers", [])),
+                                "total_run_count": len(visible.get("papers", [])), "added_count": 0,
+                                "added_paper_ids": [], "message": "论文与审计结果已保留，回答尚未通过。",
+                                "retrieval_status": "not_started", "retrieval_failures": []}, "limitations": []}
 
 
 def build_chat_response(payload: dict, message: str, intent: Intent, settings) -> dict:
@@ -330,10 +375,19 @@ def build_chat_response(payload: dict, message: str, intent: Intent, settings) -
             "limitations": [],
         }
     if intent.direct_answer:
-        answer = intent.answer or _llm_direct_answer(payload, message, intent, settings)
+        generated = _llm_direct_answer(payload, message, intent, settings)
+        if generated is not None:
+            answer, answer_audit = generated
+        elif intent.answer:
+            # A legacy route's unbound prose cannot bypass answer auditing.
+            answer = ""
+            answer_audit = {"ok": False, "errors": ["legacy_unbound_answer"], "citations": []}
+        else:
+            answer = ""
+            answer_audit = {"ok": False, "errors": ["llm_direct_answer_failed"], "citations": []}
         if not answer:
-            return {"overview": "", "overview_mode": "llm_error", "intent": asdict(intent), "error": "llm_direct_answer_failed", "papers": [], "paper_selection": {"mode": "llm_error", "matched_count": 0, "total_run_count": 0, "added_count": 0, "added_paper_ids": [], "message": "AI 未生成结果，请重试。", "retrieval_status": "not_started", "retrieval_failures": []}, "map": {}, "ask": {"papers": []}, "run_id": payload.get("run_id"), "actions": [], "limitations": []}
-        return {"overview": answer, "overview_mode": "direct_answer", "intent": asdict(intent), "papers": [], "paper_selection": {"mode": "direct_answer", "matched_count": 0, "total_run_count": len(payload.get("papers", [])), "added_count": 0, "added_paper_ids": [], "message": "复用当前研究结果，未重新检索。", "retrieval_status": "not_started", "retrieval_failures": []}, "map": {}, "ask": {"papers": []}, "run_id": payload.get("run_id"), "actions": [], "limitations": []}
+            return _answer_error(payload, intent, answer_audit if generated is not None or intent.answer else None, "llm_direct_answer_failed")
+        return {"overview": answer, "overview_mode": "direct_answer", "answer_audit": answer_audit, "intent": asdict(intent), "papers": [], "paper_selection": {"mode": "direct_answer", "matched_count": 0, "total_run_count": len(payload.get("papers", [])), "added_count": 0, "added_paper_ids": [], "message": "复用当前研究结果，未重新检索。", "retrieval_status": "not_started", "retrieval_failures": []}, "map": {}, "ask": {"papers": []}, "run_id": payload.get("run_id"), "actions": [], "limitations": []}
     if intent.needs_clarification:
         return {
             "overview": _clarification_overview(message, intent),
@@ -350,12 +404,14 @@ def build_chat_response(payload: dict, message: str, intent: Intent, settings) -
         }
     overview, overview_mode = _llm_overview(payload, intent, settings)
     if overview_mode == "llm_error":
-        return {"overview": "", "overview_mode": "llm_error", "intent": asdict(intent), "error": "llm_overview_failed", "papers": [], "paper_selection": {"mode": "llm_error", "matched_count": 0, "total_run_count": 0, "added_count": 0, "added_paper_ids": [], "message": "AI 未生成结果，请重试。", "retrieval_status": "not_started", "retrieval_failures": []}, "map": {}, "ask": {"papers": []}, "run_id": payload.get("run_id"), "actions": [], "limitations": []}
+        return _answer_error(payload, intent, payload.get("answer_audit"), "llm_overview_failed")
     ask = ask_payload(settings.runs_dir, payload["run_id"], intent.expanded_query or message)
     target = intent.target_paper_id
     all_papers = payload.get("papers", [])
     live = payload.get("live") or {}
     added_ids = live.get("added_paper_ids") or []
+    if payload.get("offline") is False and live:
+        all_papers = [p for p in all_papers if p.get("paper_id") in set(added_ids)]
     if target:
         papers = [paper for paper in all_papers if paper.get("paper_id") == target]
     elif added_ids:
@@ -371,6 +427,7 @@ def build_chat_response(payload: dict, message: str, intent: Intent, settings) -
     return {
         "overview": overview,
         "overview_mode": overview_mode,
+        "answer_audit": payload.get("answer_audit", {"ok": False, "errors": ["unbound_overview"], "citations": []}),
         "intent": asdict(intent),
         "papers": papers,
         "paper_selection": {

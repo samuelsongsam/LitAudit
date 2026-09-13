@@ -1,5 +1,15 @@
 # Agent A 操作日志
 
+## 2026-09-11 v0.2 审计闭环
+
+- 新增 `audit_enrichment.py`：冻结来源文件，提取 PDF 逐页文本，为旧 Evidence 生成带文件指纹的片段和定位检查，为 Claim 生成保留原判决的轨迹，为缺全文、冲突和匹配失败生成下一步建议。
+- 新增 CLI `audit <run_id> [--acquire]` 和 `/api/audit/upgrade`，始终创建新 run；新增原文 PDF 受限访问接口。
+- 前端增加全文/定位/判决/待处理计数、原文入口、引用链、查询快照和报告下载；修复在线报告及生成上下文的基准隔离。
+- 总论与直接回答执行引用审计；非法引用向模型反馈并重试一次，拒绝路由旧文本绕过校验。摘要线索严格使用原文摘录。
+- 真实 PDF：4 篇解析、14 条定位检查，12 条匹配、2 条人工复核；原金标不变。真实模型总论返回 5 条绑定并通过检查。
+- 回归覆盖全文缺失降级、原 run 不变、隐藏反证、虚构摘要和跨 run 引用。
+- 最终验收：84 tests passed，doctor/validate/JS 语法/diff 检查通过。浏览器真实点击全文获取按钮，新增下载 3 篇 PDF，总计 7 篇解析、12/14 摘录匹配、5 项待处理；最终快照 `audit_20260911T141848Z_430f08`，真实模型 5 条总论陈述通过引用审计。原文 GET 接口与路径隔离已增加测试并实测。服务端口 8787。
+
 ## 2026-08-22 14:00
 - 操作：读取 两人分工与交付计划.md、README.md，检查 docs/ 与 data/。
 - 目的：确认角色 A 的职责、接口边界和现有资产。
@@ -370,3 +380,16 @@
 - 修改：新增 `scopedAuditData()`，证据、反证和论断视图按当前在线 run 的 `added_paper_ids` 过滤；对话入口按当前 `run_id` 打开模块页，模块顶部显示所属对话并提供返回对话按钮。
 - 验证：JavaScript 语法解析通过，`52 passed`。
 - 追加：发现旧证据标签页仍使用 `app.js?v=20260830-sidebar2`，因此没有返回栏并展示旧页面内容；静态资源版本升级为 `sidebar3`，新标签页强制加载当前模块隔离逻辑。API 检查确认 PD 分离 run 的 19 个 payload 论文中仅 12 个属于本轮新增，基准数据由模块过滤器排除。
+
+## 2026-09-09
+- 操作：启动 v0.2 优化方案的 P0 落地。
+- 文档：新增 `docs/optimized_product_plan.md`，明确产品定位、可信度优先架构、数据契约升级、阶段交付和终验标准。
+- 规则：强化 `ClaimDecision` 校验；`supported` 必须引用至少一条可 grounding 的支持性 Evidence，且不能引用 contradict Evidence。
+- 回归：新增两条 schema 测试；`66 passed`，`python -m src.cli validate` 无错误，`git diff --check` 通过。
+
+## 2026-09-10
+- 操作：完成 Phase 0 数据契约扩展，并接入在线检索与回答链路。
+- 数据契约：新增 `ResearchQuestion`、`QueryPlan`、`SourceSnapshot`、`EvidenceSpan`、`DecisionTrace`、`NextAction` 及对应枚举、外键和状态约束；旧 run 缺少新文件时仍可读取。
+- 流水线：新 run 固定输出六类 v0.2 审计文件；在线检索自动生成研究问题、已执行查询计划以及带响应 SHA-256 的来源快照，零结果、限流与失败分开记录。
+- 回答审计：新增逐条陈述的 Claim/Evidence 绑定检查；确定性陈述必须绑定 supported/partial Claim 及可定位支持证据，pending 只能以 uncertain 表述。
+- 回归：增加 schema、在线检索、run 快照和回答审计测试；摘要级 Evidence 不能冒充 verified；`75 passed`。

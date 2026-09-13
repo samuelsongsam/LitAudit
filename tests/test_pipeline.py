@@ -74,6 +74,15 @@ def test_offline_data_run_snapshots_screening_reasons(tmp_path: Path):
     assert (tmp_path / result["run_id"] / "output" / "paper_cards.jsonl").exists()
     assert (tmp_path / result["run_id"] / "output" / "claim_decisions.jsonl").exists()
     assert (tmp_path / result["run_id"] / "output" / "retrieval_runs.jsonl").exists()
+    for filename in (
+        "research_questions.jsonl",
+        "query_plans.jsonl",
+        "source_snapshots.jsonl",
+        "evidence_spans.jsonl",
+        "decision_traces.jsonl",
+        "next_actions.jsonl",
+    ):
+        assert (tmp_path / result["run_id"] / "output" / filename).exists()
     map_payload = replayed["map"]
     assert map_payload["edges"]
     assert map_payload["contradictions"]

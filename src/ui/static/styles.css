@@ -813,3 +813,24 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
   .module-bar { grid-template-columns: auto minmax(0, 1fr); }
   .module-run { grid-column: 1 / -1; justify-self: stretch; max-width: none; text-align: left; }
 }
+/* Evidence audit workbench */
+.audit-workbench { background: var(--panel, #fff); border: 1px solid #dce4e0; border-radius: 18px; padding: 26px; margin-bottom: 26px; }
+.shell > *, .audit-document > *, .audit-heading > * { min-width: 0; }
+.audit-citations { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.audit-heading { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
+.audit-heading h2 { font-size: 24px; margin: 8px 0; }
+.audit-buttons { display: grid; gap: 10px; min-width: 180px; }
+.audit-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 22px 0; }
+.audit-metrics > div { background: #f1f6f3; border-radius: 12px; padding: 18px; display: grid; gap: 7px; }
+.audit-metrics strong { font-size: 26px; color: #22614b; }
+.audit-metrics span { font-size: 13px; color: #56645b; }
+.audit-workbench details { border-top: 1px solid #e3e9e5; padding: 16px 0; }
+.audit-workbench summary { cursor: pointer; font-weight: 600; }
+.audit-document { display: grid; grid-template-columns: minmax(0, 1fr) 130px 140px; gap: 12px; align-items: start; padding: 13px 0; border-bottom: 1px solid #edf0ed; }
+.audit-document strong { font-size: 14px; line-height: 1.5; }
+.audit-document .tiny { grid-column: 1 / -1; }
+.audit-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.audit-actions > div { background: #faf7ef; border-radius: 9px; padding: 14px; font-size: 13px; }
+.audit-actions p { line-height: 1.6; margin-bottom: 0; }
+.audit-sources > div { display: grid; gap: 6px; padding: 10px 0; overflow-wrap: anywhere; }
+@media (max-width: 800px) { .audit-heading { flex-direction: column; } .audit-metrics { grid-template-columns: repeat(2, 1fr); } .audit-actions { grid-template-columns: 1fr; } .audit-document { grid-template-columns: 1fr; } }

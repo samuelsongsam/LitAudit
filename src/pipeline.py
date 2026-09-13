@@ -41,6 +41,8 @@ def new_run_id(prefix: str = "run") -> str:
 
 
 def snapshot_dataset(dataset: Dataset, output_dir: Path) -> None:
+    write_jsonl(output_dir / "research_questions.jsonl", dataset.research_questions)
+    write_jsonl(output_dir / "query_plans.jsonl", dataset.query_plans)
     write_json(output_dir / "search_queries.json", [item.model_dump(mode="json") for item in dataset.queries])
     write_jsonl(output_dir / "papers.jsonl", dataset.papers)
     write_jsonl(output_dir / "paper_cards.jsonl", dataset.paper_cards)
@@ -50,6 +52,10 @@ def snapshot_dataset(dataset: Dataset, output_dir: Path) -> None:
     write_jsonl(output_dir / "claim_decisions.jsonl", dataset.claim_decisions)
     write_jsonl(output_dir / "falsification.jsonl", dataset.falsification)
     write_jsonl(output_dir / "retrieval_runs.jsonl", dataset.retrieval_runs)
+    write_jsonl(output_dir / "source_snapshots.jsonl", dataset.source_snapshots)
+    write_jsonl(output_dir / "evidence_spans.jsonl", dataset.evidence_spans)
+    write_jsonl(output_dir / "decision_traces.jsonl", dataset.decision_traces)
+    write_jsonl(output_dir / "next_actions.jsonl", dataset.next_actions)
 
 
 def run_pipeline(
@@ -106,6 +112,13 @@ def run_pipeline(
             [item for item in live_report.get("retrieval", []) if item.get("status") != "success"],
         )
 
+    from src.audit_enrichment import enrich_audit
+    from src.live_ingest import SCOPE_QUESTION
+    dataset = enrich_audit(
+        dataset, root=settings.root, run_dir=run_dir, question=question or SCOPE_QUESTION,
+        visible_ids=set(live_report["added_paper_ids"]) if live_report else None,
+    )
+
     stats = dataset_stats(dataset)
     error_count = stats["error_count"]
     logger.info(
@@ -151,3 +164,33 @@ def run_pipeline(
         "offline": offline,
         "live": live_report,
     }
+
+
+def upgrade_audit(settings: Settings, source_run: str, *, acquire: bool = False) -> dict:
+    """Create a new reviewable run, including when the source is protected."""
+    from src.audit_enrichment import enrich_audit
+    from src.replay import load_run
+    from src.live_ingest import SCOPE_QUESTION
+
+    loaded = load_run(settings.runs_dir, source_run)
+    manifest = dict(loaded.get("manifest") or {})
+    run_id = new_run_id("audit")
+    run_dir = resolve_run_dir(settings.runs_dir, run_id)
+    live = manifest.get("live") or {}
+    visible_ids = set(live.get("added_paper_ids", [])) if manifest.get("offline") is False else None
+    dataset = enrich_audit(loaded["dataset"], root=settings.root, run_dir=run_dir,
+                          question=manifest.get("question") or SCOPE_QUESTION,
+                          visible_ids=visible_ids, acquire=acquire,
+                          source_dir=resolve_run_dir(settings.runs_dir, source_run))
+    stats = dataset_stats(dataset)
+    if stats["error_count"]:
+        raise ValueError("增强审计数据未通过校验")
+    snapshot_dataset(dataset, run_dir / "output")
+    write_json(run_dir / "output" / "map.json", build_map(dataset, run_id))
+    write_json(run_dir / "stats.json", stats)
+    write_json(run_dir / "validation_report.json", [i.model_dump() for i in dataset.issues])
+    manifest.update(run_id=run_id, parent_run_id=source_run, audit_version="v0.2",
+                    created_at=datetime.now(timezone.utc).isoformat(), stats=stats,
+                    cache_dir=str(run_dir / "cache"))
+    write_json(run_dir / "run_manifest.json", manifest)
+    return {"run_id": run_id, "parent_run_id": source_run, "stats": stats}

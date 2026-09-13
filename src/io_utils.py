@@ -10,12 +10,18 @@ from src.schema import (
     Claim,
     ClaimDecision,
     Dataset,
+    DecisionTrace,
     Evidence,
+    EvidenceSpan,
     FalsificationHit,
+    NextAction,
     PaperCard,
+    QueryPlan,
+    ResearchQuestion,
     RetrievalRun,
     ScreeningLog,
     SearchQuery,
+    SourceSnapshot,
     ValidationIssue,
     validate_dataset,
 )
@@ -104,6 +110,16 @@ def load_dataset(data_dir: Path) -> Dataset:
             ValidationIssue(level="error", code="missing_file", message=f"缺少 {queries_path.name}", object_id="search_queries.json")
         )
 
+    research_questions = _parse_rows(
+        ResearchQuestion,
+        load_optional_jsonl(data_dir / "research_questions.jsonl"),
+        issues,
+        "research_questions",
+    )
+    query_plans = _parse_rows(
+        QueryPlan, load_optional_jsonl(data_dir / "query_plans.jsonl"), issues, "query_plans"
+    )
+
     papers = _parse_rows(PaperCard, load_optional_jsonl(data_dir / "papers.jsonl"), issues, "papers")
     paper_cards = _parse_rows(PaperCard, load_optional_jsonl(data_dir / "paper_cards.jsonl"), issues, "paper_cards")
     screening = _parse_rows(ScreeningLog, load_optional_jsonl(data_dir / "screening_log.jsonl"), issues, "screening_log")
@@ -118,8 +134,22 @@ def load_dataset(data_dir: Path) -> Dataset:
     retrieval_runs = _parse_rows(
         RetrievalRun, load_optional_jsonl(data_dir / "retrieval_runs.jsonl"), issues, "retrieval_runs"
     )
+    source_snapshots = _parse_rows(
+        SourceSnapshot, load_optional_jsonl(data_dir / "source_snapshots.jsonl"), issues, "source_snapshots"
+    )
+    evidence_spans = _parse_rows(
+        EvidenceSpan, load_optional_jsonl(data_dir / "evidence_spans.jsonl"), issues, "evidence_spans"
+    )
+    decision_traces = _parse_rows(
+        DecisionTrace, load_optional_jsonl(data_dir / "decision_traces.jsonl"), issues, "decision_traces"
+    )
+    next_actions = _parse_rows(
+        NextAction, load_optional_jsonl(data_dir / "next_actions.jsonl"), issues, "next_actions"
+    )
 
     dataset = Dataset(
+        research_questions=research_questions,
+        query_plans=query_plans,
         queries=queries,
         papers=papers,
         paper_cards=paper_cards,
@@ -129,6 +159,10 @@ def load_dataset(data_dir: Path) -> Dataset:
         claim_decisions=claim_decisions,
         falsification=falsification,
         retrieval_runs=retrieval_runs,
+        source_snapshots=source_snapshots,
+        evidence_spans=evidence_spans,
+        decision_traces=decision_traces,
+        next_actions=next_actions,
         issues=issues,
     )
     return validate_dataset(dataset)

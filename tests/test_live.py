@@ -133,6 +133,15 @@ def test_live_ingest_merges_new_paper_and_records_429(tmp_path: Path):
     assert all(item["status"] == "rate_limited" for item in limited)
     assert all(item["result_count"] is None for item in limited)
     assert any(item.decision.value == "exclude" for item in merged.papers)
+    assert len(merged.research_questions) == 1
+    assert merged.research_questions[0].text.startswith("检索增强")
+    assert len(merged.query_plans) == 1
+    assert merged.query_plans[0].status.value == "executed"
+    assert set(merged.query_plans[0].query_ids) == {item.query_id for item in merged.queries if item.query_id.startswith("q-live-")}
+    assert len(merged.source_snapshots) == len(report["retrieval"])
+    assert any(item.status.value == "success" and item.content_sha256 for item in merged.source_snapshots)
+    assert any(item.status.value == "zero_results" for item in merged.source_snapshots)
+    assert any(item.status.value == "rate_limited" and item.error_code == "http_429" for item in merged.source_snapshots)
 
 
 def test_expand_question_removes_chat_instructions():

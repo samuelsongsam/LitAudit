@@ -130,6 +130,12 @@ def _add_online_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--online", action="store_true", help="调用 arXiv / OpenAlex / Semantic Scholar")
 
 
+def cmd_audit(args: argparse.Namespace) -> int:
+    from src.pipeline import upgrade_audit
+    _print(upgrade_audit(load_settings(), args.run_id, acquire=args.acquire))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="litaudit", description="LitAudit 在线检索、离线回放与勘验工作台")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -141,6 +147,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--data-dir")
     validate.add_argument("--fixture", action="store_true")
     validate.set_defaults(func=cmd_validate)
+
+    audit = sub.add_parser("audit", help="创建增强审计快照，不修改原 run")
+    audit.add_argument("run_id")
+    audit.add_argument("--acquire", action="store_true", help="尝试下载最多 5 篇 arXiv 全文")
+    audit.set_defaults(func=cmd_audit)
 
     run = sub.add_parser("run", help="运行流水线；默认在线检索，--offline 只快照金标")
     _add_online_flags(run)

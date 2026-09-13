@@ -294,7 +294,13 @@ function scopedAuditData() {
   const live = data.live || {};
   const added = new Set(live.added_paper_ids || []);
   if (data.offline !== false || !live.added_paper_ids) return data;
-  return { ...data, papers: (data.papers || []).filter((item) => added.has(item.paper_id)), evidence: (data.evidence || []).filter((item) => added.has(item.paper_id)), falsification: (data.falsification || []).filter((item) => added.has(item.paper_id)), claims: (data.claims || []).filter((item) => item.text === data.question || (data.evidence || []).some((e) => e.claim_id === item.claim_id && added.has(e.paper_id))) };
+  const retrievalIds = new Set((live.retrieval || []).map(r => r.retrieval_id));
+  const queryIds = new Set((data.retrieval_runs || []).filter(r => retrievalIds.has(r.retrieval_id)).map(r => r.query_id));
+  const documentSnapshots = new Set((data.fulltext_audit?.documents || []).filter(d => added.has(d.paper_id)).map(d => d.snapshot_id));
+  return { ...data, papers: (data.papers || []).filter((item) => added.has(item.paper_id)), evidence: (data.evidence || []).filter((item) => added.has(item.paper_id)), falsification: (data.falsification || []).filter((item) => added.has(item.paper_id)), claims: (data.claims || []).filter((item) => item.text === data.question || added.has(item.paper_id) || (data.evidence || []).some((e) => e.claim_id === item.claim_id && added.has(e.paper_id))),
+    queries: (data.queries || []).filter(q => queryIds.has(q.query_id)),
+    query_plans: (data.query_plans || []).filter(p => p.query_ids.some(id => queryIds.has(id))),
+    source_snapshots: (data.source_snapshots || []).filter(s => retrievalIds.has(s.retrieval_id) || documentSnapshots.has(s.snapshot_id)) };
 }
 
 async function refreshConversations() {
@@ -419,6 +425,32 @@ function renderView() {
   const stage = document.getElementById("stage");
   const views = { chat: chatView, funnel: funnelView, map: mapView, evidence: evidenceView, falsify: falsifyView, eval: evalView };
   stage.innerHTML = views[state.view]();
+  stage.querySelectorAll("[data-audit-export]").forEach(button => {
+    button.onclick = async () => {
+      button.disabled = true;
+      try {
+        const report = await api(`/api/run/${encodeURIComponent(state.runId)}/report`);
+        const url = URL.createObjectURL(new Blob([report.content], {type: "text/markdown;charset=utf-8"}));
+        const link = document.createElement("a"); link.href = url; link.download = report.filename; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (error) { button.textContent = `导出失败：${error.message}`; }
+      finally { button.disabled = false; }
+    };
+  });
+  stage.querySelectorAll("[data-upgrade-audit]").forEach((button) => {
+    button.onclick = async () => {
+      button.disabled = true;
+      button.textContent = "正在保存全文与核验定位，请稍候…";
+      try {
+        const result = await api("/api/audit/upgrade", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({run_id: state.runId, acquire: button.dataset.upgradeAudit === "download"}) });
+        state.view = "evidence";
+        await loadRun(result.run_id);
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = `未完成：${error.message}，点击重试`;
+      }
+    };
+  });
   stage.querySelectorAll("[data-paper]").forEach((node) => {
     node.onclick = () => {
       state.selectedPaper = node.dataset.paper;
@@ -509,6 +541,7 @@ function conversationHistoryView() {
 
 function llmErrorText(response) {
   const code = String(response?.error || "");
+  if (code === "answer_audit_rejected") return "回答未通过引用完整性检查，未展示未经支持的陈述。已有论文与审计数据已保留，可查看证据后重新提问。";
   const reasons = {
     missing_llm_api_key: "未配置 LLM API 密钥。",
     missing_expanded_query: "模型未给出检索词。",
@@ -521,10 +554,16 @@ function llmErrorText(response) {
   return extra ? `AI 未生成本轮内容，请重试。${extra}` : "AI 未生成本轮内容，请重试。";
 }
 
+function citationView(response) {
+  const audit = response.answer_audit;
+  if (!audit?.ok) return '';
+  return `<div class="audit-citations">引用完整性检查已通过（不代表语义已人工复核）${(audit.citations || []).map(c => `<div>${esc(c.certainty === "abstract_only" ? "摘要级" : c.certainty === "uncertain" ? "待核验" : c.certainty === "qualified" ? "有限支持" : "已核验摘录")} · ${esc(c.claim_id || c.paper_id || '')} ${(c.evidence_ids || []).map(esc).join(' / ')}</div>`).join('')}</div>`;
+}
+
 function chatMessage(item, messageIndex = 0) {
   if (item.role === "user") return `<div class="chat-message user"><div class="chat-role">你</div><div class="chat-bubble">${esc(item.content)}</div></div>`;
   const response = item.response || {};
-  if (response.overview_mode === "llm_error") return `<div class="chat-message assistant"><div class="chat-role">勘文 AI · 服务状态</div><article class="chat-bubble assistant-bubble"><div class="chat-error">${esc(llmErrorText(response))}</div></article></div>`;
+  if (response.overview_mode === "llm_error") return `<div class="chat-message assistant"><div class="chat-role">勘文 AI · 回答状态</div><article class="chat-bubble assistant-bubble"><div class="chat-error">${esc(llmErrorText(response))}</div>${response.run_id ? `<p><a href="/?run=${encodeURIComponent(response.run_id)}&view=evidence">查看已保存的论文与证据审计 →</a></p>` : ''}</article></div>`;
   if (response.overview_mode === "clarification") return `<div class="chat-message assistant">
     <div class="chat-role">勘文 AI · 研究范围确认</div>
     <article class="chat-bubble assistant-bubble clarification-bubble">
@@ -533,13 +572,14 @@ function chatMessage(item, messageIndex = 0) {
       <button class="solid clarification-submit" type="button">提交选择并继续</button>
     </article>
   </div>`;
-  if (response.overview_mode === "direct_answer") return `<div class="chat-message assistant direct"><div class="chat-role">勘文 AI · 直接回答</div><article class="chat-bubble assistant-bubble"><div class="chat-overview rich-text">${renderMarkdown(item.content)}</div></article></div>`;
+  if (response.overview_mode === "direct_answer") return `<div class="chat-message assistant direct"><div class="chat-role">勘文 AI · 直接回答</div><article class="chat-bubble assistant-bubble"><div class="chat-overview rich-text">${renderMarkdown(item.content)}</div>${citationView(response)}</article></div>`;
   const papers = response.papers || [];
   return `<div class="chat-message assistant">
     <div class="chat-role">勘文 AI · LLM 生成</div>
     <article class="chat-bubble assistant-bubble">
       <h3>总论概览</h3>
       <div class="chat-overview rich-text">${renderMarkdown(item.content)}</div>
+      ${citationView(response)}
       <h3>本轮相关论文</h3>
       ${response.paper_selection?.retrieval_status === "all_failed" ? `<div class="chat-retrieval-warning">本轮在线检索未成功：${(response.paper_selection.retrieval_failures || []).map((item) => `${esc(labelOf("source", item.source, item.source))}（${esc(labelOf("retrievalStatus", item.status, item.status))}）`).join("、")}。不能据此判断没有相关论文。</div>` : response.paper_selection?.retrieval_status === "partial_failed" ? `<div class="chat-retrieval-warning">部分检索源失败（例如 Semantic Scholar 限流）；成功源返回的论文仍可使用，以下结果不是完整召回。本轮仅为摘要筛选，主问题不会被自动标为已支持。</div>` : ""}
       <div class="chat-result-note">${esc(response.paper_selection?.message || "仅显示本轮问题匹配的论文。")}${response.paper_selection ? ` 本轮展示 ${esc(response.paper_selection.matched_count)} 篇 · 在线新增 ${esc(response.paper_selection.added_count)} 篇 · 审计 run 共 ${esc(response.paper_selection.total_run_count)} 篇。` : ""}</div>
@@ -1442,13 +1482,38 @@ function setupGraphInteractions() {
   });
 }
 
+function auditWorkbench() {
+  const data = scopedAuditData();
+  const fulltext = data.fulltext_audit || {};
+  const docs = fulltext.documents || [];
+  const checks = fulltext.checks || [];
+  const claims = new Set((data.claims || []).map(c => c.claim_id));
+  const papers = new Set((data.papers || []).map(p => p.paper_id));
+  const evidence = new Set((data.evidence || []).map(e => e.evidence_id));
+  const actions = (data.next_actions || []).filter(a => a.status === "open" && (a.target_type === "claim" ? claims.has(a.target_id) : a.target_type === "paper" ? papers.has(a.target_id) : a.target_type === "evidence" ? evidence.has(a.target_id) : true));
+  const actionNames = {acquire_fulltext: "补充全文", verify_evidence: "核验证据", resolve_conflict: "复核冲突", retrieve_more: "补充检索", human_review: "人工复核"};
+  return `<section class="audit-workbench">
+    <div class="audit-heading"><div><span class="eyebrow">证据审计工作区</span><h2>哪些有依据，哪些还需要复核</h2><p class="muted">保存全文、逐页文本与来源快照；定位匹配不等同于语义核验。</p></div>
+    <div class="audit-buttons"><button class="solid" data-upgrade-audit="download">获取全文并核验</button><button class="ghost" data-upgrade-audit="local">仅核验本地文件</button><button class="ghost" data-audit-export>下载审计报告</button><span class="tiny">生成独立审计快照 · 原运行保留</span></div></div>
+    <div class="audit-metrics"><div><strong>${docs.filter(d => d.status === "parsed").length}</strong><span>已解析全文</span></div><div><strong>${checks.filter(c => c.status === "matched").length} / ${checks.length}</strong><span>摘录定位匹配</span></div><div><strong>${(data.decision_traces || []).filter(t => claims.has(t.claim_id)).length}</strong><span>可查看的判决记录</span></div><div><strong>${actions.length}</strong><span>待处理事项</span></div></div>
+    ${!docs.length ? '<div class="banner">此运行尚未生成全文审计。点击上方按钮创建增强审计快照。</div>' : ''}
+    <details open><summary>全文与证据定位</summary><div class="audit-documents">${docs.map(d => `<div class="audit-document"><strong>${esc(titleOf(d.paper_id))}</strong><span>${d.status === "parsed" ? `已解析 ${d.page_count} 页` : d.status === "failed" ? "获取或解析失败" : "暂无全文"}</span>${d.response_path ? `<a target="_blank" rel="noopener" href="/api/fulltext/${encodeURIComponent(state.runId)}/${encodeURIComponent(d.paper_id)}">查看原文 PDF ↗</a>` : ''}${d.error_code ? `<span class="tiny">${esc(d.error_code)}</span>` : ''}</div>`).join('')}</div></details>
+    <details ${actions.length ? 'open' : ''}><summary>下一步建议（${actions.length}）</summary><div class="audit-actions">${actions.map(a => `<div><strong>${esc(actionNames[a.kind] || a.kind)} · ${esc(a.target_id)}</strong><p>${esc(a.reason)}</p></div>`).join('') || '<p class="muted">暂无待处理事项。</p>'}</div></details>
+    <details><summary>查询计划与来源快照</summary>${(data.query_plans || []).map(p => `<p class="tiny">${esc(p.scope_version)} · ${esc(p.status)} · ${esc(p.query_ids.join(' / '))}</p>`).join('')}
+    ${(data.queries || []).map(q => `<p><strong>${esc(q.source)}</strong> · ${esc(q.query)}</p>`).join('')}
+    <div class="audit-sources">${(data.source_snapshots || []).map(s => `<div><strong>${esc(s.source)} · ${esc(s.status)}</strong><span class="tiny">${esc(s.error_code || s.content_sha256 || "无快照文件")}</span></div>`).join('')}</div></details>
+  </section>`;
+}
+
 function evidenceView() {
   const { claims, evidence, claim_decisions: decisions } = scopedAuditData();
   const selected = claims.find((item) => item.claim_id === state.selectedClaim) || claims[0];
-  if (!selected) return `<div class="banner">当前结果还没有论断。</div>`;
+  if (!selected) return auditWorkbench() + `<div class="banner">当前结果还没有论断；全文解析后仍需人工确认论断与证据的语义关系。</div>`;
   const related = evidence.filter((item) => item.claim_id === selected.claim_id);
   const decision = decisions.find((item) => item.claim_id === selected.claim_id);
+  const trace = (state.data?.decision_traces || []).find(item => item.claim_id === selected.claim_id);
   return `
+    ${auditWorkbench()}
     <p class="view-hint">每条论断都要能回到原文摘录；没有证据的不能写成确定结论。</p>
     <div class="claim-layout">
       <div class="claim-nav">
@@ -1466,6 +1531,7 @@ function evidenceView() {
         <h3>${esc(selected.text)}</h3>
         <p class="muted">${esc(selected.decision_reason)}</p>
         ${decision ? `<p class="tiny">复核说明 · ${esc(decision.reason)}</p>` : ""}
+        ${trace ? `<details class="tiny"><summary>查看本次判决记录</summary><p>${esc(trace.rationale)}</p><p>规则：${esc(trace.rule_version)} · 最终状态：${esc(labelOf("claim", trace.final_status))}</p><p>模型判决：${esc(trace.model_name || "未执行新的模型判决")} · 记录时间：${esc(trace.created_at)}</p><p>所用证据：${esc(trace.evidence_ids.join(' / '))}</p></details>` : ''}
         <details class="tiny"><summary>内部编号 ${esc(selected.claim_id)}</summary></details>
         ${related.length ? related.map(evidenceBlock).join("") : `<div class="banner danger">尚无证据摘录，不能进入确定结论区。</div>`}
       </article>
@@ -1474,6 +1540,8 @@ function evidenceView() {
 }
 
 function evidenceBlock(item) {
+  const check = (state.data?.fulltext_audit?.checks || []).find(c => c.evidence_id === item.evidence_id);
+  const span = (state.data?.evidence_spans || []).find(s => s.evidence_id === item.evidence_id);
   const locator = item.locator || {};
   const page = locator.page != null ? `第 ${locator.page} 页` : "无页码";
   return `
@@ -1485,6 +1553,8 @@ function evidenceBlock(item) {
         <span class="tiny">${esc(titleOf(item.paper_id))}</span>
       </div>
       <p>「${esc(item.snippet)}」</p>
+      ${check ? `<p class="tiny">本次定位检查：${check.status === "matched" ? "指定页精确匹配" : "未精确匹配，需要复核"}；原人工判决保留。</p>` : ''}
+      ${span ? `<details class="tiny"><summary>证据链与文件指纹</summary><p>${esc(item.claim_id)} → ${esc(span.span_id)} → ${esc(item.paper_id)} → ${esc(span.snapshot_id || "尚缺全文快照")}</p><p style="overflow-wrap:anywhere">摘录 SHA-256：${esc(span.snippet_sha256)}</p></details>` : ''}
       <div class="loc">${esc(page)}${locator.section ? ` · ${esc(locator.section)}` : ""}</div>
     </div>
   `;

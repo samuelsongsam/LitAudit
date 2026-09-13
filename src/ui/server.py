@@ -38,6 +38,9 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             runs = list_runs_for_ui(self.settings.runs_dir)
             self._json({"runs": runs, "default_run_id": self.default_run_id})
             return
+        if path.startswith("/api/fulltext/"):
+            self._fulltext(path)
+            return
         if path.startswith("/api/run/"):
             run_id = path.split("/api/run/", 1)[1].strip("/")
             if run_id.endswith("/report"):
@@ -99,6 +102,14 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/chat":
             self._chat(body)
+            return
+        if path == "/api/audit/upgrade":
+            from src.pipeline import upgrade_audit
+            try:
+                result = upgrade_audit(self.settings, str(body.get("run_id") or ""), acquire=body.get("acquire") is True)
+                self._json(result)
+            except (ValueError, FileNotFoundError) as exc:
+                self._json({"error": str(exc)}, status=400)
             return
         if path != "/api/run":
             self._json({"error": f"not found ({self.command} {path})"}, status=404)
@@ -221,6 +232,26 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             self._json({"error": str(exc)}, status=404)
         except Exception as exc:
             self._json({"error": str(exc)}, status=500)
+
+    def _fulltext(self, path: str) -> None:
+        from src.run_paths import resolve_run_dir
+        from src.io_utils import read_json
+        try:
+            run_id, paper_id = path[len("/api/fulltext/"):].split("/", 1)
+            run_dir = resolve_run_dir(self.settings.runs_dir, run_id).resolve()
+            audit = read_json(run_dir / "output" / "fulltext_audit.json")
+            document = next(d for d in audit["documents"] if d["paper_id"] == paper_id and d.get("response_path"))
+            target = Path(document["response_path"]).resolve()
+            target.relative_to(run_dir)
+            data = target.read_bytes()
+        except (ValueError, OSError, StopIteration, KeyError):
+            self._json({"error": "全文尚不可用"}, status=404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/pdf")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
 
     def _static(self, path: str) -> None:
         if path in {"/", "/index.html"}:

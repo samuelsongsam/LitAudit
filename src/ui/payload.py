@@ -80,6 +80,9 @@ def describe_run(runs_dir: Path, run_id: str) -> dict:
         else:
             added = (manifest.get("live") or {}).get("added_paper_ids") or []
             subtitle = f"新增 {len(added)} 篇候选" if added else f"共 {paper_count or '—'} 篇候选"
+    elif run_id.startswith("audit_"):
+        label = f"证据审计 · {when}" if when else "证据审计"
+        subtitle = f"{paper_count or 0} 篇候选 · 增强审计快照"
     elif kind == "snapshot":
         label = f"本地快照 · {when}" if when else "本地快照"
         subtitle = f"{paper_count or '—'} 篇候选"
@@ -316,6 +319,13 @@ def build_payload(runs_dir, run_id: str) -> dict:
         "screening": [_dump(item) for item in dataset.screening],
         "retrieval_runs": [_dump(item) for item in dataset.retrieval_runs],
         "queries": [_dump(item) for item in dataset.queries],
+        "research_questions": [_dump(item) for item in dataset.research_questions],
+        "query_plans": [_dump(item) for item in dataset.query_plans],
+        "source_snapshots": [_dump(item) for item in dataset.source_snapshots],
+        "evidence_spans": [_dump(item) for item in dataset.evidence_spans],
+        "decision_traces": [_dump(item) for item in dataset.decision_traces],
+        "next_actions": [_dump(item) for item in dataset.next_actions],
+        "fulltext_audit": read_json(resolve_run_dir(runs_dir, run_id) / "output" / "fulltext_audit.json") if (resolve_run_dir(runs_dir, run_id) / "output" / "fulltext_audit.json").exists() else {},
     }
 
 
@@ -336,7 +346,23 @@ def build_audit_report(runs_dir: Path, run_id: str) -> tuple[str, str]:
     loaded = load_run(runs_dir, run_id)
     dataset = loaded["dataset"]
     manifest = loaded.get("manifest") or {}
-    stats = loaded.get("stats") or dataset_stats(dataset)
+    if manifest.get("offline") is False and manifest.get("live"):
+        ids = set(manifest["live"].get("added_paper_ids") or [])
+        visible_evidence = [e for e in dataset.evidence if e.paper_id in ids]
+        claim_ids = {e.claim_id for e in visible_evidence} | {c.claim_id for c in dataset.claims if c.text == manifest.get("question") or c.paper_id in ids}
+        retrieval_ids = {r.get("retrieval_id") for r in manifest["live"].get("retrieval", [])}
+        dataset = dataset.model_copy(update={
+            "papers": [p for p in dataset.papers if p.paper_id in ids],
+            "paper_cards": [p for p in dataset.paper_cards if p.paper_id in ids],
+            "claims": [c for c in dataset.claims if c.claim_id in claim_ids],
+            "evidence": visible_evidence,
+            "falsification": [f for f in dataset.falsification if f.paper_id in ids and f.target_claim in claim_ids],
+            "claim_decisions": [d for d in dataset.claim_decisions if d.claim_id in claim_ids],
+            "retrieval_runs": [r for r in dataset.retrieval_runs if r.retrieval_id in retrieval_ids],
+            "decision_traces": [t for t in dataset.decision_traces if t.claim_id in claim_ids],
+            "evidence_spans": [s for s in dataset.evidence_spans if s.paper_id in ids],
+        })
+    stats = dataset_stats(dataset)
     map_payload = _visible_live_map(build_map(dataset, run_id), manifest)
     display = describe_run(runs_dir, run_id)
     context = _workspace_context(dataset, manifest, display, stats, map_payload)
@@ -415,7 +441,30 @@ def build_audit_report(runs_dir: Path, run_id: str) -> tuple[str, str]:
     if not any([context["pending_claims"], context["pending_papers"], context["abstract_only_papers"], context["retrieval_failures"]]):
         lines.append("当前没有额外待处理项。")
     lines.extend(["", "## 限制", ""])
-    for limitation in manifest.get("limitations") or map_payload.get("limitations") or []:
+    audit_payload = build_payload(runs_dir, run_id)
+    fulltext = audit_payload.get("fulltext_audit") or {}
+    lines.extend(["", "## 全文与定位检查", "", "| 论文 | 全文状态 | 页数 | 失败原因 |", "| --- | --- | ---: | --- |"])
+    for doc in fulltext.get("documents", []):
+        lines.append(f"| {_md_cell(doc['paper_id'])} | {_md_cell(doc['status'])} | {doc.get('page_count', 0)} | {_md_cell(doc.get('error_code'))} |")
+    lines.extend(["", f"增强证据片段：{len(dataset.evidence_spans)}；判决轨迹：{len(dataset.decision_traces)}。", "", "| Evidence | 定位检查 | 页码 |", "| --- | --- | ---: |"])
+    for check in fulltext.get("checks", []):
+        lines.append(f"| {_md_cell(check['evidence_id'])} | {_md_cell(check['status'])} | {_md_cell(check.get('page'))} |")
+    lines.extend(["", "## 增强证据链与指纹", "", "| Evidence | Span | 来源快照 | 摘录 SHA-256 | 文档 SHA-256 |", "| --- | --- | --- | --- | --- |"])
+    for span in dataset.evidence_spans:
+        lines.append(f"| {_md_cell(span.evidence_id)} | {_md_cell(span.span_id)} | {_md_cell(span.snapshot_id)} | `{span.snippet_sha256}` | `{_md_cell(span.document_version)}` |")
+    lines.extend(["", "## 判决轨迹", "", "| Claim | 规则 | 最终状态 | 判决说明 |", "| --- | --- | --- | --- |"])
+    for trace in dataset.decision_traces:
+        lines.append(f"| {_md_cell(trace.claim_id)} | {_md_cell(trace.rule_version)} | {_md_cell(trace.final_status.value)} | {_md_cell(trace.rationale)} |")
+    lines.extend(["", "定位检查采用归一化精确文本匹配，只证明摘录位置，不代表模型已验证语义支持。", "", "## 运行限制", ""])
+    limitations = manifest.get("limitations") or map_payload.get("limitations") or []
+    if manifest.get("offline") is False:
+        limitations = [
+            "本报告只展示当前在线主题的新增论文与相关证据，不包含继承的基准研究结论。",
+            "全文解析和摘录定位不等同于人工语义核验；摘要级线索不能升级为确定结论。",
+            "失败与限流不代表零匹配，当前结果不保证完整召回。",
+            *map_payload.get("limitations", []),
+        ]
+    for limitation in limitations:
         lines.append(f"- {_md_cell(limitation)}")
     lines.extend(["", "---", "", "证据链原则：Claim -> Evidence -> PaperCard。没有有效 Evidence 或存在未解决冲突时，不将 Claim 写成确定支持。", ""])
     filename = f"litaudit-{run_id}-audit.md"

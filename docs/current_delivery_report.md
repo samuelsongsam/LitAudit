@@ -1,5 +1,17 @@
 # LitAudit 当前交付报告
 
+## 最新工作区交付：2026-09-11
+
+本节优先于下方历史记录。已实现独立审计快照、PDF 全文获取/解析状态、来源文件冻结、摘录精确定位检查、EvidenceSpan / DecisionTrace / NextAction 生成、前端证据工作区与报告导出。总论和直接回答均检查 Claim/Evidence 引用，摘要线索要求逐字摘录；失败后给模型一次带错误反馈的修正机会。
+
+最终验收 run：`audit_20260911T141848Z_430f08`。浏览器点击全文按钮后真实下载 STORM、WebGPT、Toolformer，加上 4 篇本地 PDF，共 7 篇解析成功。14 条证据生成片段记录，其中 12 条指定页匹配、2 条需人工复核；8 条判决轨迹，21 个来源快照，5 个待处理事项。原金标和 `claim-008=pending` 保持不变。新片段的 verified 表示已有已核验证据再次完成机器定位匹配，不是新的人工作证或语义判断。
+
+真实配置模型总论调用通过引用审计，返回 5 条带绑定的陈述。下载目前支持 arXiv，每次最多 5 篇，单文件 25MB、300 页上限。未完成的长期项目：OCR、其他全文来源、自动语义判决、人工双人盲评与效果对照实验。不能把现有回放指标宣传为模型效果提升。
+
+验收检查：`84 passed`；doctor 正常；最终快照 validate 无错误；JavaScript 语法检查与 `git diff --check` 通过。浏览器显示证据工作区、全文下载完成后自动切换新 run、报告接口返回成功，无页面脚本错误。原文 PDF GET 接口已实测，并新增拒绝越出 run 目录的回归测试。最终 run 的真实模型总论返回 5 条陈述并通过引用检查。
+
+启动：`python -m src.cli ui --run-id audit_20260911T141848Z_430f08 --port 8787 --no-browser`。
+
 版本：current-2026-08-29-workspace
 数据状态：以本报告和 `runs/phase2-real/` 为当前准；更早报告均为历史记录。
 
@@ -95,6 +107,14 @@ python -m src.cli ui --run-id phase2-real
 4. 评测不是闭卷 LLM 准确率，也不是正式模型效果实验。
 5. 比赛提交包（PDF、视频、ZIP）需按 `docs/submission_checklist.md` 人工导出和录屏。
 6. LLM 总论、路由和澄清题需要在 `.env` 配置 `LITAUDIT_LLM_API_KEY`，可选配置兼容 `BASE_URL` 和模型名；未配置或调用失败时只返回 AI 服务状态，不使用固定问题或模板答案。
+
+## 8. v0.2 优化进展（2026-09-10）
+
+- 已冻结第一版增强审计契约：ResearchQuestion、QueryPlan、SourceSnapshot、EvidenceSpan、DecisionTrace、NextAction。
+- 新旧 run 向后兼容；新 run 会输出对应 JSONL 文件。
+- 在线检索已记录结构化问题、已执行查询计划、响应路径和内容 SHA-256；成功零结果、限流和失败不再共用一个快照状态。
+- 直接回答新增句子级 Claim/Evidence 审计：确定性陈述缺少可定位支持证据时整次回答拒绝进入确定结果。
+- 当前已有 v0.1 金标尚未批量迁移生成 EvidenceSpan 与 DecisionTrace；这是下一阶段的数据迁移任务，不能把空扩展对象口播成已完成增强审计。
 
 ## 7. 可信度规则
 

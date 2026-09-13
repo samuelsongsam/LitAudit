@@ -4,13 +4,18 @@ from src.schema import (
     ClaimSource,
     ClaimStatus,
     Dataset,
+    DecisionTrace,
     Evidence,
+    EvidenceSpan,
     EvidenceVerdict,
     ExtractionStatus,
     Locator,
+    QueryPlan,
+    ResearchQuestion,
     PaperCard,
     PaperDecision,
     RetrievalRun,
+    SourceSnapshot,
     ScreeningLog,
     ScreeningStage,
     validate_dataset,
@@ -176,6 +181,85 @@ def test_claim_decision_must_match_claim_status():
     assert any(issue.code == "claim_status_mismatch" for issue in dataset.issues)
 
 
+def test_supported_decision_requires_supporting_evidence():
+    dataset = Dataset(
+        papers=[_paper()],
+        claims=[
+            Claim.model_validate(
+                {
+                    "claim_id": "claim-001",
+                    "text": "该方法有效。",
+                    "source": ClaimSource.derived,
+                    "status": ClaimStatus.supported,
+                    "decision_reason": "有证据。",
+                }
+            )
+        ],
+        claim_decisions=[
+            ClaimDecision.model_validate(
+                {
+                    "claim_id": "claim-001",
+                    "status": ClaimStatus.supported,
+                    "evidence_ids": [],
+                    "reason": "错误地省略证据。",
+                    "reviewer": "test",
+                    "reviewed_at": "2026-08-26",
+                    "scope_version": "v0.1",
+                }
+            )
+        ],
+    )
+    dataset = validate_dataset(dataset)
+    assert any(issue.code == "supported_decision_without_grounding" for issue in dataset.issues)
+
+
+def test_supported_decision_cannot_cite_contradicting_evidence():
+    dataset = Dataset(
+        papers=[_paper()],
+        claims=[
+            Claim.model_validate(
+                {
+                    "claim_id": "claim-001",
+                    "text": "该方法有效。",
+                    "source": ClaimSource.derived,
+                    "status": ClaimStatus.supported,
+                    "decision_reason": "错误地忽略反证。",
+                }
+            )
+        ],
+        evidence=[
+            Evidence.model_validate(
+                {
+                    "evidence_id": "ev-001",
+                    "claim_id": "claim-001",
+                    "paper_id": "paper-001",
+                    "snippet": "结果相反。",
+                    "locator": {"page": 2},
+                    "verdict": EvidenceVerdict.contradicts,
+                    "confidence": "high",
+                    "extraction_status": ExtractionStatus.verified,
+                }
+            )
+        ],
+        claim_decisions=[
+            ClaimDecision.model_validate(
+                {
+                    "claim_id": "claim-001",
+                    "status": ClaimStatus.supported,
+                    "evidence_ids": ["ev-001"],
+                    "reason": "错误地把反证当支持。",
+                    "reviewer": "test",
+                    "reviewed_at": "2026-08-26",
+                    "scope_version": "v0.1",
+                }
+            )
+        ],
+    )
+    dataset = validate_dataset(dataset)
+    assert any(issue.code == "supported_decision_without_grounding" for issue in dataset.issues)
+    assert any(issue.code == "supported_decision_with_conflict" for issue in dataset.issues)
+
+
 def test_rate_limit_cannot_be_marked_success():
     run = RetrievalRun.model_validate(
         {
@@ -192,3 +276,84 @@ def test_rate_limit_cannot_be_marked_success():
         }
     )
     assert run.is_failure is True
+
+
+def test_query_plan_references_existing_question_and_queries():
+    question = ResearchQuestion.model_validate(
+        {
+            "question_id": "rq-001",
+            "text": "RAG 是否改善科学问答可追溯性？",
+            "scope_version": "v0.2",
+            "start_year": 2019,
+            "end_year": 2026,
+        }
+    )
+    plan = QueryPlan.model_validate(
+        {
+            "query_plan_id": "qp-001",
+            "question_id": "rq-001",
+            "query_ids": ["q-missing"],
+            "status": "ready",
+            "scope_version": "v0.2",
+            "created_at": "2026-09-10T10:00:00+08:00",
+        }
+    )
+    dataset = validate_dataset(Dataset(research_questions=[question], query_plans=[plan]))
+    assert any(issue.code == "missing_query_fk" for issue in dataset.issues)
+
+
+def test_success_snapshot_requires_hash_and_path():
+    try:
+        SourceSnapshot.model_validate(
+            {
+                "snapshot_id": "snapshot-001",
+                "retrieval_id": "retrieval-001",
+                "source": "arxiv",
+                "status": "success",
+                "retrieved_at": "2026-09-10T10:00:00+08:00",
+            }
+        )
+    except Exception as exc:
+        assert "response_path" in str(exc)
+    else:
+        raise AssertionError("successful snapshot without audit fields should fail")
+
+
+def test_verified_evidence_span_requires_verification_time():
+    try:
+        EvidenceSpan.model_validate(
+            {
+                "span_id": "span-001",
+                "evidence_id": "ev-001",
+                "paper_id": "paper-001",
+                "document_version": "sha256:document",
+                "snippet_sha256": "0" * 64,
+                "locator": {"page": 1},
+                "extraction_status": "verified",
+            }
+        )
+    except Exception as exc:
+        assert "verified_at" in str(exc)
+    else:
+        raise AssertionError("verified span without verified_at should fail")
+
+
+def test_decision_trace_disagreement_must_remain_uncertain():
+    try:
+        DecisionTrace.model_validate(
+            {
+                "trace_id": "trace-001",
+                "claim_id": "claim-001",
+                "evidence_ids": ["ev-001"],
+                "rule_status": "unsupported",
+                "model_status": "supported",
+                "final_status": "supported",
+                "rationale": "模型与规则冲突。",
+                "rule_version": "rules-v0.2",
+                "created_at": "2026-09-10T10:00:00+08:00",
+            }
+        )
+    except Exception as exc:
+        assert "pending" in str(exc) or "partial" in str(exc)
+    else:
+        raise AssertionError("rule/model disagreement must not resolve to supported")

@@ -149,6 +149,7 @@ def test_ui_server_reuses_current_run_for_direct_follow_up(tmp_path, monkeypatch
     from src.config import load_settings
 
     settings_runs = tmp_path / "runs"
+    monkeypatch.setattr("src.conversation._llm_direct_answer", lambda *args, **kwargs: ("基于当前数据回答", {"ok": True, "errors": [], "citations": []}))
     (settings_runs / "current-run" / "output").mkdir(parents=True)
     monkeypatch.setattr("src.ui.server.load_settings", lambda **_: load_settings(runs_dir=settings_runs))
     monkeypatch.setattr("src.ui.server.build_payload", lambda *args, **kwargs: {"run_id": "current-run", "papers": [], "claims": [], "stats": {}, "workspace": {}, "question": "当前问题"})
@@ -605,12 +606,10 @@ def test_live_overview_excludes_inherited_baseline_papers(monkeypatch):
     monkeypatch.setattr(conversation, "urlopen", fake_urlopen)
     settings = replace(load_settings(runs_dir=ROOT / "runs", offline=False), llm_api_key="test-key")
     overview, mode = conversation._llm_overview(payload, Intent("new_topic", 1.0, "retrieve", True), settings)
-    compact = json.loads(captured["messages"][1]["content"])
-    assert mode == "llm"
-    assert overview == "没有新增论文。"
-    assert compact["papers"] == []
-    assert compact["evidence"] == []
-    assert "PaperQA" not in captured["messages"][1]["content"]
+    assert mode == "retrieval_status"
+    assert "没有新增候选论文" in overview
+    assert "PaperQA" not in overview
+    assert captured == {}  # No model call is needed to render observed status.
 
 
 def test_ui_server_chat_falls_back_without_llm_and_persists_message(tmp_path, monkeypatch):

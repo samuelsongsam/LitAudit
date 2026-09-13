@@ -1,6 +1,6 @@
 # LitAudit 数据契约（A -> B）
 
-版本：v0.1；对应研究范围：scope_version=v0.1；更新时间：2026-08-22。
+版本：v0.2（向后兼容 v0.1）；对应研究范围：scope_version=v0.1/v0.2；更新时间：2026-09-10。
 
 ## 总体约束
 所有对象以 UTF-8 JSON/JSONL 存储。paper_id 是跨文件主键，必须稳定且唯一；缺失 paper_id 的引用不得进入最终输出。研究结论必须能沿 Claim -> Evidence -> PaperCard 回溯。没有 Evidence 的 Claim 不得判定为 supported 或其他确定支持状态。排除论文保留在候选集和筛选日志中，供反证据模块重新召回。
@@ -47,6 +47,28 @@
 data/claim_decisions.jsonl 是 Claim 判决审计账本。字段为 claim_id、status、evidence_ids、reason、reviewer、reviewed_at、scope_version；它不能替代 claims.jsonl，且 status 必须与 Claim.status 一致。
 
 data/retrieval_runs.jsonl 记录实际检索调用。字段为 retrieval_id、query_id、source、request、retrieved_at、http_status、status、result_count、response_path、notes。HTTP 429、连接失败或解析失败必须保留记录，不能写成零结果成功。
+
+## v0.2 审计对象
+
+以下文件均为可选的向后兼容扩展；旧 run 缺少它们时按空列表读取，新生成的 run 必须创建这些文件。
+
+### ResearchQuestion 与 QueryPlan
+
+`research_questions.jsonl` 把自然语言问题冻结成可版本化对象。字段包括 `question_id`、`text`、对象、方法/现象、任务/结果、比较基线、领域边界、起止年份和 `scope_version`。已填写的年份窗口必须合法。
+
+`query_plans.jsonl` 记录 `query_plan_id`、`question_id`、`query_ids`、子问题、边界词、反向词、状态、范围版本和创建时间。`ready` 或 `executed` 状态必须至少关联一个真实存在的 SearchQuery；查询 ID 不得重复。
+
+### SourceSnapshot 与 EvidenceSpan
+
+`source_snapshots.jsonl` 为每次 RetrievalRun 保存审计快照，状态严格区分 `success`、`zero_results`、`partial_failed`、`all_failed`、`rate_limited` 和 `failed`。成功快照必须包含响应路径和 SHA-256；失败/限流必须记录错误代码。
+
+`evidence_spans.jsonl` 保存证据摘录的稳定定位：`span_id`、`evidence_id`、`paper_id`、可选 `snapshot_id`、文档版本、摘录 SHA-256、locator、抽取状态和核验时间。`verified` 必须有核验时间；span 的论文必须与对应 Evidence 一致。
+
+### DecisionTrace 与 NextAction
+
+`decision_traces.jsonl` 同时保留规则状态、可选模型状态、最终状态、证据 ID、冲突标记、规则/提示词版本和理由。规则与模型不一致时，最终状态只能为 `pending` 或 `partial`；存在冲突时不得为 `supported`。
+
+`next_actions.jsonl` 把不确定性转成行动项。类型包括补检索、获取全文、核验证据、解决冲突、人工复核和接受不确定性；目标可指向问题、查询计划、论文、Claim、Evidence 或 run，非 run 目标必须真实存在。
 
 ## 关联与无效数据处理
 读取时先校验 ID、枚举、日期和外键，再构建地图/界面。未知枚举、重复 ID、孤立 Claim/Evidence、缺少 paper_id、空 snippet 或无 locator 的 Evidence 应报错或降级为 pending，不能静默丢弃。UI 必须展示 exclude 与 pending 及失败原因。
