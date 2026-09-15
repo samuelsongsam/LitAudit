@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+from src.run_scope import visible_paper_ids
+
 import json
+import os
 import re
+import tempfile
+import threading
 import time
+from functools import wraps
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -197,6 +203,7 @@ def _payload_has_research_data(payload: dict | None) -> bool:
 
 def classify_intent(message: str, payload: dict | None = None, settings=None, clarification_context: list[str] | None = None, clarification_topic: str | None = None) -> Intent:
     text = (message or "").strip()
+    payload = scoped_payload(payload) if payload is not None else None
     llm_route = _llm_route(text, payload, settings, clarification_context, clarification_topic)
     action = llm_route["action"]
     if action == "error":
@@ -243,6 +250,7 @@ def _llm_direct_answer(payload: dict, message: str, intent: Intent, settings) ->
               "若指定 target_paper_id，只聚焦该论文。不得编造论文、证据、页码或结论；摘要级信息与页码级证据必须明确区分；冲突和 pending 必须保留。"
               "只返回 JSON：{\"statements\":[{\"text\":\"...\",\"claim_id\":\"claim-...\",\"evidence_ids\":[\"evidence-...\"],\"certainty\":\"verified|qualified|uncertain\"}]}。"
               "每条陈述只表达一项事实并绑定一个现有 Claim；verified/qualified 必须绑定该 Claim 的支持性 Evidence。pending、冲突或无证据 Claim 只能写 uncertain。"
+              "text 应使用该 Claim 的原始正文；程序会用存储的正文与证据状态生成最终显示，不接受新增断言。"
               "不要输出未绑定 Claim 的研究事实，不添加固定总论或研究地图格式；默认控制在 4 至 10 条陈述。")
     system += ('若只有摘要，可返回 {"paper_id":"论文编号","quote":"摘要连续原文摘录",'
                '"certainty":"abstract_only"}；quote 不可改写或翻译。')
@@ -275,13 +283,10 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
     if not settings.llm_api_key:
         return "", "llm_error"
     live = payload.get("live") or {}
-    added_ids = set(live.get("added_paper_ids") or [])
+    added_ids = visible_paper_ids(live)
     is_live = not payload.get("offline", True) and bool(live)
     papers = [paper for paper in payload.get("papers", []) if not is_live or paper.get("paper_id") in added_ids]
-    claims = [
-        claim for claim in payload.get("claims", [])
-        if not is_live or claim.get("text") == payload.get("question")
-    ]
+    claims = scoped_payload(payload).get("claims", [])
     evidence = [
         item for item in payload.get("evidence", [])
         if not is_live or item.get("paper_id") in added_ids
@@ -316,7 +321,7 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
               "不能把关键词匹配、引用邻近或纳入状态当成证据。"
               '只返回 JSON {"statements": [...]}，最多 5 条。论断格式为 '
               '{"text":"中文陈述", "claim_id":"现有Claim编号", "evidence_ids":["现有Evidence编号"], "certainty":"verified|qualified|uncertain"}。'
-              "确定事实必须绑定支持证据；pending 或冲突只能用 uncertain。"
+              "确定事实必须绑定支持证据；pending 或冲突只能用 uncertain。text 使用 Claim 原始正文；最终展示由程序生成，不接受新增断言。"
               "每条陈述仅绑定一个 Claim；evidence_ids 中每条 Evidence 的 claim_id 必须与该陈述的 claim_id 完全一致。不要把不同 Claim 合并到一条陈述。"
               '摘要线索格式为 {"paper_id":"现有论文编号", "quote":"摘要中逐字连续摘录", "certainty":"abstract_only"}，quote 不得翻译、改写或省略。'
               "没有可用证据时展示摘要线索，不生成未绑定引用的科学结论。")
@@ -410,12 +415,13 @@ def build_chat_response(payload: dict, message: str, intent: Intent, settings) -
     all_papers = payload.get("papers", [])
     live = payload.get("live") or {}
     added_ids = live.get("added_paper_ids") or []
+    matched_ids = visible_paper_ids(live)
     if payload.get("offline") is False and live:
-        all_papers = [p for p in all_papers if p.get("paper_id") in set(added_ids)]
+        all_papers = [p for p in all_papers if p.get("paper_id") in matched_ids]
     if target:
         papers = [paper for paper in all_papers if paper.get("paper_id") == target]
-    elif added_ids:
-        added_id_set = set(added_ids)
+    elif matched_ids:
+        added_id_set = matched_ids
         papers = [paper for paper in all_papers if paper.get("paper_id") in added_id_set]
     else:
         matched_ids = {item.get("paper_id") for item in ask.get("papers", [])}
@@ -431,12 +437,13 @@ def build_chat_response(payload: dict, message: str, intent: Intent, settings) -
         "intent": asdict(intent),
         "papers": papers,
         "paper_selection": {
-            "mode": "target_paper" if target else "live_retrieval" if added_ids else "keyword_overlap",
+            "mode": "target_paper" if target else "live_retrieval" if matched_ids else "keyword_overlap",
             "matched_count": len(papers),
             "total_run_count": len(all_papers),
             "added_count": len(added_ids),
             "added_paper_ids": added_ids,
-            "message": "以下展示本轮在线检索新增并完成摘要级筛选的论文。" if added_ids else "以下仅显示与本轮问题匹配的论文；其余论文仍保留在当前 run 的审计数据中。" if papers else "本轮在线检索没有新增论文；继承的基准论文不会作为本主题结果展示。",
+            "matched_paper_ids": sorted(matched_ids),
+            "message": "以下展示本轮检索命中并完成当前主题筛选的论文，包含本轮再次命中的已有论文。" if matched_ids else "以下仅显示与本轮问题匹配的论文；其余论文仍保留在当前 run 的审计数据中。" if papers else "本轮在线检索没有匹配论文；未命中的基准论文不会作为本主题结果展示。",
             "retrieval_status": "all_failed" if all_retrieval_failed else "partial_failed" if retrieval_failures else "completed",
             "retrieval_failures": retrieval_failures,
         },
@@ -454,6 +461,38 @@ def build_chat_response(payload: dict, message: str, intent: Intent, settings) -
     }
 
 
+_conversation_locks: dict[Path, object] = {}
+_conversation_locks_guard = threading.Lock()
+
+
+def _locked_conversation(function):
+    @wraps(function)
+    def locked(runs_dir, run_id, *args, **kwargs):
+        key = resolve_run_dir(runs_dir, run_id)
+        with _conversation_locks_guard:
+            lock = _conversation_locks.setdefault(key, threading.RLock())
+        with lock:
+            return function(runs_dir, run_id, *args, **kwargs)
+    return locked
+
+
+def _write_conversation(path: Path, conversation: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=".conversation-", suffix=".tmp", delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(conversation, stream, ensure_ascii=False, indent=2)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+@_locked_conversation
 def load_conversation(runs_dir: Path, run_id: str) -> dict:
     path = resolve_run_dir(runs_dir, run_id) / "output" / "conversation.json"
     if not path.exists():
@@ -462,19 +501,20 @@ def load_conversation(runs_dir: Path, run_id: str) -> dict:
         conversation = json.loads(path.read_text(encoding="utf-8"))
         conversation["messages"] = _visible_messages(conversation.get("messages") or [])
         return conversation
-    except json.JSONDecodeError:
-        return {"run_id": run_id, "messages": []}
+    except json.JSONDecodeError as exc:
+        raise ValueError("会话文件损坏，请恢复备份后重试；原文件已保留。") from exc
 
 
+@_locked_conversation
 def save_message(runs_dir: Path, run_id: str, role: str, content: str, response: dict | None = None) -> dict:
     conversation = load_conversation(runs_dir, run_id)
     conversation.setdefault("messages", []).append({"role": role, "content": content, "created_at": datetime.now(timezone.utc).isoformat(), "response": response})
     path = resolve_run_dir(runs_dir, run_id) / "output" / "conversation.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(conversation, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_conversation(path, conversation)
     return conversation
 
 
+@_locked_conversation
 def rename_conversation(runs_dir: Path, run_id: str, title: str) -> dict:
     normalized = " ".join((title or "").split()).strip()
     if not normalized:
@@ -484,8 +524,7 @@ def rename_conversation(runs_dir: Path, run_id: str, title: str) -> dict:
     conversation = load_conversation(runs_dir, run_id)
     conversation["title"] = normalized
     path = resolve_run_dir(runs_dir, run_id) / "output" / "conversation.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(conversation, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_conversation(path, conversation)
     return {"run_id": run_id, "title": normalized}
 
 
@@ -528,6 +567,7 @@ def list_conversations(runs_dir: Path) -> list[dict]:
     return conversations
 
 
+@_locked_conversation
 def delete_conversation(runs_dir: Path, run_id: str) -> bool:
     path = resolve_run_dir(runs_dir, run_id) / "output" / "conversation.json"
     if not path.exists():

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
 from typing import Callable
@@ -101,6 +101,17 @@ class LiveHit:
     url: str
     abstract: str | None
     dedup_key: str
+    source_id: str | None = None
+    open_access_pdf_url: str | None = None
+    citation_count: int | None = None
+    reference_count: int | None = None
+    fields_of_study: list[str] = field(default_factory=list)
+    publication_types: list[str] = field(default_factory=list)
+    tldr: str | None = None
+    semantic_score: float | None = None
+    lexical_score: float | None = None
+    ranking_score: float | None = None
+    semantic_scholar_id: str | None = None
 
 
 @dataclass
@@ -117,6 +128,7 @@ class SearchBundle:
     runs: list[RetrievalRun]
     hits: list[LiveHit]
     notes: list[str] = field(default_factory=list)
+    citation_graph: dict = field(default_factory=dict)
 
 
 def retrieval_status(http_status: int | None, error: str | None = None) -> str:
@@ -272,6 +284,51 @@ def hit_keys(hit: LiveHit) -> set[str]:
     return keys
 
 
+def merge_duplicate_hits(hits: list[LiveHit]) -> list[LiveHit]:
+    """Merge provider metadata for the same paper while preserving result order."""
+    merged: list[LiveHit] = []
+    for candidate in hits:
+        index = next(
+            (i for i, current in enumerate(merged) if hit_keys(current) & hit_keys(candidate)),
+            None,
+        )
+        if index is None:
+            merged.append(candidate)
+            continue
+        current = merged[index]
+
+        def richer_text(first: str | None, second: str | None) -> str | None:
+            return max((value for value in (first, second) if value), key=len, default=None)
+
+        def union(first: list[str], second: list[str]) -> list[str]:
+            return list(dict.fromkeys([*first, *second]))
+
+        merged[index] = replace(
+            current,
+            authors=current.authors or candidate.authors,
+            year=current.year or candidate.year,
+            venue=current.venue or candidate.venue,
+            doi_or_arxiv=current.doi_or_arxiv or candidate.doi_or_arxiv,
+            url=current.url or candidate.url,
+            abstract=richer_text(current.abstract, candidate.abstract),
+            source_id=current.source_id or candidate.source_id,
+            open_access_pdf_url=current.open_access_pdf_url or candidate.open_access_pdf_url,
+            citation_count=max(
+                (value for value in (current.citation_count, candidate.citation_count) if value is not None),
+                default=None,
+            ),
+            reference_count=max(
+                (value for value in (current.reference_count, candidate.reference_count) if value is not None),
+                default=None,
+            ),
+            fields_of_study=union(current.fields_of_study, candidate.fields_of_study),
+            publication_types=union(current.publication_types, candidate.publication_types),
+            tldr=richer_text(current.tldr, candidate.tldr),
+            semantic_scholar_id=current.semantic_scholar_id or candidate.semantic_scholar_id,
+        )
+    return merged
+
+
 def _local(tag: str) -> str:
     return tag.split("}", 1)[-1]
 
@@ -367,6 +424,7 @@ def parse_openalex(body: bytes) -> tuple[list[LiveHit], int | None]:
             continue
         doi = normalize_doi(work.get("doi") or (work.get("ids") or {}).get("doi"))
         location = work.get("primary_location") or {}
+        oa_location = work.get("best_oa_location") or location
         source = (location.get("source") or {}).get("display_name")
         landing = location.get("landing_page_url") or work.get("id")
         arxiv_id = extract_arxiv_id(landing) or extract_arxiv_id(str(work.get("ids") or {}))
@@ -400,6 +458,15 @@ def parse_openalex(body: bytes) -> tuple[list[LiveHit], int | None]:
                 url=url,
                 abstract=reconstruct_abstract(work.get("abstract_inverted_index")),
                 dedup_key=dedup,
+                source_id=work.get("id"),
+                open_access_pdf_url=oa_location.get("pdf_url"),
+                citation_count=work.get("cited_by_count"),
+                reference_count=len(work.get("referenced_works") or []),
+                fields_of_study=[
+                    topic.get("display_name") for topic in work.get("topics") or []
+                    if topic.get("display_name")
+                ][:8],
+                publication_types=[str(work.get("type"))] if work.get("type") else [],
             )
         )
     return hits, int(total) if total is not None else None
@@ -444,6 +511,14 @@ def parse_semantic_scholar(body: bytes) -> tuple[list[LiveHit], int | None]:
                 url=url,
                 abstract=paper.get("abstract"),
                 dedup_key=dedup,
+                source_id=paper.get("paperId"),
+                open_access_pdf_url=(paper.get("openAccessPdf") or {}).get("url"),
+                citation_count=paper.get("citationCount"),
+                reference_count=paper.get("referenceCount"),
+                fields_of_study=[str(item) for item in paper.get("fieldsOfStudy") or []],
+                publication_types=[str(item) for item in paper.get("publicationTypes") or []],
+                tldr=(paper.get("tldr") or {}).get("text"),
+                semantic_scholar_id=paper.get("paperId"),
             )
         )
     return hits, int(total) if total is not None else None
@@ -464,7 +539,7 @@ def _source_urls(spec: QuerySpec, *, limit: int, mailto: str | None) -> list[str
     params = {
         "query": spec.query,
         "limit": limit,
-        "fields": "title,abstract,year,authors,externalIds,url,venue",
+        "fields": "title,abstract,year,authors,externalIds,url,venue,openAccessPdf,citationCount,referenceCount,fieldsOfStudy,publicationTypes,tldr",
     }
     return ["https://api.semanticscholar.org/graph/v1/paper/search?" + urlencode(params)]
 
@@ -648,4 +723,25 @@ def search_all(
                 if fallback_status == "success" and fallback_parsed:
                     hits.extend(fallback_parsed)
                     notes.append(f"arXiv 首次零结果，回退检索返回 {len(fallback_parsed)} 条。")
-    return SearchBundle(queries=queries, runs=runs, hits=hits, notes=notes)
+    merged_hits = merge_duplicate_hits(hits)
+    duplicate_count = len(hits) - len(merged_hits)
+    if duplicate_count:
+        notes.append(f"跨来源合并 {duplicate_count} 条重复论文，并保留开放全文与引用元数据。")
+    if question and merged_hits:
+        from src.retrieval_rank import rank_hits
+        merged_hits, ranking = rank_hits(question, merged_hits)
+        notes.append(
+            "候选统一重排：" + ranking["backend"]
+            + (f"（{ranking['reason']}）" if ranking.get("reason") else "")
+        )
+    from src.citation_graph import expand_citation_graph
+    citation_graph = expand_citation_graph(
+        merged_hits, cache_dir=cache_dir, api_key=semantic_scholar_api_key, fetch=fetch
+    )
+    if citation_graph["seed_count"]:
+        notes.append(
+            f"引文一跳扩展：{citation_graph['seed_count']} 篇种子，"
+            f"{citation_graph['edge_count']} 条关系，{citation_graph['failure_count']} 个请求失败。"
+        )
+    return SearchBundle(queries=queries, runs=runs, hits=merged_hits, notes=notes,
+                        citation_graph=citation_graph)

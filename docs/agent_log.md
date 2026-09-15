@@ -393,3 +393,31 @@
 - 流水线：新 run 固定输出六类 v0.2 审计文件；在线检索自动生成研究问题、已执行查询计划以及带响应 SHA-256 的来源快照，零结果、限流与失败分开记录。
 - 回答审计：新增逐条陈述的 Claim/Evidence 绑定检查；确定性陈述必须绑定 supported/partial Claim 及可定位支持证据，pending 只能以 uncertain 表述。
 - 回归：增加 schema、在线检索、run 快照和回答审计测试；摘要级 Evidence 不能冒充 verified；`75 passed`。
+# 2026-09-14：代码审查五项整改
+
+- 统一运行保护，拒绝覆盖已存在目录；保护测试在临时目录执行，真实金标不写入。
+- 回答展示改为存储 Claim 原文与程序生成状态，防止 certainty 标签掩盖自由生成断言；补充针对三种 certainty 的回归用例。
+- 当前运行独立计算 UI 评测，保留仓库级 CLI 金标评测。
+- 区分本轮命中、复用和新增论文，重新筛选复用候选，同步所有展示和审计升级范围，兼容旧 manifest。
+- 会话按运行加线程锁、原子替换，写入失败保留旧数据，损坏会话明确报错。
+- 验收：98 项 Python 测试、2 项前端行为测试；外部检索与模型使用模拟响应。详见 current_delivery_report.md 最新章节。
+
+# 2026-09-14：SPECTER2 研究地图替换
+
+- 操作：将研究地图从证据冲突边/词重叠启发边替换为 Title + Abstract -> SPECTER2 embedding -> cosine matrix -> threshold graph。
+- 模型适配：目标 Hugging Face 模型为 `allenai/specter2`；代码按 adapter 方式使用 `allenai/specter2_base` + `allenai/specter2`，取 CLS 768 维向量。默认无网络、无缓存时退回确定性 768 维文本哈希向量，并在 `map.json` 记录 backend 和原因；可用 `LITAUDIT_MAP_EMBEDDER=specter2` 强制要求真实模型。
+- 图谱输出：`map.json` 新增 `algorithm=specter2_cosine_network`、embedding 元数据、全局相似度矩阵、相似度阈值；边统一为 `semantic_similarity`，边权为余弦相似度。NetworkX 用于语义簇；pipeline 额外输出 `output/map.html`，PyVis 可用时生成交互式 HTML，否则生成静态说明页。
+- UI：工作台地图改为展示 SPECTER2 语义相似边，线宽按相似度变化；保留力学碰撞动画、悬停、拖拽、缩放和平移。证据冲突不再作为地图边，但 contradictions 仍保留在审计提示中。
+- 文档：README、演示脚本、提交清单和当前交付报告已改为 SPECTER2 语义图口径。
+- 模型缓存：安装 `.[map]` 后从 Hugging Face 下载 `allenai/specter2_base` snapshot `3447645e1def9117997203454fa4495937bfbd83` 与 `allenai/specter2` snapshot `2081559630a80fc5851d8f798a05ba81e9468089`。强制 `LITAUDIT_MAP_EMBEDDER=specter2` 构建 `phase2-real` 地图，确认 `embedding.backend=specter2`、`active_adapter=[PRX]`、7 个节点、21 条语义边。
+- 验收：真实 SPECTER2 缓存存在状态下相关测试 48 passed；全量 98 passed；前端语法检查通过；`node --test tests/ui_scope.test.cjs` 2 passed；doctor ok；validate issues=[]；`git diff --check` 通过；`data/` 与 `runs/phase2-real/` 无差异。
+
+# 2026-09-15：SPECTER2 可运行性交付修正
+
+- 默认安装命令统一为 `pip install -e ".[dev,map]"`，`requirements.txt` 补齐地图依赖。
+- 新增 `python -m src.cli download-model`，明确下载并报告 `allenai/specter2_base` 与 `allenai/specter2` 的缓存路径。
+- 地图默认严格要求真实 SPECTER2；缺依赖或缓存时返回可执行修复提示。哈希兜底只在显式 `hash` 或 `auto` 模式启用。
+- 基础模型与 adapter 在进程内只加载一次，相同 Title + Abstract 输入的向量结果缓存复用，并使用 inference mode；空论文集不再触发模型编码异常。
+- 地图可读性修正：完整余弦矩阵继续保留，但画布采用阈值候选中的每篇 Top-2 近邻并集，避免高基线相似度形成毛线团；NetworkX 加权社区发现生成主题簇，布局按簇分区并执行矩形避碰。历史对话中的旧地图派生数据会用当前 run 的新版地图替换，旧浏览器布局缓存通过版本键自动失效。
+- 对截图对应的德国古典哲学 run 实测：12 个可见节点由 64 条阈值候选压缩为 21 条关键近邻边，形成 2 个可分辨社区；Playwright 浏览器截图确认不再竖线塌缩或卡片重叠。
+- 二次可视化重构：SPECTER2 余弦距离通过经典 MDS 投影为二维坐标；默认以无连线星图展示，社区映射颜色、关键近邻度数映射节点大小。节点悬停时仅显示局部近邻线和相关节点，其余节点淡化；不再使用线宽承载相似度差异。

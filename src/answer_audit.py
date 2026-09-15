@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from src.run_scope import visible_paper_ids
+
 from typing import Any
 
 
@@ -13,7 +15,7 @@ def scoped_payload(payload: dict[str, Any]) -> dict[str, Any]:
     live = payload.get("live")
     if payload.get("offline", True) or not live:
         return payload
-    ids = set(live.get("added_paper_ids") or [])
+    ids = visible_paper_ids(live)
     evidence = [e for e in payload.get("evidence", []) if e.get("paper_id") in ids]
     claim_ids = {e.get("claim_id") for e in evidence}
     claims = [c for c in payload.get("claims", []) if c.get("paper_id") in ids or c.get("claim_id") in claim_ids or c.get("text") == payload.get("question")]
@@ -86,11 +88,18 @@ def audit_answer_statements(payload: dict[str, Any], statements: object) -> dict
                 spans = {s.get("evidence_id"): s for s in payload["evidence_spans"]}
                 if not any(spans.get(row.get("evidence_id"), {}).get("extraction_status") == "verified" for row in grounding):
                     errors.append(f"{prefix}:verified_without_verified_span")
-        elif certainty == "uncertain" and claim.get("status") == "supported":
-            # Conservative wording is always safe; no error is needed.
-            pass
-
-        accepted.append(text)
+        # IDs validate provenance, not the meaning of arbitrary generated prose.
+        # Render the stored claim and a server-owned qualification instead.
+        claim_text = str(claim.get("text") or "").strip()
+        if not claim_text:
+            errors.append(f"{prefix}:empty_claim_text")
+        if certainty == "uncertain":
+            rendered = f"待核验论断 [{claim_id}]：\n「{claim_text}」\n本条仅列出待核验内容，不作确定结论。"
+        elif certainty == "qualified":
+            rendered = f"有限支持 [{claim_id}]：\n「{claim_text}」\n仅在所引证据范围内成立，不应扩展为无条件结论。"
+        else:
+            rendered = f"已有证据支持的论断 [{claim_id}]：\n「{claim_text}」\n定位核验不代表整篇全文审阅。"
+        accepted.append(rendered)
         citations.append({"statement": index, "claim_id": claim_id, "evidence_ids": evidence_ids, "certainty": certainty})
 
     return {

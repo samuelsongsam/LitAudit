@@ -8,11 +8,13 @@ from __future__ import annotations
 import re
 import shutil
 import unicodedata
+import ipaddress
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 
 from src.io_utils import write_json, load_dataset
 from src.schema import (
@@ -33,9 +35,30 @@ def arxiv_pdf_url(paper) -> str | None:
     return None
 
 
+def provider_pdf_url(paper) -> str | None:
+    """Accept provider-supplied public HTTPS PDF URLs while rejecting local targets."""
+    value = (getattr(paper, "open_access_pdf_url", None) or "").strip()
+    if not value:
+        return None
+    parsed = urlparse(value)
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if parsed.scheme != "https" or not host or host == "localhost" or host.endswith(".local"):
+        return None
+    try:
+        if ipaddress.ip_address(host).is_private or ipaddress.ip_address(host).is_loopback:
+            return None
+    except ValueError:
+        pass
+    return value
+
+
+def fulltext_pdf_url(paper) -> str | None:
+    return arxiv_pdf_url(paper) or provider_pdf_url(paper)
+
+
 def fetch_pdf(url: str, target: Path) -> None:
-    # URLs are constructed from arXiv identifiers, never supplied as arbitrary
-    # remote URLs by the browser. Keep response size and wait bounded.
+    # URLs come from arXiv identifiers or provider-declared open-access PDF
+    # locations, never from a browser parameter. Keep response size and wait bounded.
     with urlopen(Request(url, headers={"User-Agent": "LitAudit/0.2"}), timeout=25) as response:
         content = response.read(25 * 1024 * 1024 + 1)
     if len(content) > 25 * 1024 * 1024:
@@ -114,10 +137,10 @@ def enrich_audit(dataset: Dataset, *, root: Path, run_dir: Path,
             if existing_doc:
                 shutil.copyfile(existing_doc, target)
                 row["acquisition"] = "local_copy"
-            elif acquire and arxiv_pdf_url(paper) and download_count < 5:
+            elif acquire and fulltext_pdf_url(paper) and download_count < 5:
                 download_count += 1
-                fetch_pdf(arxiv_pdf_url(paper), target)
-                row["acquisition"] = "arxiv_download"
+                fetch_pdf(fulltext_pdf_url(paper), target)
+                row["acquisition"] = "arxiv_download" if arxiv_pdf_url(paper) else "provider_open_access_pdf"
             else:
                 if acquire and download_count >= 5:
                     row["error_code"] = "batch_limit_retry_remaining"
@@ -130,7 +153,7 @@ def enrich_audit(dataset: Dataset, *, root: Path, run_dir: Path,
             dataset.retrieval_runs = [r for r in dataset.retrieval_runs if r.retrieval_id != retrieval_id]
             dataset.retrieval_runs.append(RetrievalRun(
                 retrieval_id=retrieval_id, query_id="fulltext-acquisition", source=row["acquisition"],
-                request=arxiv_pdf_url(paper) or paper.url or paper.paper_id,
+                request=fulltext_pdf_url(paper) or paper.url or paper.paper_id,
                 retrieved_at=now.date(), status="success", result_count=1,
                 response_path=str(target), notes="本次保存全文文件；不代表已审阅全文。"))
             snapshots[retrieval_id] = SourceSnapshot(
@@ -199,7 +222,13 @@ def enrich_audit(dataset: Dataset, *, root: Path, run_dir: Path,
                    "存在反证，需要人工复核冲突。" if conflict else "证据不足，需要补充或核验支持证据。", 0 if conflict else 1)
     for row in documents:
         if row["status"] != "parsed":
-            action("acquire_fulltext", "paper", row["paper_id"], "全文尚不可用：" + str(row.get("error_code")))
+            error_code = row.get("error_code")
+            reason = {
+                "fulltext_not_available": "尚未取得可解析的开放全文。",
+                "batch_limit_retry_remaining": "本批次全文获取已达上限，可在下一批继续。",
+                "ocr_required": "该文件需要 OCR 后才能建立页码文本索引。",
+            }.get(error_code, "全文获取或解析失败，需要复核来源文件。")
+            action("acquire_fulltext", "paper", row["paper_id"], reason)
     for check in checks:
         if check["status"] != "matched":
             action("verify_evidence", "evidence", check["evidence_id"], "指定页未精确匹配摘录，需人工核对排版、OCR 或摘录差异。")
@@ -212,11 +241,19 @@ def enrich_audit(dataset: Dataset, *, root: Path, run_dir: Path,
         existing = actions.get(("verify_evidence", "evidence", check["evidence_id"]))
         if existing and check["status"] == "matched":
             existing.status = ActionStatus.completed
+    from src.fulltext_search import build_fulltext_search
+    fulltext_search = build_fulltext_search(question, cards, pages_by_paper)
+    write_json(run_dir / "output" / "fulltext_index.json", fulltext_search)
     dataset.source_snapshots = list(snapshots.values())
     dataset.evidence_spans = list(spans.values())
     dataset.decision_traces = list(traces.values())
     dataset.next_actions = list(actions.values())
     write_json(run_dir / "output" / "fulltext_audit.json", {
         "created_at": now.isoformat(), "documents": documents, "checks": checks,
-        "limitations": ["精确文本匹配只检查摘录位置，不判断语义支持，也不代表人工通读。", "全文下载目前支持 arXiv，每次最多 5 篇；扫描 PDF 需要另行 OCR。"]})
+        "search_index": {
+            "algorithm": fulltext_search["algorithm"],
+            "passage_count": fulltext_search["passage_count"],
+            "hit_count": len(fulltext_search["hits"]),
+        },
+        "limitations": ["精确文本匹配只检查摘录位置，不判断语义支持，也不代表人工通读。", "全文下载支持 arXiv 及检索提供商声明的开放 PDF，每次最多 5 篇；扫描 PDF 需要另行 OCR。"]})
     return validate_dataset(dataset)

@@ -5,7 +5,7 @@
 **赛题：** 面向真实学术场景的深度研究智能体  
 **系统：** 勘文（LitAudit）  
 **范围版本：** v0.1  
-**日期：** 2026-08-29
+**日期：** 2026-09-15
 
 ## 1. 问题与定位
 
@@ -28,8 +28,11 @@ LitAudit 因此不写长综述。输入一个科研问题或待检验想法，�
 
 ```
 用户问题
-  -> 在线/离线候选检索
+  -> arXiv / OpenAlex / Semantic Scholar 候选检索与跨来源合并
+  -> SPECTER2 查询—论文统一重排
   -> 筛选漏斗（include / exclude / pending + 理由）
+  -> 开放全文获取、页码切片与 BM25 + SPECTER2 段落检索
+  -> 一跳参考/施引网络（独立数据层）
   -> PaperCard（task / method / data / metrics / limitations）
   -> Claim / Evidence / ClaimDecision
   -> 研究地图（主线 + 证据冲突边 + 矛盾对）
@@ -40,7 +43,7 @@ LitAudit 因此不写长综述。输入一个科研问题或待检验想法，�
 
 实现为可校验的 Python 包：`src/schema.py` 用 pydantic 卡住字段；`src/pipeline.py` 生成带 `run_id` 的离线快照；`src/replay.py` 回放；`src/ui/` 提供离线勘验工作台（漏斗、地图、证据、证伪、评测）。
 
-工作台顶部显示当前研究问题、scope 版本、run 状态规模、页码证据数和待处理项。左侧 01–05 按“检索与筛选 -> 研究地图 -> 证据核验 -> 反证检查 -> 可追溯性评测”组织。研究地图使用 SVG Graph：论文以方框节点展示，现有 `evidence_conflict` 和 `falsification` 关系以带方向的箭头展示；支持力导向动态布局、拖动节点、平移/缩放画布、重置/适配布局以及点击节点和箭头查看详情。布局引擎按论文框实际矩形执行多轮碰撞校正；曲线起止点取源框和目标框边界交点。同一论文对存在多类关系时使用不同曲率分轨，箭头帽与实线冲突边或虚线反证边保持同色。`GET /api/run/<run_id>/report` 和 UI 的“下载审计报告”会生成结构化 Markdown，包含 Claim/Evidence 索引、反证据、检索失败、人工待处理项和限制；它不生成未经核验的长综述。
+工作台顶部显示当前研究问题、scope 版本、run 状态规模、页码证据数和待处理项。左侧 01–05 按“检索与筛选 -> 研究地图 -> 证据核验 -> 反证检查 -> 可追溯性评测”组织。研究地图使用 SVG Graph：论文位置来自 SPECTER2 余弦距离的二维投影，颜色表示语义社区，悬停或选择节点时显示关键语义近邻；支持力学避碰、拖动节点、平移/缩放画布和重置布局。语义边不代表引用或证据支持。一跳引文关系另存为 `citation_graph.json`，保留引用方向和上下文，避免与语义边混淆。`GET /api/run/<run_id>/report` 和 UI 的“下载审计报告”会生成结构化 Markdown，包含 Claim/Evidence 索引、反证据、检索失败、人工待处理项和限制；它不生成未经核验的长综述。
 
 硬规则：
 
@@ -80,6 +83,7 @@ LitAudit 因此不写长综述。输入一个科研问题或待检验想法，�
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+python -m src.cli download-model
 python -m src.cli doctor
 python -m src.cli validate
 python -m src.cli run --offline --run-id phase2-real
@@ -88,7 +92,7 @@ python -m pytest -q
 python -m src.cli ui --run-id phase2-real
 ```
 
-打开工作台后，选择“更多 -> 下载审计报告”可导出当前 run。进入研究地图可以拖动论文节点，点击箭头查看关系详情；拖动后箭头会重新计算方框边界锚点，`重新布局` 会再次执行矩形避碰。在线检索产生新的 `live_...` run，不覆盖 `phase2-real`；报告、工作区上下文和图谱都保留 `claim-008=pending`、反证据及 HTTP 429 失败记录。当前没有已核验引用关系，因此图谱不把关键词相似度或引用关系臆测成箭头。
+打开工作台后，选择“更多 -> 下载审计报告”可导出当前 run。进入研究地图可以拖动论文节点，悬停或选择论文查看 SPECTER2 关键近邻；`重新布局` 会再次执行矩形避碰。在线检索产生新的 `live_...` run，不覆盖 `phase2-real`；报告、工作区上下文和图谱都保留 `claim-008=pending`、反证据及 HTTP 429 失败记录。引文扩展结果保存在独立产物中，不会冒充语义相似或页码级证据。
 
 ## 6. 限制与后续
 
@@ -106,8 +110,9 @@ python -m src.cli ui --run-id phase2-real
 
 连续追问采用双层路由契约：LLM 先给出 `direct_answer / clarify / retrieve`，同时标记 `follow_up / paper_explore / branch_deepen / requery / new_topic`。服务端据此选择当前 run 数据或在线检索工具，并校验检索完成后必须存在可回放 run；客户端不会把无 run 的直接回答或澄清误当作检索结果。
 
-- 在线多源检索未接入 pipeline；Semantic Scholar 曾 429  
-- 研究地图不是引用图谱  
+- 在线多源检索已接入 pipeline，但外部来源仍可能限流或失败
+- 研究地图展示 SPECTER2 语义近邻；一跳引文网络暂为独立数据产物，尚未加入 UI 图层切换
+- 扫描 PDF 尚未自动 OCR；付费全文不绕过许可
 - 未完成全部论文的逐页审阅  
 - 主问题的普遍优越性主张保持 pending  
 

@@ -1,11 +1,22 @@
 from hashlib import sha256
 
 from src.answer_audit import audit_answer_statements, audit_overview_statements
-from src.audit_enrichment import enrich_audit
+from src.audit_enrichment import enrich_audit, provider_pdf_url
 from src.config import load_settings
 from src.io_utils import load_dataset, read_json
 from src.pipeline import upgrade_audit
 from src.schema import dataset_stats
+
+
+def test_provider_pdf_url_accepts_public_https_and_rejects_local_targets():
+    class Paper:
+        open_access_pdf_url = "https://repository.example/paper.pdf"
+
+    assert provider_pdf_url(Paper()) == Paper.open_access_pdf_url
+    Paper.open_access_pdf_url = "http://repository.example/paper.pdf"
+    assert provider_pdf_url(Paper()) is None
+    Paper.open_access_pdf_url = "https://127.0.0.1/private.pdf"
+    assert provider_pdf_url(Paper()) is None
 
 
 def test_real_pdf_audit_freezes_files_and_preserves_gold(tmp_path):
@@ -36,10 +47,11 @@ def test_missing_pdf_does_not_create_verified_span(tmp_path):
     assert all(s.extraction_status.value != "verified" for s in enriched.evidence_spans)
     assert all(s.snapshot_id is None for s in enriched.evidence_spans)
     assert any(a.kind.value == "acquire_fulltext" for a in enriched.next_actions)
+    assert all("fulltext_not_available" not in a.reason for a in enriched.next_actions)
 
 
 def test_conflict_cannot_be_hidden_by_omitting_citation():
-    payload = {"claims": [{"claim_id": "c", "status": "supported"}], "evidence": [
+    payload = {"claims": [{"claim_id": "c", "status": "supported", "text": "Stored fact"}], "evidence": [
         {"evidence_id": "yes", "claim_id": "c", "verdict": "supports", "extraction_status": "verified", "locator": {"page": 1}},
         {"evidence_id": "no", "claim_id": "c", "verdict": "contradicts", "extraction_status": "verified", "locator": {"page": 2}},
     ]}
@@ -60,7 +72,7 @@ def test_overview_rejects_invented_abstract_and_other_run_paper():
 
 
 def test_bad_page_match_blocks_verified_prose():
-    payload = {"claims": [{"claim_id": "c", "status": "supported"}], "evidence": [
+    payload = {"claims": [{"claim_id": "c", "status": "supported", "text": "Stored fact"}], "evidence": [
         {"evidence_id": "e", "claim_id": "c", "verdict": "supports", "extraction_status": "verified", "locator": {"page": 1}},
     ], "evidence_spans": [{"evidence_id": "e", "extraction_status": "unverified"}]}
     assert not audit_answer_statements(payload, [{"text": "fact", "claim_id": "c", "evidence_ids": ["e"], "certainty": "verified"}])["ok"]
@@ -98,7 +110,7 @@ def test_model_receives_audit_feedback_before_retry(monkeypatch):
         return Response()
     monkeypatch.setattr(conversation, "urlopen", request)
     monkeypatch.setattr(conversation.time, "sleep", lambda *_: None)
-    payload = {"claims": [{"claim_id": "c", "status": "supported"}], "evidence": [
+    payload = {"claims": [{"claim_id": "c", "status": "supported", "text": "Stored fact"}], "evidence": [
         {"evidence_id": "e", "claim_id": "c", "verdict": "supports", "extraction_status": "verified", "locator": {"page": 1}}
     ]}
     result = conversation._llm_direct_answer(payload, "test", conversation.Intent("follow_up", 1, "test", False), replace(load_settings(), llm_api_key="test"))

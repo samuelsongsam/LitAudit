@@ -605,13 +605,14 @@ tr.fail td { background: #f8ece8; }
   fill: transparent;
   stroke: transparent;
   stroke-width: 2;
-  pointer-events: all;
+  pointer-events: none;
   cursor: pointer;
 }
 .arrow-head.conflict { fill: var(--exclude); }
 .arrow-head.falsification { fill: var(--seal); }
 .arrow-head.default { fill: var(--info); }
 .arrow-head.heuristic { fill: var(--pending); }
+.arrow-head.semantic { fill: var(--info); }
 .graph-edge.conflict {
   stroke: var(--exclude);
   marker-end: url(#arrow-evidence-conflict);
@@ -627,6 +628,12 @@ tr.fail td { background: #f8ece8; }
   opacity: 0.72;
   marker-end: url(#arrow-heuristic);
 }
+.graph-edge.semantic {
+  stroke: var(--info);
+  stroke-width: 2 !important;
+  opacity: 0;
+}
+.graph-edge.semantic.related, .graph-edge.semantic.selected { opacity: .82; }
 .graph-edge.default {
   stroke: var(--info);
   marker-end: url(#arrow-default);
@@ -641,18 +648,22 @@ tr.fail td { background: #f8ece8; }
   outline: none;
   transition: opacity 120ms ease;
 }
-.graph-node:focus-visible rect { stroke: var(--ink); stroke-width: 3; }
+.graph-node:focus-visible circle { stroke: var(--ink); stroke-width: 3; }
 .graph-node.dragging { cursor: grabbing; }
-.graph-node rect {
-  fill: var(--panel);
-  stroke: var(--line);
-  stroke-width: 1.5;
-  filter: drop-shadow(0 2px 1px rgba(28, 24, 20, 0.08));
-}
-.graph-node.include rect { stroke: var(--include); }
-.graph-node.exclude rect { stroke: var(--exclude); }
-.graph-node.pending rect { stroke: var(--pending); }
-.graph-node.selected rect { stroke: var(--ink); stroke-width: 3; fill: #fff; }
+.graph-node circle { stroke: #fffdf7; stroke-width: 4; filter: drop-shadow(0 3px 4px rgba(28,24,20,.2)); }
+.graph-node.cluster-0 circle { fill: #3b82a0; }
+.graph-node.cluster-1 circle { fill: #c96b3b; }
+.graph-node.cluster-2 circle { fill: #688b4e; }
+.graph-node.cluster-3 circle { fill: #8a65a8; }
+.graph-node.cluster-4 circle { fill: #c29a2e; }
+.graph-node.cluster-5 circle { fill: #4776b5; }
+.graph-node.selected circle { stroke: var(--ink); stroke-width: 5; }
+.legend-node.cluster-0 { background: #3b82a0; }
+.legend-node.cluster-1 { background: #c96b3b; }
+.legend-node.cluster-2 { background: #688b4e; }
+.legend-node.cluster-3 { background: #8a65a8; }
+.legend-node.cluster-4 { background: #c29a2e; }
+.legend-node.cluster-5 { background: #4776b5; }
 .graph-node.faded { opacity: 0.28; }
 .graph-node-title {
   fill: var(--ink);

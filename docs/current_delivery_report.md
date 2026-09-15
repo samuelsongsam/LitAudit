@@ -1,5 +1,59 @@
 # LitAudit 当前交付报告
 
+## 交付前复验：2026-09-15
+
+当前交付在原 SPECTER2 语义地图基础上补齐三层检索能力：多来源候选统一重排、开放全文分段混合检索、Semantic Scholar 一跳引文扩展。候选重排使用 `allenai/specter2_adhoc_query` 编码短查询、`allenai/specter2` proximity adapter 编码 Title + Abstract；综合分由语义 0.75、词项 0.20、被引量 0.05 组成。三个 Hugging Face 仓库均已缓存，真实加载状态为查询 `[QRY]`、论文 `[PRX]`。
+
+已解析全文按页切片，BM25 召回后再由 SPECTER2 重排，命中记录包含论文 ID、页码、章节提示和文本 SHA-256，产物为 `output/fulltext_index.json`。全文来源包括本地文件、arXiv 及检索提供商声明的开放 PDF；扫描件仍标记为 OCR 待办。引文扩展限制为最多 3 篇种子，每篇每个方向最多 20 条，独立保存引用方向、上下文、意图、influential 标志和原始响应，产物为 `output/citation_graph.json`。SPECTER2 语义地图与引文数据是两个独立层，界面地图仍展示 Title + Abstract 语义近邻。
+
+本次交付前结果：`doctor` 正常；`validate` 无错误；`pip check` 无依赖冲突；Python **110 项测试通过**；前端 JavaScript 语法检查通过；前端范围行为 **2 项测试通过**；真实模型适配器加载通过。真实 Semantic Scholar 小流量验收取得 4 条引用关系、2 个请求均为 HTTP 200。真实离线端到端 run `delivery-smoke-20260915` 使用 SPECTER2 生成 7 个地图节点、10 条关键近邻边，并从 4 篇 PDF 建立 294 个全文片段、返回 12 个页码级候选，`claim-008` 保持 pending。
+
+浏览器验收发现 UI 曾在打开 run 时重复执行 SPECTER2 构图，首次并发加载可能触发模型导入竞争并返回 500。现已改为优先读取 run 内算法版本匹配的 `map.json`，旧格式或缺失时才重建；修复后 `/api/run/delivery-smoke-20260915` 在约 0.14 秒内返回 200。筛选漏斗、地图、证据页、审计报告和 PDF 接口均已验证；界面不再显示“暂无全文”，内部 `fulltext_not_available` 也改为用户可读待办文字。完整计划与逐项验收见 `docs/retrieval_optimization_plan.md`。
+
+当前限制：完整检索效果仍缺少人工标注问题集上的 Recall@10 / nDCG@10 对照；扫描 PDF 未自动 OCR；付费全文不绕过许可；引文网络目前作为独立数据产物提供，尚未加入界面交互层切换；外部 API 仍可能限流。以上限制不影响离线回放和证据状态边界。
+
+## 最新工作区交付：2026-09-15 可运行性修正
+
+默认安装路径现已包含测试与地图依赖，并新增 `python -m src.cli download-model` 负责从 Hugging Face 获取 `allenai/specter2_base`、`allenai/specter2` 和 `allenai/specter2_adhoc_query`。地图默认严格使用真实 SPECTER2；缺少依赖或缓存时会明确提示安装和下载命令，非语义哈希兜底只允许显式启用。
+
+模型和 adapter 改为每进程加载一次，相同论文文本的 embedding 会复用缓存，推理使用 inference mode。空论文集不再调用模型，修复了 fixture 和空在线结果构图时的 `IndexError`。
+
+针对稠密语义图无法阅读的问题，完整相似度矩阵仍保存在 payload 中，画布边改为阈值候选内的每篇 Top-2 近邻并集，并使用 NetworkX 加权社区发现划分主题簇。前端按簇分区、执行矩形避碰、根据相似度调整弹簧距离，并自动失效旧布局缓存。历史对话不再显示生成当时固化的旧地图，而是渲染当前 run 的最新版派生地图。截图对应 run 从 64 条候选边收敛到 21 条关键边，12 篇论文形成 2 个可辨识社区。
+
+进一步按 SPECTER2 数据特性改为语义星图：对余弦距离矩阵执行确定性二维 MDS，空间距离成为相关性差异的主要编码；节点颜色表示 NetworkX 社区，节点大小表示关键近邻度数。默认隐藏所有关系线，悬停或选中节点时只显示该论文的 Top-2 近邻，同时淡化无关节点。常驻标签缩短，完整题名保留在悬停提示中。该设计不再要求用户比较接近的线宽。
+
+## 最新工作区交付：2026-09-14 SPECTER2 研究地图替换
+
+本节优先于下方历史记录。本轮完整替换论文检索地图的关系生成方式：论文节点仍来自当前 run 可见论文，但关系边不再由证据冲突或词重叠启发规则生成，而是按 Title + Abstract 生成 768 维语义向量，计算全局余弦相似度矩阵，并以默认阈值 0.82 过滤出语义相似边。
+
+实现要点：
+
+1. **SPECTER2 适配**：目标模型改为 Hugging Face `allenai/specter2`，代码按 SPECTER2 adapter 结构加载 `allenai/specter2_base` 与 `allenai/specter2`。输入文本使用标题和摘要拼接，取 CLS 向量并归一化。
+2. **无 GPU / 无模型缓存兜底**：默认优先使用本地 SPECTER2；若 `adapters` / `transformers` / `torch` 或本地模型缓存不可用，退回确定性的 768 维文本哈希向量，保证离线测试和工作台不崩。payload 会记录 `embedding.backend` 与失败原因；强制要求 SPECTER2 时可设置 `LITAUDIT_MAP_EMBEDDER=specter2`。
+3. **相似度矩阵与网络拓扑**：`map.json` 新增 `algorithm=specter2_cosine_network`、`embedding` 元数据、`similarity_threshold` 和 `similarity_matrix`。边统一为 `semantic_similarity`，`weight/score` 保存余弦相似度。
+4. **NetworkX / HTML 输出**：语义簇优先用 NetworkX connected components 生成；每个 pipeline run 额外输出 `output/map.html`。若安装 PyVis，则生成 PyVis 交互式 HTML；未安装时生成可说明状态的静态 HTML fallback。应用内 SVG 图继续提供力学碰撞动画、悬停、拖拽、平移和缩放。
+5. **审计边界保留**：证据冲突不再作为地图边，但 `contradictions` 仍保留给审计提示。语义相似不代表引用、页码证据或事实支持，Claim/Evidence 判断仍以证据模块为准。
+
+模型落地：已安装 `.[map]` 依赖，并从 Hugging Face 下载缓存 `allenai/specter2_base` 与 `allenai/specter2`。本机缓存 snapshot 分别为 `3447645e1def9117997203454fa4495937bfbd83` 和 `2081559630a80fc5851d8f798a05ba81e9468089`。强制 `LITAUDIT_MAP_EMBEDDER=specter2` 构建 `phase2-real` 地图已验证 `embedding.backend=specter2`、`model=allenai/specter2`、`base_model=allenai/specter2_base`、`active_adapter=[PRX]`，7 个节点、21 条语义边。
+
+验收：地图、pipeline、UI 相关测试 48 项在真实 SPECTER2 缓存存在的状态下通过；全量 Python 测试 98 项通过；前端语法检查通过；前端范围行为测试 2 项通过；doctor 正常、validate 无错误；diff 格式检查通过，`data/` 与 `runs/phase2-real/` 无差异。若未来机器没有模型缓存，默认 `auto` 模式仍会记录原因并退回确定性向量；交付环境已具备真实 SPECTER2 缓存。
+
+## 最新工作区交付：2026-09-14 代码审查整改
+
+本节优先于下方历史记录。本轮按五项问题逐条修改、验收：
+
+1. **运行保护**：在线、离线、fixture 均将 `phase2-real` / `demo` 请求转为新运行；已有普通运行拒绝覆盖。目录在日志和快照写入前独占创建，审计升级同样先预留新目录。
+2. **回答正文约束**：模型选择 Claim/Evidence，程序展示存储的 Claim 原文及固定证据状态。`uncertain` 不显示模型生成的断言；`qualified` 和 `verified` 也不能以合法编号夹带新结论。摘要逐字引用和引用错误修正重试保留。
+3. **评测隔离**：UI 按当前运行可见的真实论文、论断和证据计算指标，不调用全局金标评测。未执行的金标答题与无检索对照不显示成绩。CLI `evaluate` 保留仓库金标评测用途。
+4. **检索命中保留**：新增 `matched_paper_ids` / `reused_paper_ids`，与 `added_paper_ids` 区分；本轮命中的已有论文在独立 run 内按当前主题重新筛选。回答、路由、关键词问答、地图、筛选漏斗、审计报告、审计升级和评测使用同一可见范围；旧运行兼容仅新增编号。
+5. **会话持久化**：按规范化运行路径串行处理读取、追加、重命名和删除；临时文件写完、刷新后原子替换。写入失败保留旧文件；损坏文件报错而非静默重置。
+
+验收：Python 全量测试 98 项通过；前端范围与指标展示测试 2 项通过。覆盖受保护文件字节不变、普通运行拒绝覆盖、无证据 99% 断言不展示、空/fixture/live 评测隔离、新增 0 但命中 1 的端到端快照、16 条并发消息加重命名、原子替换失败以及损坏会话保护。
+
+最终复验：98 项 Python 测试在 38.88 秒内通过；doctor 正常、validate 无错误；前端语法检查及 2 项行为测试通过；diff 格式检查通过，`data/` 与 `runs/phase2-real/` 无差异。
+
+边界：本轮使用离线数据及模拟检索/模型响应，未再次调用真实外部服务；并发锁针对当前单进程多线程 HTTP 服务，不覆盖多个独立进程同时写同一会话。正文约束保证不添加超出已存储 Claim 的模型断言，不等同于自动验证 Claim 的科学真实性。旧历史回答不会被追溯改写。原 `.venv` 启动器不可用，本次使用可用 Python 运行时与本地测试依赖完成验证。
+
 ## 最新工作区交付：2026-09-11
 
 本节优先于下方历史记录。已实现独立审计快照、PDF 全文获取/解析状态、来源文件冻结、摘录精确定位检查、EvidenceSpan / DecisionTrace / NextAction 生成、前端证据工作区与报告导出。总论和直接回答均检查 Claim/Evidence 引用，摘要线索要求逐字摘录；失败后给模型一次带错误反馈的修正机会。
@@ -88,7 +142,7 @@ python -m src.cli ui --run-id phase2-real
 - 图谱支持节点拖动、空白区域平移、滚轮缩放、重新布局、适配视图、重置位置和布局按 run 保存；点击节点或边可查看对应详情。
 - 图谱按 `208 x 88` 论文框执行矩形碰撞校正；箭头不再以节点左上角或框内固定偏移为锚点，而是沿曲线路径计算源框和目标框的边界交点。
 - 同一 `source -> target` 同时存在 `evidence_conflict` 与 `falsification` 时，两条边使用不同曲率；实线冲突边、虚线反证边及其箭头帽保持同色。
-- 当前图谱仍不推断引用网络；没有已核验引用边时只展示证据冲突和反证关系。
+- 当前界面地图展示 SPECTER2 语义近邻；引文关系保存在独立 `citation_graph.json`，不与语义边或证据关系混用。
 - 对话首页按“总论概览 -> 检索论文 -> 研究地图 -> 后续核验模块”组织回复；消息绑定 run 并保存到 `output/conversation.json`。当前 run 的事实追问不重复调用外部检索，明确扩展或重新检索才创建新的 `live_*` run。
 - 证据核验、反证检查、可追溯性评测本轮仅保留原有视图和代码；对话底部显示保留入口，不在对话链路中重新实现。
 - UI/报告回归测试已补充；当前环境使用捆绑 Python 验证为 51 passed。历史版本写入的固定澄清用户/助手消息只在显示层成对隐藏，原始审计文件不删除。
@@ -103,7 +157,7 @@ python -m src.cli ui --run-id phase2-real
 
 1. STORM / WebGPT / Toolformer 无本地 PDF，保持摘要级边界卡片。
 2. 已有 PDF 未做逐页审阅；SciMON 未抽取完整实验表。
-3. Semantic Scholar 429 与 OpenAlex 部分 external ID 适配未修复；pipeline 仍只离线读取。
+3. Semantic Scholar 仍可能出现 429；系统会保留限流状态并继续使用成功来源，不能将失败解释为零结果。
 4. 评测不是闭卷 LLM 准确率，也不是正式模型效果实验。
 5. 比赛提交包（PDF、视频、ZIP）需按 `docs/submission_checklist.md` 人工导出和录屏。
 6. LLM 总论、路由和澄清题需要在 `.env` 配置 `LITAUDIT_LLM_API_KEY`，可选配置兼容 `BASE_URL` 和模型名；未配置或调用失败时只返回 AI 服务状态，不使用固定问题或模板答案。

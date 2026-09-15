@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from src.run_scope import visible_paper_ids
+
 import re
 from datetime import datetime
 from pathlib import Path
 
 from src.ask import ask
 from src.config import ROOT, load_settings
-from src.eval_metrics import evaluate
+from src.eval_metrics import evaluate_payload
 from src.io_utils import read_json
 from src.map_builder import build_map
 from src.replay import list_runs, load_run
@@ -167,7 +169,7 @@ def _workspace_context(dataset, manifest: dict, display: dict, stats: dict, map_
         "v0.1",
     )
     live = manifest.get("live") or {}
-    added_ids = set(live.get("added_paper_ids") or [])
+    added_ids = visible_paper_ids(live)
     is_live = not manifest.get("offline", True) and bool(live)
     live_retrieval_ids = {item.get("retrieval_id") for item in live.get("retrieval", [])}
     visible_papers = [paper for paper in dataset.papers if not is_live or paper.paper_id in added_ids]
@@ -237,7 +239,7 @@ def _workspace_context(dataset, manifest: dict, display: dict, stats: dict, map_
 def _visible_live_map(map_payload: dict, manifest: dict) -> dict:
     """Hide inherited baseline nodes from a live map without deleting audit data."""
     live = manifest.get("live") or {}
-    added_ids = set(live.get("added_paper_ids") or [])
+    added_ids = visible_paper_ids(live)
     if manifest.get("offline", True) or not live:
         return map_payload
 
@@ -262,15 +264,45 @@ def _visible_live_map(map_payload: dict, manifest: dict) -> dict:
         ],
         "limitations": [
             *map_payload.get("limitations", []),
-            "在线地图仅展示本轮新增论文；继承的本地基准论文仍保留在 run 和内部研究上下文中。",
+            "在线地图仅展示本轮命中的论文；未命中的基准论文只保留在原始快照中。",
         ],
     }
     visible["tracks"] = [track for track in visible["tracks"] if track["paper_ids"]]
+    matrix = map_payload.get("similarity_matrix") or {}
+    matrix_ids = matrix.get("paper_ids") or []
+    values = matrix.get("values") or []
+    threshold = float(map_payload.get("similarity_threshold") or 0.0)
+    visible_indexes = [index for index, paper_id in enumerate(matrix_ids) if paper_id in added_ids]
+    visible_candidates = sum(
+        1
+        for offset, left in enumerate(visible_indexes)
+        for right in visible_indexes[offset + 1 :]
+        if left < len(values) and right < len(values[left]) and float(values[left][right]) >= threshold
+    )
+    visible["edge_policy"] = {
+        **(map_payload.get("edge_policy") or {}),
+        "candidate_edge_count": visible_candidates,
+        "displayed_edge_count": len(visible["edges"]),
+    }
     visible["contradictions"] = [
         item for item in visible["contradictions"]
         if item["support_or_context_papers"] and item["contradict_papers"]
     ]
     return visible
+
+
+def _run_map(runs_dir: Path, run_id: str, dataset) -> dict:
+    """Reuse a current-format run artifact; rebuild only legacy or missing maps."""
+    path = resolve_run_dir(runs_dir, run_id) / "output" / "map.json"
+    if path.exists():
+        saved = read_json(path)
+        if (
+            saved.get("algorithm") == "specter2_cosine_network"
+            and saved.get("layout") == "specter2_cosine_mds"
+            and isinstance(saved.get("similarity_matrix"), dict)
+        ):
+            return saved
+    return build_map(dataset, run_id)
 
 
 def build_payload(runs_dir, run_id: str) -> dict:
@@ -295,10 +327,10 @@ def build_payload(runs_dir, run_id: str) -> dict:
     manifest = loaded.get("manifest") or {}
     display = describe_run(runs_dir, run_id)
     stats = loaded.get("stats") or dataset_stats(dataset)
-    map_payload = _visible_live_map(build_map(dataset, run_id), manifest)
+    map_payload = _visible_live_map(_run_map(runs_dir, run_id, dataset), manifest)
     context = _workspace_context(dataset, manifest, display, stats, map_payload)
     retrieval_summary = _retrieval_summary(dataset, manifest)
-    return {
+    payload = {
         "run_id": run_id,
         "display": display,
         "scope_version": context["scope_version"],
@@ -310,7 +342,6 @@ def build_payload(runs_dir, run_id: str) -> dict:
         "map": map_payload,
         "workspace": context,
         "retrieval_summary": retrieval_summary,
-        "eval": evaluate(ROOT),
         "papers": papers,
         "claims": [_dump(item) for item in dataset.claims],
         "evidence": [_dump(item) for item in dataset.evidence],
@@ -326,16 +357,30 @@ def build_payload(runs_dir, run_id: str) -> dict:
         "decision_traces": [_dump(item) for item in dataset.decision_traces],
         "next_actions": [_dump(item) for item in dataset.next_actions],
         "fulltext_audit": read_json(resolve_run_dir(runs_dir, run_id) / "output" / "fulltext_audit.json") if (resolve_run_dir(runs_dir, run_id) / "output" / "fulltext_audit.json").exists() else {},
+        "fulltext_index": read_json(resolve_run_dir(runs_dir, run_id) / "output" / "fulltext_index.json") if (resolve_run_dir(runs_dir, run_id) / "output" / "fulltext_index.json").exists() else {},
+        "citation_graph": read_json(resolve_run_dir(runs_dir, run_id) / "output" / "citation_graph.json") if (resolve_run_dir(runs_dir, run_id) / "output" / "citation_graph.json").exists() else {},
     }
+    payload["eval"] = evaluate_payload(payload)
+    return payload
 
 
 def list_available_runs(runs_dir) -> list[str]:
     return list_runs(runs_dir)
 
 
-def ask_payload(runs_dir, run_id: str, question: str) -> dict:
-    dataset = load_run(runs_dir, run_id)["dataset"]
-    return ask(dataset, question)
+def ask_payload(runs_dir, run_id: str, question: str, *, limit: int = 5) -> dict:
+    loaded = load_run(runs_dir, run_id)
+    dataset = loaded["dataset"]
+    manifest = loaded.get("manifest") or {}
+    if manifest.get("offline") is False and manifest.get("live"):
+        ids = visible_paper_ids(manifest["live"])
+        evidence = [e for e in dataset.evidence if e.paper_id in ids]
+        claim_ids = {e.claim_id for e in evidence}
+        claims = [c for c in dataset.claims if c.paper_id in ids or c.claim_id in claim_ids or c.text == manifest.get("question")]
+        dataset = dataset.model_copy(update={"papers": [p for p in dataset.papers if p.paper_id in ids],
+            "claims": claims, "evidence": evidence,
+            "falsification": [h for h in dataset.falsification if h.paper_id in ids]})
+    return ask(dataset, question, limit=limit)
 
 
 def _md_cell(value: object) -> str:
@@ -347,7 +392,7 @@ def build_audit_report(runs_dir: Path, run_id: str) -> tuple[str, str]:
     dataset = loaded["dataset"]
     manifest = loaded.get("manifest") or {}
     if manifest.get("offline") is False and manifest.get("live"):
-        ids = set(manifest["live"].get("added_paper_ids") or [])
+        ids = visible_paper_ids(manifest["live"])
         visible_evidence = [e for e in dataset.evidence if e.paper_id in ids]
         claim_ids = {e.claim_id for e in visible_evidence} | {c.claim_id for c in dataset.claims if c.text == manifest.get("question") or c.paper_id in ids}
         retrieval_ids = {r.get("retrieval_id") for r in manifest["live"].get("retrieval", [])}
@@ -459,7 +504,7 @@ def build_audit_report(runs_dir: Path, run_id: str) -> tuple[str, str]:
     limitations = manifest.get("limitations") or map_payload.get("limitations") or []
     if manifest.get("offline") is False:
         limitations = [
-            "本报告只展示当前在线主题的新增论文与相关证据，不包含继承的基准研究结论。",
+            "本报告只展示当前在线主题命中的论文与相关证据，包含本轮再次命中的已有论文。",
             "全文解析和摘录定位不等同于人工语义核验；摘要级线索不能升级为确定结论。",
             "失败与限流不代表零匹配，当前结果不保证完整召回。",
             *map_payload.get("limitations", []),

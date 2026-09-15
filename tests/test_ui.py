@@ -17,11 +17,11 @@ def test_payload_keeps_conflict_and_rate_limit():
     assert payload["display"]["label"] == "基准核验结果"
     claim = next(item for item in payload["claims"] if item["claim_id"] == "claim-008")
     assert claim["status"] == "pending"
-    assert payload["map"]["edges"]
     assert payload["map"]["contradictions"]
     evidence_kinds = {edge["kind"] for edge in payload["map"]["edges"]}
-    assert "evidence_conflict" in evidence_kinds
-    assert {"decision_boundary", "track_affinity", "pending_review"} & evidence_kinds
+    assert payload["map"]["algorithm"] == "specter2_cosine_network"
+    assert evidence_kinds <= {"semantic_similarity"}
+    assert payload["map"]["similarity_matrix"]["paper_ids"]
     limited = next(item for item in payload["retrieval_runs"] if item["retrieval_id"] == "retrieval-010")
     assert limited["http_status"] == 429
     summary = payload["retrieval_summary"]
@@ -32,6 +32,33 @@ def test_payload_keeps_conflict_and_rate_limit():
     assert payload["workspace"]["scope_version"] == "v0.1"
     assert payload["workspace"]["question"] == payload["question"]
     assert payload["workspace"]["review_item_count"] >= 2
+
+
+def test_evaluation_isolated_to_empty_and_live_runs(tmp_path):
+    import shutil
+    from src.io_utils import write_json
+    from src.eval_metrics import evaluate_payload
+    shutil.copytree(ROOT / "runs" / "phase2-real", tmp_path / "live-review")
+    write_json(tmp_path / "live-review" / "run_manifest.json", {
+        "run_id": "live-review", "offline": False, "question": "Unrelated topic",
+        "live": {"added_paper_ids": [], "retrieval": []}})
+    metrics = build_payload(tmp_path, "live-review")["eval"]
+    assert metrics["run_id"] == "live-review"
+    assert metrics["paper_count"] == metrics["verified_evidence_count"] == 0
+    assert metrics["gold_paper_recall"] is None
+    assert metrics["delta_vs_no_retrieval"] == {}
+    baseline = build_payload(ROOT / "runs", "phase2-real")
+    assert baseline["eval"]["verified_evidence_count"] == 14
+    other = {**baseline, "run_id": "other", "offline": False, "live": {"added_paper_ids": ["paper-001"]}}
+    assert evaluate_payload(other)["paper_count"] == 1
+
+
+def test_fixture_run_does_not_inherit_real_evaluation(tmp_path):
+    from src.config import load_settings
+    from src.pipeline import run_pipeline
+    result = run_pipeline(load_settings(runs_dir=tmp_path, offline=True), source="fixture")
+    metrics = build_payload(tmp_path, result["run_id"])["eval"]
+    assert metrics["paper_count"] == metrics["claim_count"] == metrics["verified_evidence_count"] == 0
 
 
 def test_live_retrieval_summary_counts_current_round_only():
@@ -48,15 +75,15 @@ def test_live_retrieval_summary_counts_current_round_only():
     assert any("摘要筛选" in hint for hint in summary["hints"])
 
 
-def test_live_map_has_heuristic_edges_for_added_papers():
+def test_live_map_has_semantic_edges_for_added_papers():
     live_runs = [item for item in list_runs_for_ui(ROOT / "runs") if item["kind"] == "live"]
     if not live_runs:
         return
     payload = build_payload(ROOT / "runs", live_runs[0]["id"])
     edges = payload["map"]["edges"]
-    assert edges
     kinds = {edge["kind"] for edge in edges}
-    assert {"decision_boundary", "track_affinity", "pending_review"} & kinds
+    assert kinds <= {"semantic_similarity"}
+    assert payload["map"]["algorithm"] == "specter2_cosine_network"
     assert all(edge["source"] in {node["paper_id"] for node in payload["map"]["nodes"]} for edge in edges)
     assert all(edge["target"] in {node["paper_id"] for node in payload["map"]["nodes"]} for edge in edges)
 
@@ -110,15 +137,16 @@ def test_static_shell_exists():
     assert "基准核验结果" in js
     assert "本轮检索异常" in js
     assert "证据不足/不支持该表述" in js
-    assert "摘要启发边" in js
+    assert "SPECTER2 语义星图" in js
     assert "paper-graph" in js
     assert "chat-map-" in js
     assert "data-graph-id" in js
     assert "llmErrorText" in js
     assert "AI 未生成本轮内容，请重试。" in js
     assert "requestAnimationFrame" in js
-    assert "marker-end" in js
-    assert "拖动画布可平移" in js
+    assert "specter2_cosine_mds" in js
+    assert "pointerenter" in js
+    assert "空间距离＝语义差异" in js
     assert ".graph-node" in css
     assert ".graph-edge" in css
     assert "claim-008" not in js or "内部编号" in js

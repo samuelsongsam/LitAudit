@@ -12,13 +12,18 @@
   -> 必要时生成动态范围确认题
   -> arXiv / OpenAlex / Semantic Scholar 检索
   -> DOI、arXiv ID、标题去重
+  -> SPECTER2 查询与论文统一重排
   -> 标题与摘要规则筛选
+  -> 核心候选一跳引文扩展
   -> 写入独立 live_<时间>_<随机标识> run
+  -> 按需获取开放全文并建立页码级混合检索索引
   -> DeepSeek 根据当前 run 生成总论
   -> 对话、论文、研究地图和审计模块按 run 展示
 ```
 
 每次在线检索都会产生新的 `live_*` run，不覆盖本地基准数据。每个历史对话绑定一个 run；论文、检索记录、Claim、Evidence、反证、地图和评测都必须从当前 run 读取。
+
+在线、离线与 fixture 模式均保护 `phase2-real` / `demo`：请求这些名称时创建新运行；其他已存在的运行名称拒绝覆盖。本轮检索区分“命中”“复用”“新增”，命中的已有论文会在新运行内重新筛选，并保留在结果中。UI 评测只统计当前可见结果；仓库金标评测通过 CLI `evaluate` 单独执行。
 
 ## 对话 Agent
 
@@ -38,7 +43,7 @@
 
 在线检索支持 arXiv、OpenAlex 和 Semantic Scholar。HTTP 429 记录为 `rate_limited`，不能解释成零结果。网络失败、部分来源失败和确实没有匹配结果在界面中分开显示。
 
-在线检索默认完成标题和摘要级筛选。在证据核验页面点击“获取全文并核验”，会创建独立审计快照，优先解析已有本地 PDF，并尝试下载 arXiv 全文（每次最多 5 篇）。获取、解析失败和需要 OCR 的情况会保存为明确状态。全文解析不会自动把 Claim 标记为 `supported`。
+在线检索默认完成标题和摘要级筛选。在证据核验页面点击“获取全文并核验”，会创建独立审计快照，优先解析已有本地 PDF，并尝试下载 arXiv 或检索提供商声明的开放 PDF（每次最多 5 篇）。获取、解析失败和需要 OCR 的情况会保存为明确状态。全文解析不会自动把 Claim 标记为 `supported`。
 
 筛选规则必须区分研究主题和输出形式。“综述”“深入分析”“性能对比”是输出要求，不能直接当作论文主题词。自定义主题筛选不能只因为论文包含 `literature review` 或 `systematic review` 就纳入；应同时检查领域锚点、对象、方法和任务等实质性词项。当前规则属于工程筛选，不等同于语义模型判断或人工全文审阅。
 
@@ -46,7 +51,7 @@
 
 对话回复包含论文筛选、研究地图、证据核验、反证检查和可追溯性评测入口。进入模块时地址携带当前对话的 `run_id`；模块只读取当前 run，显示所属对话和返回对话按钮。在线 run 会过滤继承的本地基准论文，避免 PaperQA、SciMON 等基准数据混入其他主题。
 
-研究地图中的论文是节点。证据边来自已落盘的证据冲突或反证关系；同主线相近、筛选边界和待定关系属于摘要级启发边，不是引用或页码级证据。引用关系图算法尚未接入。节点支持拖动、画布平移和缩放。
+研究地图中的论文是节点。系统将每篇论文的 Title + Abstract 输入 SPECTER2（`allenai/specter2_base` + `allenai/specter2` adapter）得到 768 维向量，计算全局余弦相似度矩阵，并在相似度达到阈值时连边。边权越大，界面连线越粗。语义相似边不是引用、页码级证据或事实支持关系；Claim/Evidence 审计仍以证据模块为准。每个 run 会输出 `output/map.json` 和可独立打开的 `output/map.html`，工作台内置图支持力学碰撞动画、悬停、拖拽、画布平移和缩放。UI 优先读取 run 内已生成且算法版本匹配的地图，避免打开页面时重复加载模型；旧格式或缺失地图才会重建。
 
 ### v0.2 证据审计工作区
 
@@ -54,8 +59,9 @@
 - 逐页提取本地或新获取的 PDF；对已有摘录执行归一化精确匹配。匹配只检查位置，保留原人工判决；未匹配的摘录进入人工复核。
 - 页面可查看原文 PDF、证据到文件指纹的链路、全文失败状态、后续建议，并下载当前 run 的 Markdown 审计报告。
 - 总论与直接回答均执行引用完整性检查；证据必须属于对应 Claim，冲突不能通过省略反证来隐藏。摘要线索只允许逐字摘录并明确标记。
+- Claim 回答由程序展示已存储原文及证据状态，模型自由生成的正文不直接作为审计结论；待核验内容明确标记，不因 certainty 标签而自动可信。
 - 模型返回非法引用时，将校验错误反馈给模型修正一次；仍不通过则显示回答状态，并保留论文与审计入口。
-- 审计升级创建 `audit_*` 新运行，原 run 和金标保持不变。运行 `python -m src.cli audit phase2-real` 可只核验本地文件；加 `--acquire` 可尝试获取 arXiv 全文。
+- 审计升级创建 `audit_*` 新运行，原 run 和金标保持不变。运行 `python -m src.cli audit phase2-real` 可只核验本地文件；加 `--acquire` 可尝试获取 arXiv 或提供商声明的开放全文。
 
 证据规则：没有 Evidence 的 Claim 不能标记为 `supported`；正反证据冲突时必须保持 `pending`；`pdf_partial_verified` 只表示摘录和定位已核对；在线 `live_abstract` 结果不能作为页码级证据。
 
@@ -66,7 +72,8 @@
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -e ".[dev,map]"
+python -m src.cli download-model
 python -m src.cli doctor
 python -m src.cli validate
 python -m src.cli ui --run-id phase2-real
@@ -77,6 +84,10 @@ python -m src.cli ui --run-id phase2-real
 ```powershell
 python -m src.cli ui --run-id phase2-real --port 8787 --no-browser
 ```
+
+`download-model` 会从 Hugging Face 下载 `allenai/specter2_base`、论文 proximity adapter `allenai/specter2` 和查询 adapter `allenai/specter2_adhoc_query`，之后地图与检索重排只读取本地缓存。默认地图模式严格要求真实 SPECTER2；在线候选和全文片段重排默认优先使用 SPECTER2，并在不可用时记录降级原因。测试或故障排查可显式设置 `LITAUDIT_MAP_EMBEDDER=hash`、`LITAUDIT_RERANK_EMBEDDER=hash`。
+
+在线检索 run 还会生成 `output/citation_graph.json`，保存核心候选的一跳参考/施引关系、引用上下文与请求状态。证据审计会生成 `output/fulltext_index.json`，以 BM25 召回和 SPECTER2 重排全文片段，并保留论文 ID、PDF 页码和片段哈希。
 
 ## 命令行
 
@@ -125,9 +136,9 @@ docs/research_scope.md                 冻结的研究范围
 
 ## 已知边界
 
-- 在线论文默认只有标题摘要级筛选；可按需获取 arXiv 全文。扫描文档 OCR、其他出版商全文适配和自动语义判决尚未实现。
+- 在线论文默认先做标题摘要级筛选；可按需获取 arXiv、OpenAlex 或 Semantic Scholar 声明的开放 PDF。扫描文档 OCR、付费全文获取和自动语义判决尚未实现。
 - 系统不会自动生成跨论文确定性长综述。
-- 研究地图不是引用图谱；同被引、文献耦合、PageRank、Node2Vec 尚未接入。
+- 研究地图是 SPECTER2 语义相似图，不是引用图谱；边表示 Title + Abstract 的向量相似，不代表证据支持。
 - 在线筛选仍是规则与关键词辅助，不能替代人工判断或领域语义模型。
 - API 来源可能限流或失败，失败状态必须保留并在结果中说明。
 - 可追溯性评测关注证据定位和审计链路，不是模型准确率排行榜。
@@ -138,6 +149,7 @@ docs/research_scope.md                 冻结的研究范围
 python -m src.cli doctor
 python -m src.cli validate
 python -m pytest -q
+node --test tests/ui_scope.test.cjs
 git diff --check
 ```
 

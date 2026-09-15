@@ -1,4 +1,5 @@
 from src.answer_audit import audit_answer_statements
+import pytest
 
 
 def _payload(status="supported", verdict="supports", extraction_status="verified"):
@@ -100,3 +101,19 @@ def test_abstract_only_evidence_cannot_be_called_verified():
     )
     assert result["ok"] is False
     assert any("definite_without_grounding" in error for error in result["errors"])
+
+
+@pytest.mark.parametrize("certainty,status", [("uncertain", "pending"), ("qualified", "partial"), ("verified", "supported")])
+def test_generated_assertion_cannot_bypass_binding(certainty, status):
+    payload = _payload(status=status)
+    ids = ["evidence-001"]
+    if certainty == "uncertain":
+        payload["evidence"] = []
+        ids = []
+    result = audit_answer_statements(payload, [{"text": "已确证提高 99%，适用于所有任务。", "claim_id": "claim-001", "evidence_ids": ids, "certainty": certainty}])
+    assert result["ok"]
+    assert "99%" not in result["answer"]
+    assert "适用于所有任务" not in result["answer"]
+    assert payload["claims"][0]["text"] in result["answer"]
+    if certainty == "uncertain":
+        assert "不作确定结论" in result["answer"]

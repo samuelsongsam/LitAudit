@@ -103,6 +103,13 @@ def cmd_evaluate(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_download_model(_: argparse.Namespace) -> int:
+    from src.map_builder import download_specter2
+
+    _print({"ok": True, "models": download_specter2()})
+    return 0
+
+
 def cmd_ask(args: argparse.Namespace) -> int:
     settings = load_settings(offline=_offline_from_args(args))
     if settings.offline:
@@ -110,8 +117,8 @@ def cmd_ask(args: argparse.Namespace) -> int:
         _print(ask(dataset, args.question, limit=args.limit))
         return 0
     result = run_pipeline(settings, source="data", question=args.question)
-    dataset = load_run(settings.runs_dir, result["run_id"])["dataset"]
-    payload = ask(dataset, args.question, limit=args.limit)
+    from src.ui.payload import ask_payload
+    payload = ask_payload(settings.runs_dir, result["run_id"], args.question, limit=args.limit)
     payload["run_id"] = result["run_id"]
     payload["live"] = result.get("live")
     payload["mode"] = "live_retrieve_then_local_overlap"
@@ -150,7 +157,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     audit = sub.add_parser("audit", help="创建增强审计快照，不修改原 run")
     audit.add_argument("run_id")
-    audit.add_argument("--acquire", action="store_true", help="尝试下载最多 5 篇 arXiv 全文")
+    audit.add_argument("--acquire", action="store_true", help="尝试下载最多 5 篇 arXiv 或提供商声明的开放全文")
     audit.set_defaults(func=cmd_audit)
 
     run = sub.add_parser("run", help="运行流水线；默认在线检索，--offline 只快照金标")
@@ -168,6 +175,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     eval_cmd = sub.add_parser("evaluate", help="计算仓库覆盖率与无检索可追溯性对照")
     eval_cmd.set_defaults(func=cmd_evaluate)
+
+    model_cmd = sub.add_parser("download-model", help="从 Hugging Face 下载 SPECTER2 基础模型、论文与查询 adapter")
+    model_cmd.set_defaults(func=cmd_download_model)
 
     ask_cmd = sub.add_parser("ask", help="检索问题：默认仅本地；--online 先在线扩候选再匹配")
     ask_cmd.add_argument("question")

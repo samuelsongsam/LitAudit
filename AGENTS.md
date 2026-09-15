@@ -8,7 +8,8 @@ LitAudit 是一个可核验的文献调研智能体，支持 arXiv / OpenAlex / 
 
 ```bash
 # 安装依赖
-pip install -e ".[dev]"
+pip install -e ".[dev,map]"
+python -m src.cli download-model
 
 # 跑测试
 python -m pytest -q
@@ -46,7 +47,7 @@ python -c "from src.config import load_settings; s=load_settings(); print('LLM k
 python -m pytest -q
 ```
 
-所有 59 项测试应通过。若有失败，检查 `runs/` 目录是否缺少 `phase2-real` 数据。
+所有测试应通过。若有失败，检查 `runs/` 目录是否缺少 `phase2-real` 数据，并运行 `python -m src.cli download-model` 确认 SPECTER2 已缓存。
 
 ### 在线检索说明
 
