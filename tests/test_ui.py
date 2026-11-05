@@ -17,11 +17,11 @@ def test_payload_keeps_conflict_and_rate_limit():
     assert payload["display"]["label"] == "基准核验结果"
     claim = next(item for item in payload["claims"] if item["claim_id"] == "claim-008")
     assert claim["status"] == "pending"
-    assert payload["map"]["edges"]
     assert payload["map"]["contradictions"]
     evidence_kinds = {edge["kind"] for edge in payload["map"]["edges"]}
-    assert "evidence_conflict" in evidence_kinds
-    assert {"decision_boundary", "track_affinity", "pending_review"} & evidence_kinds
+    assert payload["map"]["algorithm"] == "specter2_cosine_network"
+    assert evidence_kinds <= {"semantic_similarity"}
+    assert payload["map"]["similarity_matrix"]["paper_ids"]
     limited = next(item for item in payload["retrieval_runs"] if item["retrieval_id"] == "retrieval-010")
     assert limited["http_status"] == 429
     summary = payload["retrieval_summary"]
@@ -34,6 +34,33 @@ def test_payload_keeps_conflict_and_rate_limit():
     assert payload["workspace"]["review_item_count"] >= 2
 
 
+def test_evaluation_isolated_to_empty_and_live_runs(tmp_path):
+    import shutil
+    from src.io_utils import write_json
+    from src.eval_metrics import evaluate_payload
+    shutil.copytree(ROOT / "runs" / "phase2-real", tmp_path / "live-review")
+    write_json(tmp_path / "live-review" / "run_manifest.json", {
+        "run_id": "live-review", "offline": False, "question": "Unrelated topic",
+        "live": {"added_paper_ids": [], "retrieval": []}})
+    metrics = build_payload(tmp_path, "live-review")["eval"]
+    assert metrics["run_id"] == "live-review"
+    assert metrics["paper_count"] == metrics["verified_evidence_count"] == 0
+    assert metrics["gold_paper_recall"] is None
+    assert metrics["delta_vs_no_retrieval"] == {}
+    baseline = build_payload(ROOT / "runs", "phase2-real")
+    assert baseline["eval"]["verified_evidence_count"] == 14
+    other = {**baseline, "run_id": "other", "offline": False, "live": {"added_paper_ids": ["paper-001"]}}
+    assert evaluate_payload(other)["paper_count"] == 1
+
+
+def test_fixture_run_does_not_inherit_real_evaluation(tmp_path):
+    from src.config import load_settings
+    from src.pipeline import run_pipeline
+    result = run_pipeline(load_settings(runs_dir=tmp_path, offline=True), source="fixture")
+    metrics = build_payload(tmp_path, result["run_id"])["eval"]
+    assert metrics["paper_count"] == metrics["claim_count"] == metrics["verified_evidence_count"] == 0
+
+
 def test_live_retrieval_summary_counts_current_round_only():
     live_runs = [item for item in list_runs_for_ui(ROOT / "runs") if item["kind"] == "live"]
     if not live_runs:
@@ -43,20 +70,19 @@ def test_live_retrieval_summary_counts_current_round_only():
     assert summary["round_runs"]
     assert summary["round_failure_count"] <= len(payload["retrieval_runs"])
     assert summary["round_failure_count"] == sum(1 for run in summary["round_runs"] if run["status"] != "success" or run.get("http_status") == 429)
-    if any(run["source"] == "semantic_scholar" and run["status"] != "success" for run in summary["round_runs"]):
-        assert any("SEMANTIC_SCHOLAR_API_KEY" in hint for hint in summary["hints"])
+    assert all("SEMANTIC_SCHOLAR_API_KEY" not in hint for hint in summary["hints"])
     assert any("摘要筛选" in hint for hint in summary["hints"])
 
 
-def test_live_map_has_heuristic_edges_for_added_papers():
+def test_live_map_has_semantic_edges_for_added_papers():
     live_runs = [item for item in list_runs_for_ui(ROOT / "runs") if item["kind"] == "live"]
     if not live_runs:
         return
     payload = build_payload(ROOT / "runs", live_runs[0]["id"])
     edges = payload["map"]["edges"]
-    assert edges
     kinds = {edge["kind"] for edge in edges}
-    assert {"decision_boundary", "track_affinity", "pending_review"} & kinds
+    assert kinds <= {"semantic_similarity"}
+    assert payload["map"]["algorithm"] == "specter2_cosine_network"
     assert all(edge["source"] in {node["paper_id"] for node in payload["map"]["nodes"]} for edge in edges)
     assert all(edge["target"] in {node["paper_id"] for node in payload["map"]["nodes"]} for edge in edges)
 
@@ -99,7 +125,7 @@ def test_static_shell_exists():
     css = (STATIC_DIR / "styles.css").read_text(encoding="utf-8")
     js = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
     assert "勘文" in html
-    assert "clarification-submit" in js
+    assert "data-clarification-form" in js
     assert "clarification_context" in js
     assert "response_format" in (ROOT / "src" / "conversation.py").read_text(encoding="utf-8")
     assert "正在打开勘文" in html
@@ -107,25 +133,28 @@ def test_static_shell_exists():
     assert "#boot[hidden]" in css
     assert ".history-bar" in css
     assert "检索文献" in js
-    assert "基准核验结果" in js
-    assert "本轮检索异常" in js
+    assert 'class="workspace-meta"' in js
+    assert "retrieval_failures" in js
+    assert "source-status-details" in js
     assert "证据不足/不支持该表述" in js
-    assert "摘要启发边" in js
+    assert "SPECTER2 语义星图" in js
     assert "paper-graph" in js
     assert "chat-map-" in js
     assert "data-graph-id" in js
     assert "llmErrorText" in js
     assert "AI 未生成本轮内容，请重试。" in js
     assert "requestAnimationFrame" in js
-    assert "marker-end" in js
-    assert "拖动画布可平移" in js
+    assert "specter2_cosine_mds" in js
+    assert "pointerenter" in js
+    assert "data-open-topic" in js
+    assert "选择主题或论文" in js
     assert ".graph-node" in css
     assert ".graph-edge" in css
     assert "claim-008" not in js or "内部编号" in js
     assert "streamlit" not in js.lower()
     assert "new-conversation" in js
     assert "conversation-history" in js
-    assert "__other__" in js
+    assert "data-clarification-custom" in js
     assert "clarification-other-input" in js
     assert ".clarification-other" in css
     assert "conversationBeforeRunChange" in js
@@ -139,9 +168,12 @@ def test_static_shell_exists():
     assert ".chat-message.assistant" in css
     assert "sidebarConversations" in js
     assert "data-conversation-rename" in js
-    assert "window.open(`/?run=${encodeURIComponent(state.runId)}&view=" in js
+    assert "data-workspace-view" in js
+    assert "history.pushState" in js
     assert ".conversation-sidebar" in css
-    assert "当前模块" in js
+    assert 'aria-label="研究工作区"' in js
+    assert 'class="nav-more"' in js
+    assert ".nav-more" in css
     assert "id=\"search-form\"" in js
 
 
@@ -186,7 +218,8 @@ def test_ui_server_serves_index_and_run_json():
     assert payload["display"]["label"] == "基准核验结果"
     assert runs["runs"][0]["label"]
     assert health["ok"] is True
-    assert health["live_search"] is True
+    assert health["live_search"] is bool(server.RequestHandlerClass.settings.llm_api_key)
+    assert health["capabilities"]["llm_configured"] is health["live_search"]
     assert "pid" in health
 
 
@@ -312,7 +345,7 @@ def test_ui_server_does_not_persist_clarification_into_existing_run(tmp_path, mo
     (settings_runs / "phase2-real" / "output").mkdir(parents=True)
     monkeypatch.setattr("src.ui.server.load_settings", lambda **_: load_settings(runs_dir=settings_runs))
     monkeypatch.setattr("src.ui.server.build_payload", lambda *args, **kwargs: {"run_id": "phase2-real", "papers": [], "stats": {}, "workspace": {}, "question": "基准"})
-    monkeypatch.setattr("src.ui.server.classify_intent", lambda *args, **kwargs: Intent("new_topic", 1.0, "clarify", False, needs_clarification=True, clarification_questions=[{"question": "Q1", "options": ["A", "B", "C"]}, {"question": "Q2", "options": ["A", "B", "C"]}, {"question": "Q3", "options": ["A", "B", "C"]}]))
+    monkeypatch.setattr("src.ui.server.classify_intent", lambda *args, **kwargs: Intent("new_topic", 1.0, "clarify", False, needs_clarification=True, clarification_questions=[{"question": "你想研究哪个地区的房地产？", "options": []}]))
     server, url = make_server(port=0, run_id="phase2-real")
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -330,7 +363,7 @@ def test_ui_server_does_not_persist_clarification_into_existing_run(tmp_path, mo
 def test_conversation_intent_routes_only_through_llm(monkeypatch):
     payload = build_payload(ROOT / "runs", "phase2-real")
     routes = iter([
-        {"action": "clarify", "questions": [{"question": "Q1", "options": ["A", "B", "C"]}, {"question": "Q2", "options": ["A", "B", "C"]}, {"question": "Q3", "options": ["A", "B", "C"]}]},
+        {"action": "clarify", "questions": [{"question": "你指的是哪个项目？", "options": []}]},
         {"action": "retrieve", "expanded_query": "expanded research query"},
         {"action": "direct_answer", "answer": "generated answer"},
     ])
@@ -352,7 +385,8 @@ def test_conversation_preserves_llm_tool_operation(monkeypatch):
 
 def test_clarification_does_not_generate_search_results():
     payload = build_payload(ROOT / "runs", "phase2-real")
-    intent = Intent("new_topic", 1.0, "clarify", False, needs_clarification=True, clarification_questions=[{"question": "Q1", "options": ["A", "B", "C"]}, {"question": "Q2", "options": ["A", "B", "C"]}, {"question": "Q3", "options": ["A", "B", "C"]}], route_source="llm")
+    intent = Intent("new_topic", 1.0, "clarify", False, needs_clarification=True,
+                    clarification_questions=[{"question": "你指的是哪个项目？", "options": []}], route_source="llm")
     response = build_chat_response(payload, "帮我看看人工智能在科研中的应用", intent, object())
     assert response["overview_mode"] == "clarification"
     assert response["paper_selection"]["retrieval_status"] == "not_started"
@@ -408,9 +442,7 @@ def test_llm_route_retries_one_transient_failure(monkeypatch, tmp_path):
             content = json.dumps({
                 "action": "clarify",
                 "questions": [
-                    {"question": "Q1", "options": ["A", "B", "C"]},
-                    {"question": "Q2", "options": ["A", "B", "C"]},
-                    {"question": "Q3", "options": ["A", "B", "C"]},
+                    {"dimension": "focus", "question": "你想研究哪个地区的房地产？", "options": []},
                 ],
             })
             return json.dumps({"choices": [{"message": {"content": content}}]}).encode("utf-8")
@@ -450,9 +482,7 @@ def test_llm_route_retries_one_invalid_response(monkeypatch, tmp_path):
     valid = {
         "action": "clarify",
         "questions": [
-            {"question": "Q1", "options": ["A", "B", "C"]},
-            {"question": "Q2", "options": ["A", "B", "C"]},
-            {"question": "Q3", "options": ["A", "B", "C"]},
+            {"dimension": "focus", "question": "你想研究哪个地区的房地产？", "options": []},
         ],
     }
     responses = iter([FakeResponse({"action": "unknown"}), FakeResponse(valid)])
@@ -471,24 +501,40 @@ def test_malformed_clarify_falls_back_to_retrieve():
     assert result["expanded_query"] == "RAG"
 
 
-def test_clarify_questions_are_coerced_to_three_by_three():
+def test_clarification_preserves_specific_choices_without_padding():
+    question = {"question": "你指的是哪一种图扩散？", "options": ["图上的扩散过程", "生成图结构的扩散模型"]}
     result, error = _normalize_llm_route(
-        {
-            "action": "clarify",
-            "questions": [
-                {"question": "关注哪一面？", "options": ["原理", "应用"]},
-                {"q": "输出类型？", "choices": ["综述", {"label": "方法"}, "评测", "多余"]},
-                "希望覆盖的时间范围？",
-            ],
-        },
-        "RAG",
-    )
+        {"action": "clarify", "questions": [{**question, "dimension": "entity"}]}, "图扩散研究")
     assert error is None
     assert result["action"] == "clarify"
-    assert len(result["questions"]) == 3
-    assert all(len(item["options"]) == 3 for item in result["questions"])
-    assert result["questions"][0]["options"] == ["原理", "应用", "综述与经典论文"]
-    assert result["questions"][2]["question"] == "希望覆盖的时间范围？"
+    assert result["questions"] == [question]
+
+
+def test_clarification_never_fills_or_repeats_generic_options():
+    choices = ["综述与经典论文", "方法原理与框架", "实验对比与评测"]
+    for questions in (
+        ["Astra 是哪个项目？", "关注哪类研究产出？", "希望检索的时间范围是？"],
+        [{"dimension": "entity", "question": "你指的是哪个 Astra？", "options": choices}],
+        [{"dimension": "focus", "question": "你希望检索的时间范围是？", "options": ["近三年", "不限"]}],
+    ):
+        result, error = _normalize_llm_route(
+            {"action": "clarify", "questions": questions, "expanded_query": "编造的项目"},
+            "Astra 在具身智能中的研究")
+        assert error is None
+        assert result["action"] == "retrieve"
+        assert result["expanded_query"] == "Astra 在具身智能中的研究"
+
+
+def test_clarification_answer_starts_retrieval_without_second_router_round(monkeypatch):
+    def unexpected_route(*args, **kwargs):
+        raise AssertionError("收到澄清答案后应直接检索")
+
+    monkeypatch.setattr("src.conversation._llm_route", unexpected_route)
+    intent = classify_intent("用户补充了项目", clarification_context=["Astra 项目的论文题名"],
+                             clarification_topic="Astra 在具身智能中的研究")
+    assert intent.needs_retrieval is True
+    assert intent.needs_clarification is False
+    assert intent.expanded_query == "Astra 在具身智能中的研究 Astra 项目的论文题名"
 
 
 def test_llm_router_may_delegate_direct_answer_generation(monkeypatch, tmp_path):

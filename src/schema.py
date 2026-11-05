@@ -204,6 +204,17 @@ class PaperCard(StrictModel):
     url: str | None = None
     source: str
     abstract: str | None = None
+    source_id: str | None = None
+    open_access_pdf_url: str | None = None
+    citation_count: int | None = None
+    reference_count: int | None = None
+    fields_of_study: list[str] = Field(default_factory=list)
+    publication_types: list[str] = Field(default_factory=list)
+    tldr: str | None = None
+    semantic_score: float | None = None
+    lexical_score: float | None = None
+    ranking_score: float | None = None
+    semantic_scholar_id: str | None = None
     retrieved_at: Date
     dedup_key: str
     decision: PaperDecision

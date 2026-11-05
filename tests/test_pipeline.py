@@ -52,12 +52,13 @@ def test_pipeline_rejects_path_traversal_run_id(tmp_path: Path):
 def test_fixture_run_is_offline_and_replayable(tmp_path: Path):
     settings = load_settings(runs_dir=tmp_path, offline=True)
     result = run_pipeline(settings, source="fixture", run_id="demo")
-    assert result["run_id"] == "demo"
-    replayed = load_run(tmp_path, "demo")
+    assert result["run_id"] != "demo"
+    replayed = load_run(tmp_path, result["run_id"])
     stats = dataset_stats(replayed["dataset"])
     assert stats["fixture_paper_count"] == 1
     assert stats["paper_count"] == 0
-    assert (tmp_path / "demo" / "output" / "map.json").exists()
+    assert (tmp_path / result["run_id"] / "output" / "map.json").exists()
+    assert (tmp_path / result["run_id"] / "output" / "map.html").exists()
     assert replayed["manifest"]["offline"] is True
 
 
@@ -84,11 +85,12 @@ def test_offline_data_run_snapshots_screening_reasons(tmp_path: Path):
     ):
         assert (tmp_path / result["run_id"] / "output" / filename).exists()
     map_payload = replayed["map"]
-    assert map_payload["edges"]
+    assert map_payload["algorithm"] == "specter2_cosine_network"
+    assert map_payload["similarity_matrix"]["paper_ids"]
     assert map_payload["contradictions"]
-    assert any(edge["kind"] == "evidence_conflict" for edge in map_payload["edges"])
-    assert any(edge["kind"] == "falsification" for edge in map_payload["edges"])
-    assert any(track["track_id"] == "sciqa" for track in map_payload["tracks"])
+    assert all(edge["kind"] == "semantic_similarity" for edge in map_payload["edges"])
+    assert all(track["track_id"].startswith("semantic-") for track in map_payload["tracks"])
+    assert (tmp_path / result["run_id"] / "output" / "map.html").exists()
     assert any("verified=" in note for note in replayed["manifest"]["limitations"])
 
 
@@ -110,3 +112,25 @@ def test_ask_returns_local_hits_without_inventing_papers():
     empty = ask(dataset, "qzxqzxqzxqzx")
     assert empty["papers"] == []
     assert empty["claims"] == []
+
+
+@pytest.mark.parametrize("offline", [True, False])
+@pytest.mark.parametrize("protected", ["phase2-real", "demo"])
+def test_protected_run_keeps_existing_bytes(tmp_path, monkeypatch, offline, protected):
+    marker = tmp_path / protected / "output" / "papers.jsonl"
+    marker.parent.mkdir(parents=True)
+    marker.write_bytes(b"protected sentinel")
+    monkeypatch.setattr("src.live_ingest.ingest_live", lambda dataset, *a, **k: (dataset, {"added_paper_ids": [], "retrieval": []}))
+    result = run_pipeline(load_settings(runs_dir=tmp_path, offline=offline), run_id=protected)
+    assert result["run_id"] != protected
+    assert marker.read_bytes() == b"protected sentinel"
+
+
+def test_existing_run_rejected_before_any_write(tmp_path):
+    marker = tmp_path / "existing" / "pipeline.log"
+    marker.parent.mkdir()
+    marker.write_bytes(b"original")
+    with pytest.raises(FileExistsError):
+        run_pipeline(load_settings(runs_dir=tmp_path, offline=True), run_id="existing")
+    assert marker.read_bytes() == b"original"
+    assert list(marker.parent.iterdir()) == [marker]

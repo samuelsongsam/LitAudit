@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import os
+import time
+
+
 import json
 from pathlib import Path
 from typing import Any, TypeVar
@@ -25,6 +29,18 @@ from src.schema import (
     ValidationIssue,
     validate_dataset,
 )
+
+def replace_with_retry(source, destination) -> None:
+    """Preserve atomic replacement during short Windows file-share conflicts."""
+    for attempt in range(4):
+        try:
+            os.replace(source, destination)
+            return
+        except PermissionError:
+            if attempt == 3:
+                raise
+            time.sleep(0.02 * (2 ** attempt))
+
 
 T = TypeVar("T", bound=BaseModel)
 

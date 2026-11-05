@@ -38,6 +38,28 @@ def evaluate(root: Path) -> dict:
     hits = read_jsonl(data / "falsification.jsonl")
     questions = read_jsonl(data / "gold_standard" / "questions.jsonl")
 
+    return _evaluate_rows(papers, claims, evidence, hits, questions)
+
+
+def evaluate_payload(payload: dict) -> dict:
+    """Evaluate only this run's visible, non-fixture data."""
+    from src.answer_audit import scoped_payload
+    visible = scoped_payload(payload)
+    papers = {p["paper_id"]: p for p in visible.get("papers", []) if not p.get("is_fixture") and p.get("source") != "fixture" and not p["paper_id"].startswith("fixture-")}
+    claims = {c["claim_id"]: c for c in visible.get("claims", []) if not c.get("is_fixture") and not c["claim_id"].startswith("fixture-")}
+    evidence = [e for e in visible.get("evidence", []) if e.get("paper_id") in papers and e.get("claim_id") in claims and not e["evidence_id"].startswith("fixture-")]
+    hits = [h for h in visible.get("falsification", []) if h.get("paper_id") in papers and h.get("target_claim") in claims and not h["hit_id"].startswith("fixture-")]
+    result = _evaluate_rows(papers, claims, evidence, hits, [])
+    result.update(run_id=payload["run_id"], scope="current_run", question_count=None,
+                  gold_paper_count=None, gold_claim_count=None, gold_paper_recall=None,
+                  gold_claim_coverage=None, baseline=None, delta_vs_no_retrieval={})
+    result["litaudit"]["name"] = "current_run"
+    result["limitations"] = ["指标仅来自当前运行中可见的论文与证据。", "当前运行未执行独立金标答题或无检索对照实验。", "证据状态为已存储的审计状态；定位匹配不代表语义判断或全文通读。"]
+    return result
+
+
+def _evaluate_rows(papers, claims, evidence, hits, questions) -> dict:
+
     gold_papers = {paper_id for row in questions for paper_id in row.get("gold_paper_ids", [])}
     gold_claims = {claim_id for row in questions for claim_id in row.get("gold_claim_ids", [])}
     located = [item for item in evidence if _has_locator(item)]

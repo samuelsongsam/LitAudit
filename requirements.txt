@@ -1,4 +1,2 @@
-pydantic>=2.7
-python-dotenv>=1.0
-pypdf>=5.0
-pytest>=8.0
+# Full development profile. Lightweight install: pip install -e ".[dev,documents]"
+-e .[dev,documents,map]

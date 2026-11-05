@@ -1,11 +1,22 @@
 from hashlib import sha256
 
 from src.answer_audit import audit_answer_statements, audit_overview_statements
-from src.audit_enrichment import enrich_audit
+from src.audit_enrichment import enrich_audit, provider_pdf_url
 from src.config import load_settings
 from src.io_utils import load_dataset, read_json
 from src.pipeline import upgrade_audit
 from src.schema import dataset_stats
+
+
+def test_provider_pdf_url_accepts_public_https_and_rejects_local_targets():
+    class Paper:
+        open_access_pdf_url = "https://repository.example/paper.pdf"
+
+    assert provider_pdf_url(Paper()) == Paper.open_access_pdf_url
+    Paper.open_access_pdf_url = "http://repository.example/paper.pdf"
+    assert provider_pdf_url(Paper()) is None
+    Paper.open_access_pdf_url = "https://127.0.0.1/private.pdf"
+    assert provider_pdf_url(Paper()) is None
 
 
 def test_real_pdf_audit_freezes_files_and_preserves_gold(tmp_path):
@@ -26,7 +37,8 @@ def test_real_pdf_audit_freezes_files_and_preserves_gold(tmp_path):
         if span.extraction_status.value == "verified":
             snapshot = next(s for s in enriched.source_snapshots if s.snapshot_id == span.snapshot_id)
             from pathlib import Path
-            assert sha256(Path(snapshot.response_path).read_bytes()).hexdigest() == span.document_version
+            from src.run_paths import resolve_run_file
+            assert sha256(resolve_run_file(tmp_path / "audit", snapshot.response_path).read_bytes()).hexdigest() == span.document_version
     assert any(a.kind.value == "resolve_conflict" for a in enriched.next_actions)
 
 
@@ -36,10 +48,11 @@ def test_missing_pdf_does_not_create_verified_span(tmp_path):
     assert all(s.extraction_status.value != "verified" for s in enriched.evidence_spans)
     assert all(s.snapshot_id is None for s in enriched.evidence_spans)
     assert any(a.kind.value == "acquire_fulltext" for a in enriched.next_actions)
+    assert all("fulltext_not_available" not in a.reason for a in enriched.next_actions)
 
 
 def test_conflict_cannot_be_hidden_by_omitting_citation():
-    payload = {"claims": [{"claim_id": "c", "status": "supported"}], "evidence": [
+    payload = {"claims": [{"claim_id": "c", "status": "supported", "text": "Stored fact"}], "evidence": [
         {"evidence_id": "yes", "claim_id": "c", "verdict": "supports", "extraction_status": "verified", "locator": {"page": 1}},
         {"evidence_id": "no", "claim_id": "c", "verdict": "contradicts", "extraction_status": "verified", "locator": {"page": 2}},
     ]}
@@ -60,7 +73,7 @@ def test_overview_rejects_invented_abstract_and_other_run_paper():
 
 
 def test_bad_page_match_blocks_verified_prose():
-    payload = {"claims": [{"claim_id": "c", "status": "supported"}], "evidence": [
+    payload = {"claims": [{"claim_id": "c", "status": "supported", "text": "Stored fact"}], "evidence": [
         {"evidence_id": "e", "claim_id": "c", "verdict": "supports", "extraction_status": "verified", "locator": {"page": 1}},
     ], "evidence_spans": [{"evidence_id": "e", "extraction_status": "unverified"}]}
     assert not audit_answer_statements(payload, [{"text": "fact", "claim_id": "c", "evidence_ids": ["e"], "certainty": "verified"}])["ok"]
@@ -98,7 +111,7 @@ def test_model_receives_audit_feedback_before_retry(monkeypatch):
         return Response()
     monkeypatch.setattr(conversation, "urlopen", request)
     monkeypatch.setattr(conversation.time, "sleep", lambda *_: None)
-    payload = {"claims": [{"claim_id": "c", "status": "supported"}], "evidence": [
+    payload = {"claims": [{"claim_id": "c", "status": "supported", "text": "Stored fact"}], "evidence": [
         {"evidence_id": "e", "claim_id": "c", "verdict": "supports", "extraction_status": "verified", "locator": {"page": 1}}
     ]}
     result = conversation._llm_direct_answer(payload, "test", conversation.Intent("follow_up", 1, "test", False), replace(load_settings(), llm_api_key="test"))
@@ -123,12 +136,15 @@ def test_live_report_excludes_inherited_gold(tmp_path):
 
 
 def test_fulltext_get_serves_pdf_but_rejects_outside_run(tmp_path, monkeypatch):
+    from datetime import date
     import json
     import threading
     from urllib.request import urlopen
     from urllib.error import HTTPError
     import pytest
     from src.io_utils import write_json
+    from src.pipeline import snapshot_dataset
+    from src.schema import Dataset, PaperCard
     from src.ui.server import make_server
     run = tmp_path / "audit-test"
     run.mkdir()
@@ -136,6 +152,15 @@ def test_fulltext_get_serves_pdf_but_rejects_outside_run(tmp_path, monkeypatch):
     pdf.write_bytes(b"%PDF-1.7 test")
     outside = tmp_path / "private.txt"
     outside.write_text("private")
+    # Original documents are served only for papers in a valid research scope.
+    # Both IDs are visible so p2 still exercises outside-run path rejection.
+    papers = [PaperCard(paper_id=pid, title="Source " + pid, source="test",
+                        retrieved_at=date(2026, 1, 1), dedup_key=pid,
+                        url="https://example.test/" + pid, decision="include", reason="Scope fixture")
+              for pid in ["p1", "p2"]]
+    snapshot_dataset(Dataset(papers=papers, paper_cards=[p.model_copy(deep=True) for p in papers]), run / "output")
+    write_json(run / "run_manifest.json", {"run_id": "audit-test", "offline": True,
+                                           "status": "completed", "question": "Inspect original sources"})
     write_json(run / "output" / "fulltext_audit.json", {"documents": [
         {"paper_id": "p1", "response_path": str(pdf)},
         {"paper_id": "p2", "response_path": str(outside)},

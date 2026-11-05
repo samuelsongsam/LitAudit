@@ -1,10 +1,19 @@
+import json
 from pathlib import Path
 
 from src.config import ROOT, load_settings
 from src.http_fetch import FetchResult
 from src.io_utils import load_dataset
 from src.live_ingest import ingest_live
-from src.retrieve import build_query_plan, expand_question, to_arxiv_query, to_provider_query
+from src.retrieve import (
+    LiveHit,
+    build_query_plan,
+    expand_question,
+    merge_duplicate_hits,
+    parse_openalex,
+    to_arxiv_query,
+    to_provider_query,
+)
 from src.pipeline import run_pipeline
 from src.retrieve import parse_arxiv, retrieval_status
 from src.schema import PaperDecision, dataset_stats
@@ -96,11 +105,69 @@ def test_parse_arxiv_cache_finds_paperqa():
     assert any("PaperQA" in hit.title and hit.dedup_key == "arxiv:2312.07559" for hit in hits)
 
 
+def test_provider_parsers_keep_fulltext_and_discovery_metadata():
+    openalex = b'''{"meta":{"count":1},"results":[{"id":"https://openalex.org/W1","display_name":"A Study","doi":"https://doi.org/10.1/example","publication_year":2025,"primary_location":{"landing_page_url":"https://doi.org/10.1/example","source":{"display_name":"Journal"}},"best_oa_location":{"pdf_url":"https://repository.example/paper.pdf"},"cited_by_count":9,"referenced_works":["W2","W3"],"topics":[{"display_name":"Information Retrieval"}],"type":"article"}]}'''
+    oa_hits, _ = parse_openalex(openalex)
+    assert oa_hits[0].open_access_pdf_url == "https://repository.example/paper.pdf"
+    assert oa_hits[0].citation_count == 9
+    assert oa_hits[0].reference_count == 2
+    assert oa_hits[0].fields_of_study == ["Information Retrieval"]
+
+
+def test_openalex_ignores_arxiv_like_numbers_in_other_identifiers():
+    first_doi = "10.5694/j.1326-5377.1987.tb133407.x"
+    second_doi = "10.22541/au.159986926.67557766"
+    works = [
+        {"title": "Published paper", "doi": first_doi, "primary_location": {
+            "landing_page_url": f"https://doi.org/{first_doi}"}},
+        {"title": "Other preprint server", "ids": {"doi": second_doi, "pmid": "https://example.com/1706.03762"}},
+        {"title": "Actual arXiv DOI", "ids": {"doi": "https://doi.org/10.48550/ARXIV.1706.03762"}},
+        {"title": "Actual arXiv ID", "ids": {"arxiv": "cs/0107030v2"}},
+        {"title": "Actual arXiv landing page", "primary_location": {
+            "landing_page_url": "https://arxiv.org/abs/2601.12345v1"}},
+    ]
+    hits, _ = parse_openalex(json.dumps({"results": works}).encode())
+    assert [hit.dedup_key for hit in hits] == [
+        f"doi:{first_doi}", f"doi:{second_doi}", "arxiv:1706.03762", "arxiv:cs/0107030", "arxiv:2601.12345",
+    ]
+
+
+def test_openalex_finds_pdf_in_alternate_open_location():
+    best_landing = {"is_oa": True, "landing_page_url": "https://repository.example/paper"}
+    closed_pdf = {"is_oa": False, "pdf_url": "https://publisher.example/paper.pdf"}
+    open_pdf = {"is_oa": True, "pdf_url": "https://repository.example/open.pdf"}
+    works = [
+        {"title": "Open copy found", "id": "https://openalex.org/W1", "primary_location": closed_pdf,
+         "best_oa_location": best_landing, "locations": [closed_pdf, open_pdf]},
+        {"title": "Closed paper", "id": "https://openalex.org/W2", "primary_location": closed_pdf,
+         "locations": [closed_pdf]},
+    ]
+    hits, _ = parse_openalex(json.dumps({"results": works}).encode())
+    assert [hit.open_access_pdf_url for hit in hits] == [open_pdf["pdf_url"], None]
+
+
+
+def test_duplicate_provider_hits_merge_richer_metadata():
+    common = dict(title="A Study", authors=[], year=2025, venue=None, doi_or_arxiv="10.1/example", url="https://doi.org/10.1/example", dedup_key="doi:10.1/example")
+    first = LiveHit(source="openalex", abstract=None, citation_count=9, fields_of_study=["Retrieval"], **common)
+    second = LiveHit(source="semantic_scholar", abstract="A longer abstract.", open_access_pdf_url="https://publisher.example/paper.pdf", citation_count=11, tldr="Summary", **common)
+    merged = merge_duplicate_hits([first, second])
+    assert len(merged) == 1
+    assert merged[0].abstract == "A longer abstract."
+    assert merged[0].open_access_pdf_url == "https://publisher.example/paper.pdf"
+    assert merged[0].citation_count == 11
+    assert merged[0].fields_of_study == ["Retrieval"]
+
+
 def test_live_ingest_merges_new_paper_and_records_429(tmp_path: Path):
+    openalex_calls = 0
+
     def fake_fetch(url: str, **_: object) -> FetchResult:
-        if "semanticscholar" in url:
-            return FetchResult(url=url, status=429, body=b'{"message":"Too Many Requests"}')
+        nonlocal openalex_calls
         if "openalex" in url:
+            openalex_calls += 1
+            if openalex_calls == 1:
+                return FetchResult(url=url, status=429, headers={"Retry-After": "60"})
             return FetchResult(url=url, status=200, body=b'{"meta":{"count":0},"results":[]}')
         return FetchResult(url=url, status=200, body=MINI_XML.encode("utf-8"))
 
@@ -161,6 +228,14 @@ def test_custom_topic_does_not_add_default_rag_query():
     openalex = next(spec for spec in specs if spec.source == "openalex")
     assert "reason" in arxiv.query or "rationality" in arxiv.query
     assert "freedom" in openalex.query or "reason" in openalex.query
+
+
+def test_recursive_self_improvement_query_expands_rsi_in_context():
+    question = "RSI（递归自我改进）还有哪些可改进的地方，聚焦RSI的局限性与失败模式"
+    specs = build_query_plan(question, {"research_object": "RSI"})
+    assert specs[0].query == 'all:"recursive self-improvement"'
+    assert [spec.query for spec in specs if spec.source == "openalex"] == ["recursive self-improvement"]
+    assert build_query_plan("RSI")[0].query == "all:rsi"
 
 
 def test_gpu_topic_uses_broad_english_provider_queries():
@@ -260,3 +335,47 @@ def test_online_run_does_not_overwrite_phase2_real(tmp_path: Path, monkeypatch):
     assert result["run_id"].startswith("live_")
     assert result["offline"] is False
     assert not (tmp_path / "phase2-real").exists()
+
+
+def test_existing_hit_visible_across_run_modules(tmp_path, monkeypatch):
+    import re
+    from src.answer_audit import scoped_payload
+    from src.ui.payload import build_payload, build_audit_report, ask_payload
+    from src.conversation import build_chat_response, Intent, classify_intent
+    import src.live_ingest as live_module
+    xml = re.sub(r"  <entry>\s*<id>http://arxiv.org/abs/2601[\s\S]*?</entry>", "", MINI_XML)
+    def fetch(url, **kwargs):
+        body = b'{"meta":{"count":0},"results":[]}' if "openalex" in url else xml.encode()
+        return FetchResult(url=url, status=200, body=body)
+    original = live_module.ingest_live
+    monkeypatch.setattr(live_module, "ingest_live", lambda *a, **k: original(*a, **k, fetch=fetch))
+    settings = load_settings(runs_dir=tmp_path, offline=False)
+    result = run_pipeline(settings, question="PaperQA scientific literature")
+    assert result["live"]["added_paper_ids"] == []
+    assert result["live"]["matched_paper_ids"] == ["paper-001"]
+    payload = build_payload(tmp_path, result["run_id"])
+    assert [p["paper_id"] for p in scoped_payload(payload)["papers"]] == ["paper-001"]
+    assert payload["workspace"]["candidate_count"] == payload["eval"]["paper_count"] == 1
+    assert {n["paper_id"] for n in payload["map"]["nodes"]} == {"paper-001"}
+    assert payload["map"]["algorithm"] == "specter2_cosine_network"
+    assert ask_payload(tmp_path, result["run_id"], "SciMON")["papers"] == []
+    assert ask_payload(tmp_path, result["run_id"], "PaperQA")["papers"][0]["paper_id"] == "paper-001"
+    report, _ = build_audit_report(tmp_path, result["run_id"])
+    assert "PaperQA" in report
+    assert "SciMON" not in report
+    def route(message, visible, *args):
+        assert [p["paper_id"] for p in visible["papers"]] == ["paper-001"]
+        return {"action": "direct_answer"}
+    monkeypatch.setattr("src.conversation._llm_route", route)
+    assert classify_intent("PaperQA", payload).direct_answer
+    monkeypatch.setattr("src.conversation._llm_overview", lambda *a: ("overview", "llm"))
+    chat = build_chat_response(payload, "PaperQA", Intent("requery", 1, "test", True), settings)
+    assert [p["paper_id"] for p in chat["papers"]] == ["paper-001"]
+    assert chat["paper_selection"]["added_count"] == 0
+    assert chat["paper_selection"]["matched_count"] == 1
+    from src.pipeline import upgrade_audit
+    upgraded = upgrade_audit(settings, result["run_id"])
+    audit = build_payload(tmp_path, upgraded["run_id"])
+    assert audit["live"]["matched_paper_ids"] == ["paper-001"]
+    assert audit["eval"]["paper_count"] == 1
+    assert {d["paper_id"] for d in audit["fulltext_audit"]["documents"]} == {"paper-001"}

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from src.run_scope import visible_paper_ids
+
 from typing import Any
 
 
@@ -13,7 +15,7 @@ def scoped_payload(payload: dict[str, Any]) -> dict[str, Any]:
     live = payload.get("live")
     if payload.get("offline", True) or not live:
         return payload
-    ids = set(live.get("added_paper_ids") or [])
+    ids = visible_paper_ids(live)
     evidence = [e for e in payload.get("evidence", []) if e.get("paper_id") in ids]
     claim_ids = {e.get("claim_id") for e in evidence}
     claims = [c for c in payload.get("claims", []) if c.get("paper_id") in ids or c.get("claim_id") in claim_ids or c.get("text") == payload.get("question")]
@@ -86,11 +88,18 @@ def audit_answer_statements(payload: dict[str, Any], statements: object) -> dict
                 spans = {s.get("evidence_id"): s for s in payload["evidence_spans"]}
                 if not any(spans.get(row.get("evidence_id"), {}).get("extraction_status") == "verified" for row in grounding):
                     errors.append(f"{prefix}:verified_without_verified_span")
-        elif certainty == "uncertain" and claim.get("status") == "supported":
-            # Conservative wording is always safe; no error is needed.
-            pass
-
-        accepted.append(text)
+        # IDs validate provenance, not the meaning of arbitrary generated prose.
+        # Render the stored claim and a server-owned qualification instead.
+        claim_text = str(claim.get("text") or "").strip()
+        if not claim_text:
+            errors.append(f"{prefix}:empty_claim_text")
+        if certainty == "uncertain":
+            rendered = f"待核验论断 [{claim_id}]：\n「{claim_text}」"
+        elif certainty == "qualified":
+            rendered = f"有限支持 [{claim_id}]：\n「{claim_text}」"
+        else:
+            rendered = f"已有证据支持的论断 [{claim_id}]：\n「{claim_text}」"
+        accepted.append(rendered)
         citations.append({"statement": index, "claim_id": claim_id, "evidence_ids": evidence_ids, "certainty": certainty})
 
     return {
@@ -116,13 +125,27 @@ arbitrary model-generated paraphrase. Operational counts are rendered by UI.
         if not isinstance(item, dict):
             errors.append(f"statement[{i}]:not_object")
             continue
-        if item.get("certainty") == "abstract_only":
+        if item.get("certainty") == "fulltext_only":
+            passages = {p.get("passage_id"): p for p in payload.get("fulltext_index", {}).get("hits", [])}
+            passage = passages.get(item.get("passage_id"))
+            quote = item.get("quote")
+            if (not passage or passage.get("paper_id") not in papers or
+                    not isinstance(quote, str) or not quote.strip() or quote not in (passage.get("text") or "") or
+                    not isinstance(passage.get("page"), int) or passage["page"] < 1):
+                errors.append(f"statement[{i}]:invalid_fulltext_excerpt")
+                continue
+            paper = papers[passage["paper_id"]]
+            answers.append(f"正文线索 · {paper.get('title')} [{paper['paper_id']}] · 第 {passage['page']} 页\n"
+                           f"{quote}\n原文定位线索；可在全文工作区确认并加入人工证据。")
+            citations.append({"statement": i, "paper_id": passage["paper_id"],
+                              "passage_id": passage["passage_id"], "page": passage["page"], "certainty": "fulltext_only"})
+        elif item.get("certainty") == "abstract_only":
             paper = papers.get(item.get("paper_id"))
             quote = item.get("quote")
             if not paper or not isinstance(quote, str) or not quote.strip() or quote not in (paper.get("abstract") or ""):
                 errors.append(f"statement[{i}]:invalid_abstract_excerpt")
                 continue
-            answers.append(f"摘要级线索 · {paper.get('title')} [{paper['paper_id']}]\n{quote}\n尚未核验全文，不能据此形成确定结论。")
+            answers.append(f"摘要级线索 · {paper.get('title')} [{paper['paper_id']}]\n{quote}")
             citations.append({"statement": i, "paper_id": paper["paper_id"], "certainty": "abstract_only"})
         else:
             result = audit_answer_statements(payload, [item])

@@ -1,6 +1,6 @@
 [project]
 name = "litaudit"
-version = "0.1.0"
+version = "0.3.0"
 description = "可核验的文献调研智能体：筛选漏斗、研究地图、论断核验与反证据报告"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -8,10 +8,19 @@ dependencies = [
   "pydantic>=2.7",
   "python-dotenv>=1.0",
   "pypdf>=5.0",
+  "numpy>=1.24,<3",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+documents = ["PyMuPDF>=1.24,<2", "Pillow>=10", "pytesseract>=0.3.13"]
+map = [
+  "adapters>=1.0",
+  "networkx>=3.0",
+  "pyvis>=0.3",
+  "torch>=2.0",
+  "transformers>=4.40",
+]
 
 [project.scripts]
 litaudit = "src.cli:main"
@@ -22,3 +31,10 @@ testpaths = ["tests"]
 
 [tool.setuptools.packages.find]
 include = ["src*"]
+
+[tool.setuptools.package-data]
+"src.ui" = ["static/*.html", "static/*.js", "static/*.css", "static/*.svg"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
