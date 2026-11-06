@@ -7,7 +7,8 @@ from pathlib import Path
 
 from src.cache import FileCache
 from src.config import Settings
-from src.retrieve import LiveHit, expand_question, hit_keys, search_all, title_key
+from src.retrieve import LiveHit, SearchBundle, expand_question, hit_keys, search_all, title_key
+from src.research_query import validate_constraints, research_text, metadata_check
 from src.schema import (
     Claim,
     ClaimDecision,
@@ -26,7 +27,7 @@ from src.schema import (
     SourceSnapshot,
     validate_dataset,
 )
-from src.screen_rules import screen_title_abstract
+from src.screen_rules import screen_title_abstract, ScreenResult
 
 SCOPE_QUESTION = (
     "在自动科研文献综述或研究问答中，相比无外部检索的 LLM，"
@@ -147,13 +148,18 @@ def _maybe_user_claim(dataset: Dataset, question: str | None) -> tuple[list[Clai
     return [claim], [decision]
 
 
-def _audit_objects(dataset: Dataset, question: str, queries, retrieval_runs) -> tuple[list, list, list]:
+def _audit_objects(dataset: Dataset, question: str, queries, retrieval_runs, constraints: dict | None = None) -> tuple[list, list, list]:
+    conditions = validate_constraints(constraints)
     now = datetime.now(timezone.utc)
     question_id = next_numeric_id("rq", [item.question_id for item in dataset.research_questions])
     research_question = ResearchQuestion(
         question_id=question_id,
         text=question,
-        domain_boundary="由本轮对话范围确认结果限定；未提供的结构化边界保持空值。",
+        population_or_object=conditions.get("research_object"),
+        method_or_phenomenon=conditions.get("method"),
+        start_year=conditions.get("year_from"), end_year=conditions.get("year_to"),
+        domain_boundary=("文献类型：" + conditions["publication_type"] if conditions.get("publication_type") else
+                         "由本轮对话范围确认结果限定；未提供的结构化边界保持空值。"),
         scope_version="v0.2",
     )
     query_plan_id = next_numeric_id("qp", [item.query_plan_id for item in dataset.query_plans])
@@ -212,18 +218,54 @@ def ingest_live(
     cache: FileCache,
     run_dir: Path,
     fetch=None,
+    constraints: dict | None = None,
+    search_bundle: SearchBundle | None = None,
+    seed_hits: list[LiveHit] | None = None,
+    search_supplement: dict | None = None,
 ) -> tuple[Dataset, dict]:
+    conditions = validate_constraints(constraints)
     kwargs = {
         "cache_dir": cache.cache_dir,
         "mailto": settings.openalex_mailto,
-        "semantic_scholar_api_key": settings.semantic_scholar_api_key,
+        "openalex_api_key": settings.openalex_api_key,
         "limit_per_source": 15,
         "sleep_s": 0.35,
     }
     if fetch is not None:
         kwargs["fetch"] = fetch
         kwargs["sleep_s"] = 0.0
-    bundle = search_all(question, **kwargs)
+    if conditions:
+        kwargs["constraints"] = conditions
+    if search_supplement:
+        kwargs["supplement"] = search_supplement
+    bundle = search_bundle if search_bundle is not None else search_all(question, **kwargs)
+    if not isinstance(bundle, SearchBundle):
+        raise ValueError("检索结果必须是SearchBundle")
+    occupied_queries = {q.query_id for q in dataset.queries}
+    remapped_queries = {}
+    fresh_queries = []
+    for query in bundle.queries:
+        candidate, suffix = query.query_id, 1
+        while candidate in occupied_queries:
+            suffix += 1
+            candidate = f"{query.query_id}-r{suffix}"
+        occupied_queries.add(candidate)
+        remapped_queries[query.query_id] = candidate
+        fresh_queries.append(query.model_copy(update={"query_id": candidate}))
+    bundle.queries = fresh_queries
+    bundle.runs = [r.model_copy(update={"query_id": remapped_queries.get(r.query_id, r.query_id)}) for r in bundle.runs]
+    for coverage in bundle.coverage.values():
+        for batch in coverage.get("batches", []):
+            for key in ("query_id", "base_query_id"):
+                if key in batch:
+                    batch[key] = remapped_queries.get(batch[key], batch[key])
+    if not conditions:
+        conditions = validate_constraints(bundle.constraints)
+    if seed_hits:
+        from src.retrieve import merge_duplicate_hits
+        bundle.hits = merge_duplicate_hits([*bundle.hits, *seed_hits])
+    # The same post-filter is applied to externally expanded citation bundles.
+    bundle.hits = [h for h in bundle.hits if metadata_check(h, conditions)["status"] != "mismatch"]
     unique_hits, skipped = _unique_hits(bundle.hits, dataset)
     hit_key_set = set().union(*(hit_keys(hit) for hit in bundle.hits)) if bundle.hits else set()
     matched_existing = [p for p in dataset.papers if paper_keys(p) & hit_key_set and not p.is_fixture]
@@ -231,12 +273,20 @@ def ingest_live(
         paper.paper_id: next((hit for hit in bundle.hits if paper_keys(paper) & hit_keys(hit)), None)
         for paper in matched_existing
     }
-    research_query = expand_question(question or "") if question else None
+    research_query = expand_question(research_text(question, conditions)) if question else None
+    def screen(hit):
+        result = screen_title_abstract(hit.title, hit.abstract, hit.year, research_query=research_query)
+        check = metadata_check(hit, conditions)
+        hit.constraint_check = check
+        if check["status"] == "unknown" and result.decision == PaperDecision.include:
+            return ScreenResult(PaperDecision.pending, "constraint_metadata_unknown",
+                                result.reason + " " + "；".join(check["notes"]))
+        return result
     screened: list[tuple[LiveHit, object]] = []
     for hit in unique_hits:
-        result = screen_title_abstract(hit.title, hit.abstract, hit.year, research_query=research_query)
+        result = screen(hit)
         screened.append((hit, result))
-    screened.sort(key=lambda item: (RANK[item[1].decision], item[0].title.lower()))
+    screened.sort(key=lambda item: (RANK[item[1].decision], -(item[0].ranking_score or 0.0), item[0].title.lower()))
     screened = screened[: settings.live_limit]
 
     paper_ids = [paper.paper_id for paper in dataset.papers]
@@ -248,8 +298,8 @@ def ingest_live(
     # Re-screen matched existing papers for this question without modifying data/.
     existing_updates = {}
     for paper in matched_existing:
-        result = screen_title_abstract(paper.title, paper.abstract, paper.year, research_query=research_query)
         hit = matched_hits[paper.paper_id]
+        result = screen(hit) if hit else screen_title_abstract(paper.title, paper.abstract, paper.year, research_query=research_query)
         existing_updates[paper.paper_id] = {
             "decision": result.decision,
             "reason": result.reason,
@@ -316,7 +366,7 @@ def ingest_live(
 
     new_claims, new_decisions = _maybe_user_claim(dataset, question)
     audit_questions, audit_plans, source_snapshots = _audit_objects(
-        dataset, question or SCOPE_QUESTION, bundle.queries, new_retrieval_runs
+        dataset, question or SCOPE_QUESTION, bundle.queries, new_retrieval_runs, conditions
     )
     merged = dataset.model_copy(
         update={
@@ -337,6 +387,19 @@ def ingest_live(
     write_json(run_dir / "output" / "citation_graph.json", bundle.citation_graph)
     report = {
         "question": question,
+        "constraints": conditions,
+        "coverage": bundle.coverage,
+        "search_budget": bundle.search_budget,
+        "filter_report": bundle.filter_report,
+        "query_plan": [{"query_id": q.query_id, "source": q.source, "query": q.query,
+                         "purpose": q.purpose} for q in bundle.queries],
+        "paper_provenance": {
+            paper.paper_id: {"sources": hit.matched_sources or [hit.source], "records": hit.source_records,
+                             "constraint_check": hit.constraint_check}
+            for paper, hit in [*[(p, matched_hits.get(p.paper_id)) for p in matched_existing],
+                               *[(p, next((h for h, _ in screened if paper_keys(p) & hit_keys(h)), None)) for p in new_papers]]
+            if hit is not None
+        },
         "added_paper_ids": [paper.paper_id for paper in new_papers],
         "matched_paper_ids": [paper.paper_id for paper in matched_existing] + [paper.paper_id for paper in new_papers],
         "reused_paper_ids": [paper.paper_id for paper in matched_existing],

@@ -115,5 +115,9 @@ def test_generated_assertion_cannot_bypass_binding(certainty, status):
     assert "99%" not in result["answer"]
     assert "适用于所有任务" not in result["answer"]
     assert payload["claims"][0]["text"] in result["answer"]
+    assert result["citations"][0]["certainty"] == certainty
+    assert result["citations"][0]["evidence_ids"] == ids
+    assert all(phrase not in result["answer"] for phrase in
+               ["不作确定结论", "不代表", "不应扩展", "还需要补充"])
     if certainty == "uncertain":
-        assert "不作确定结论" in result["answer"]
+        assert "待核验论断" in result["answer"]

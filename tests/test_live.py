@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from src.config import ROOT, load_settings
@@ -10,7 +11,6 @@ from src.retrieve import (
     expand_question,
     merge_duplicate_hits,
     parse_openalex,
-    parse_semantic_scholar,
     to_arxiv_query,
     to_provider_query,
 )
@@ -113,12 +113,38 @@ def test_provider_parsers_keep_fulltext_and_discovery_metadata():
     assert oa_hits[0].reference_count == 2
     assert oa_hits[0].fields_of_study == ["Information Retrieval"]
 
-    semantic = b'''{"total":1,"data":[{"paperId":"S1","title":"A Study","url":"https://www.semanticscholar.org/paper/S1","externalIds":{"DOI":"10.1/example"},"openAccessPdf":{"url":"https://publisher.example/paper.pdf"},"citationCount":11,"referenceCount":3,"fieldsOfStudy":["Computer Science"],"publicationTypes":["JournalArticle"],"tldr":{"text":"A concise result."}}]}'''
-    s2_hits, _ = parse_semantic_scholar(semantic)
-    assert s2_hits[0].source_id == "S1"
-    assert s2_hits[0].semantic_scholar_id == "S1"
-    assert s2_hits[0].open_access_pdf_url == "https://publisher.example/paper.pdf"
-    assert s2_hits[0].tldr == "A concise result."
+
+def test_openalex_ignores_arxiv_like_numbers_in_other_identifiers():
+    first_doi = "10.5694/j.1326-5377.1987.tb133407.x"
+    second_doi = "10.22541/au.159986926.67557766"
+    works = [
+        {"title": "Published paper", "doi": first_doi, "primary_location": {
+            "landing_page_url": f"https://doi.org/{first_doi}"}},
+        {"title": "Other preprint server", "ids": {"doi": second_doi, "pmid": "https://example.com/1706.03762"}},
+        {"title": "Actual arXiv DOI", "ids": {"doi": "https://doi.org/10.48550/ARXIV.1706.03762"}},
+        {"title": "Actual arXiv ID", "ids": {"arxiv": "cs/0107030v2"}},
+        {"title": "Actual arXiv landing page", "primary_location": {
+            "landing_page_url": "https://arxiv.org/abs/2601.12345v1"}},
+    ]
+    hits, _ = parse_openalex(json.dumps({"results": works}).encode())
+    assert [hit.dedup_key for hit in hits] == [
+        f"doi:{first_doi}", f"doi:{second_doi}", "arxiv:1706.03762", "arxiv:cs/0107030", "arxiv:2601.12345",
+    ]
+
+
+def test_openalex_finds_pdf_in_alternate_open_location():
+    best_landing = {"is_oa": True, "landing_page_url": "https://repository.example/paper"}
+    closed_pdf = {"is_oa": False, "pdf_url": "https://publisher.example/paper.pdf"}
+    open_pdf = {"is_oa": True, "pdf_url": "https://repository.example/open.pdf"}
+    works = [
+        {"title": "Open copy found", "id": "https://openalex.org/W1", "primary_location": closed_pdf,
+         "best_oa_location": best_landing, "locations": [closed_pdf, open_pdf]},
+        {"title": "Closed paper", "id": "https://openalex.org/W2", "primary_location": closed_pdf,
+         "locations": [closed_pdf]},
+    ]
+    hits, _ = parse_openalex(json.dumps({"results": works}).encode())
+    assert [hit.open_access_pdf_url for hit in hits] == [open_pdf["pdf_url"], None]
+
 
 
 def test_duplicate_provider_hits_merge_richer_metadata():
@@ -134,10 +160,14 @@ def test_duplicate_provider_hits_merge_richer_metadata():
 
 
 def test_live_ingest_merges_new_paper_and_records_429(tmp_path: Path):
+    openalex_calls = 0
+
     def fake_fetch(url: str, **_: object) -> FetchResult:
-        if "semanticscholar" in url:
-            return FetchResult(url=url, status=429, body=b'{"message":"Too Many Requests"}')
+        nonlocal openalex_calls
         if "openalex" in url:
+            openalex_calls += 1
+            if openalex_calls == 1:
+                return FetchResult(url=url, status=429, headers={"Retry-After": "60"})
             return FetchResult(url=url, status=200, body=b'{"meta":{"count":0},"results":[]}')
         return FetchResult(url=url, status=200, body=MINI_XML.encode("utf-8"))
 
@@ -198,6 +228,14 @@ def test_custom_topic_does_not_add_default_rag_query():
     openalex = next(spec for spec in specs if spec.source == "openalex")
     assert "reason" in arxiv.query or "rationality" in arxiv.query
     assert "freedom" in openalex.query or "reason" in openalex.query
+
+
+def test_recursive_self_improvement_query_expands_rsi_in_context():
+    question = "RSI（递归自我改进）还有哪些可改进的地方，聚焦RSI的局限性与失败模式"
+    specs = build_query_plan(question, {"research_object": "RSI"})
+    assert specs[0].query == 'all:"recursive self-improvement"'
+    assert [spec.query for spec in specs if spec.source == "openalex"] == ["recursive self-improvement"]
+    assert build_query_plan("RSI")[0].query == "all:rsi"
 
 
 def test_gpu_topic_uses_broad_english_provider_queries():
@@ -307,7 +345,7 @@ def test_existing_hit_visible_across_run_modules(tmp_path, monkeypatch):
     import src.live_ingest as live_module
     xml = re.sub(r"  <entry>\s*<id>http://arxiv.org/abs/2601[\s\S]*?</entry>", "", MINI_XML)
     def fetch(url, **kwargs):
-        body = b'{"meta":{"count":0},"results":[]}' if "openalex" in url else b'{"total":0,"data":[]}' if "semanticscholar" in url else xml.encode()
+        body = b'{"meta":{"count":0},"results":[]}' if "openalex" in url else xml.encode()
         return FetchResult(url=url, status=200, body=body)
     original = live_module.ingest_live
     monkeypatch.setattr(live_module, "ingest_live", lambda *a, **k: original(*a, **k, fetch=fetch))

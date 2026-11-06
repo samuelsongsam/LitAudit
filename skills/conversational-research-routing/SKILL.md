@@ -22,27 +22,21 @@ Return a structured intent with `kind`, `confidence`, `reason`, `needs_retrieval
 
 ## LLM-first understanding
 
-For every new topic or expanded keyword, send the user's wording and the relevant conversation context to the configured LLM before choosing an action. The LLM must decide among:
+Send new topics and expanded keywords to the configured LLM before choosing an action. An explicit request to proceed with the original wording goes straight to retrieval. The LLM must decide among:
 
 - `direct_answer`: the current run already has papers/claims/evidence that can answer the follow-up; answer through the LLM and do not search. Never use this when the run is empty, this is a new conversation, or `available_papers` is empty.
-- `clarify`: the topic needs scope decisions; return exactly three questions, each with exactly three topic-specific options.
+- `clarify`: a consequential ambiguity about the subject or research focus blocks a useful query. Return one question. Supply two or three distinct answers only when they answer that question directly. Use an empty option list for a free-text answer.
 - `retrieve`: the brief is sufficiently specified, or the user asked a research topic with no loaded literature; return an expanded query that includes the original topic and the user's choices. Do not tell the user to retrieve first — retrieve.
 
 The local Skill supplies the routing rules and output contract; it must not replace LLM-generated answers or questions with a fixed topic list. If the LLM is unavailable, return an AI-service error with no answer, questions, options, or retrieval. Never search merely because the LLM call failed.
 
-## Clarify before retrieval
+## Scope clarification
 
-Do not immediately search after a short, broad, or ambiguous user message. First ask focused follow-up questions to establish enough of the research brief:
+Retrieve when the wording supports a useful query, even when it is short or leaves dates and publication preferences open. Ask one focused question when the answer would materially change the search, such as which work an ambiguous name refers to. Options must resolve that specific ambiguity. Leave options empty when no distinct choices can be stated without guessing.
 
-- research object or population/domain;
-- method, intervention, phenomenon, or comparison;
-- task and intended output;
-- time range, language, source databases, or inclusion boundaries;
-- whether the user wants a broad survey, a branch investigation, or a specific paper.
+Set `needs_clarification=true` and `needs_retrieval=false` for that turn. The user can answer the question or start with the original wording. On the next turn retrieve using the original topic and any supplied answer. A malformed clarification should continue using the available query without generic questions or option padding.
 
-Set `needs_clarification=true` and `needs_retrieval=false` when these details are missing. A direct request such as “请检索……” may proceed only when its topic is still concrete enough to form a defensible query. Do not treat a generic “帮我看看”“找些论文” or a one-line topic as sufficient. Once the user answers the clarification, combine the accumulated details into an expanded query and then retrieve.
-
-The clarification response must contain only the LLM-generated questions and options. Do not show a total overview, related-paper list, research map, fixed example questions, fabricated papers, results, or citations during clarification.
+The clarification response presents the question and any valid options. It contains no literature results before retrieval.
 
 All generated overviews must distinguish abstract-level screening from page-verified evidence. Preserve pending claims and retrieval failures. Never convert citation proximity, keyword overlap, or a paper being included into proof of a claim.
 

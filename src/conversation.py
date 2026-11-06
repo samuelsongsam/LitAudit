@@ -8,6 +8,7 @@ import re
 import tempfile
 import threading
 import time
+from uuid import uuid4
 from functools import wraps
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -71,53 +72,29 @@ def _parse_llm_json(content):
 
 
 def _coerce_clarification_questions(raw) -> list[dict] | None:
-    """Accept nearby LLM shapes and normalize to exactly 3 questions × 3 options."""
-    if not isinstance(raw, list):
+    """Accept one material question and only choices supplied for it."""
+    if not isinstance(raw, list) or len(raw) != 1 or not isinstance(raw[0], dict):
         return None
-    normalized: list[dict] = []
-    for item in raw:
-        if isinstance(item, str) and item.strip():
-            normalized.append({"question": item.strip(), "options": ["综述与经典论文", "方法原理与框架", "实验对比与评测"]})
-            continue
-        if not isinstance(item, dict):
-            continue
-        question = item.get("question") or item.get("q") or item.get("prompt") or item.get("title")
-        if not isinstance(question, str) or not question.strip():
-            continue
-        options = item.get("options") or item.get("choices") or item.get("answers") or []
-        if isinstance(options, str):
-            options = [part.strip() for part in re.split(r"[|/；;、]", options) if part.strip()]
-        if not isinstance(options, list):
-            continue
-        cleaned = []
-        for option in options:
-            if isinstance(option, str) and option.strip():
-                cleaned.append(option.strip())
-            elif isinstance(option, dict):
-                label = option.get("label") or option.get("text") or option.get("option")
-                if isinstance(label, str) and label.strip():
-                    cleaned.append(label.strip())
-        # Deduplicate while preserving order.
-        seen: set[str] = set()
-        unique = []
-        for option in cleaned:
-            if option in seen:
-                continue
-            seen.add(option)
-            unique.append(option)
-        if len(unique) < 3:
-            for filler in ("综述与经典论文", "方法原理与框架", "实验对比与评测", "应用场景", "风险与局限"):
-                if filler not in seen:
-                    unique.append(filler)
-                    seen.add(filler)
-                if len(unique) >= 3:
-                    break
-        if len(unique) < 3:
-            continue
-        normalized.append({"question": question.strip(), "options": unique[:3]})
-        if len(normalized) == 3:
-            return normalized
-    return normalized if len(normalized) == 3 else None
+    item = raw[0]
+    dimension = item.get("dimension")
+    question = item.get("question")
+    options = item.get("options")
+    if dimension not in ("entity", "focus") or not isinstance(question, str) or not 0 < len(question.strip()) <= 200:
+        return None
+    if re.search(r"时间范围|年份范围|时间跨度|研究产出|输出(?:类型|格式)|文献类型|\b(?:time range|date range|output format)\b", question, re.I):
+        return None
+    if not isinstance(options, list) or len(options) not in (0, 2, 3):
+        return None
+    generic_options = {"综述与经典论文", "方法原理与框架", "实验对比与评测", "应用场景", "风险与局限", "自定义", "其他"}
+    cleaned: list[str] = []
+    for option in options:
+        if not isinstance(option, str) or not 0 < len(option.strip()) <= 120:
+            return None
+        option = option.strip()
+        if option in generic_options or option.casefold() in {previous.casefold() for previous in cleaned}:
+            return None
+        cleaned.append(option)
+    return [{"question": question.strip(), "options": cleaned}]
 
 
 def _normalize_llm_route(result, fallback_query: str = "") -> tuple[dict | None, str | None]:
@@ -127,7 +104,7 @@ def _normalize_llm_route(result, fallback_query: str = "") -> tuple[dict | None,
         questions = _coerce_clarification_questions(result.get("questions") or result.get("clarification_questions"))
         if questions is None:
             # Prefer continuing with retrieval over failing the whole turn.
-            query = _coerce_expanded_query(result.get("expanded_query")) or (fallback_query or "").strip()
+            query = (fallback_query or "").strip() or _coerce_expanded_query(result.get("expanded_query"))
             if query:
                 result["action"] = "retrieve"
                 result["expanded_query"] = query
@@ -159,8 +136,18 @@ def _llm_route(message: str, payload: dict | None, settings, clarification_conte
         "temperature": 0.1,
         "response_format": {"type": "json_object"},
         "messages": [
-            {"role": "system", "content": "你是 LitAudit 的研究请求路由器，遵守 skills/conversational-research-routing/SKILL.md。只返回 JSON。必须返回 action 和 kind；action 只能是 direct_answer、clarify、retrieve，kind 只能是 follow_up、paper_explore、branch_deepen、requery、new_topic。追问当前结果且现有 papers/claims/evidence 足够时才用 direct_answer。当前 run 为空、新建对话、或 available_papers 为空时，禁止 direct_answer，研究问题必须 retrieve 或 clarify，不得回答“没有数据请先检索”。询问某篇论文时用 paper_explore 并返回 target_paper_id；沿某分支补充文献时用 retrieve+branch_deepen 并返回 branch；明确重新检索时用 retrieve+requery；新主题或无关主题用 retrieve+new_topic。clarify 时必须返回 questions 数组，恰好 3 题，每题恰好 3 个针对当前主题的 options。retrieve 时必须返回包含原始主题、选择和范围的 expanded_query。不得编造论文。"},
-            {"role": "user", "content": json.dumps({"message": message, "original_topic": clarification_topic, "previous_choices": clarification_context or [], "current_question": (payload or {}).get("question"), "available_papers": [{"paper_id": p.get("paper_id"), "title": p.get("title")} for p in (payload or {}).get("papers", [])], "available_claims": [{"claim_id": c.get("claim_id"), "text": c.get("text"), "status": c.get("status")} for c in (payload or {}).get("claims", [])]}, ensure_ascii=False)},
+            {"role": "system", "content": (
+                "你是 LitAudit 的研究请求路由器，遵守 skills/conversational-research-routing/SKILL.md。只返回 JSON。"
+                "必须返回 action 和 kind；action 只能是 direct_answer、clarify、retrieve，kind 只能是 follow_up、paper_explore、branch_deepen、requery、new_topic。"
+                "追问当前结果且现有 papers/claims/evidence 足够时才用 direct_answer。当前 run 为空、新建对话、或 available_papers 为空时，禁止 direct_answer。"
+                "询问某篇论文时用 paper_explore 并返回 target_paper_id；沿某分支补充文献时用 retrieve+branch_deepen 并返回 branch；明确重新检索时用 retrieve+requery；新主题或无关主题用 retrieve+new_topic。"
+                "只要原问题可以开展初步检索，就直接 retrieve。仅在同名对象无法确定或研究焦点缺失，且不同答案会显著改变检索时，才 clarify。"
+                "澄清只问一个能解除该歧义的问题，不把时间范围、文献类型或报告偏好设为检索前提，也不问用户已说明的信息。"
+                'clarify 时返回一个 questions 数组，示例结构为 [{"dimension":"entity","question":"一个针对当前主题的问题","options":[]}]。'
+                "dimension 必须为 entity 或 focus。只有上下文支持两到三个具体、可区分且能直接回答这个问题的选项时，才填入 options；否则保留空数组，让用户填写。"
+                "不得为补足选项而编造实体、题名或选项。retrieve 时返回保留原始主题和已有范围的 expanded_query。不得编造论文。"
+            )},
+            {"role": "user", "content": json.dumps({"message": message, "recent_discussion": (payload or {}).get("conversation_context", [])[-6:], "original_topic": clarification_topic, "previous_choices": clarification_context or [], "current_question": (payload or {}).get("question"), "available_papers": [{"paper_id": p.get("paper_id"), "title": p.get("title")} for p in (payload or {}).get("papers", [])], "available_claims": [{"claim_id": c.get("claim_id"), "text": c.get("text"), "status": c.get("status")} for c in (payload or {}).get("claims", [])]}, ensure_ascii=False)},
         ],
     }
     last_error = "llm_request_failed:UnknownError"
@@ -168,8 +155,11 @@ def _llm_route(message: str, payload: dict | None, settings, clarification_conte
     for attempt in range(2):
         request = Request(settings.llm_base_url.rstrip("/") + "/chat/completions", data=payload_bytes, headers={"Content-Type": "application/json", "Authorization": f"Bearer {settings.llm_api_key}"}, method="POST")
         try:
+            from src.tasks import check_cancelled
+            check_cancelled()
             with urlopen(request, timeout=45) as response:
                 data = json.loads(response.read().decode("utf-8"))
+                check_cancelled()
             content = data["choices"][0]["message"]["content"]
             result = _parse_llm_json(content)
             normalized, validation_error = _normalize_llm_route(result, message)
@@ -204,6 +194,19 @@ def _payload_has_research_data(payload: dict | None) -> bool:
 def classify_intent(message: str, payload: dict | None = None, settings=None, clarification_context: list[str] | None = None, clarification_topic: str | None = None) -> Intent:
     text = (message or "").strip()
     payload = scoped_payload(payload) if payload is not None else None
+    if isinstance(clarification_topic, str) and clarification_topic.strip() and isinstance(clarification_context, list):
+        choices = [choice.strip() for choice in clarification_context[:3]
+                   if isinstance(choice, str) and 0 < len(choice.strip()) <= 200]
+        if choices:
+            query = " ".join(dict.fromkeys([clarification_topic.strip(), *choices]))
+            return Intent("new_topic", 1.0, "按用户补充的研究范围检索", True,
+                          expanded_query=query, route_source="user_clarification")
+    if (_payload_has_research_data(payload)
+            and re.search(r'(?:根据|基于|结合).{0,12}(?:以上|上述|当前|这些|刚才).{0,12}(?:结果|论文|文献|材料)', text)
+            and re.search(r'总结|汇报|概述|归纳|综述', text)
+            and not re.search(r'重新检索|补充检索|搜索更多', text)):
+        return Intent('follow_up', 1.0, '用户要求总结当前材料', False,
+                      direct_answer=True, route_source='user_material_summary')
     llm_route = _llm_route(text, payload, settings, clarification_context, clarification_topic)
     action = llm_route["action"]
     if action == "error":
@@ -227,13 +230,21 @@ def classify_intent(message: str, payload: dict | None = None, settings=None, cl
     return Intent(llm_route.get("kind") or ("requery" if payload else "new_topic"), 0.95, "LLM 判断需要调用文献检索", True, target_paper_id=llm_route.get("target_paper_id"), branch=llm_route.get("branch"), expanded_query=llm_route.get("expanded_query"), route_source="llm")
 
 
-def _clarification_overview(message: str, intent: Intent) -> str:
-    return ""
-
-
 def _llm_direct_answer(payload: dict, message: str, intent: Intent, settings) -> tuple[str, dict] | None:
+    if payload.get("reading_mode") == "materials":
+        from src.material_answer import material_answer
+        return material_answer({**payload, "answer_target_paper_id": intent.target_paper_id}, message, settings)
+    if payload.get("research_agenda"):
+        from src.grounded_reading import grounded_answer
+        return grounded_answer(payload, message, settings, payload.get("user_resources"))
+    if payload.get("reading_mode") == "grounded" and not payload.get("fulltext_index", {}).get("hits"):
+        from src.grounded_reading import grounded_answer
+        return grounded_answer(payload, message, settings, payload.get("user_resources"))
     if not settings.llm_api_key:
         return None
+    if payload.get("reading_mode") == "grounded" and payload.get("fulltext_index", {}).get("hits"):
+        from src.grounded_reading import grounded_answer
+        return grounded_answer(payload, message, settings, payload.get("user_resources"))
     payload = scoped_payload(payload)
     compact = {
         "message": message,
@@ -245,6 +256,7 @@ def _llm_direct_answer(payload: dict, message: str, intent: Intent, settings) ->
         "claims": [{k: c.get(k) for k in ("claim_id", "text", "status", "decision_reason")} for c in payload.get("claims", [])],
         "evidence": [{k: e.get(k) for k in ("evidence_id", "claim_id", "paper_id", "verdict", "locator", "snippet", "extraction_status")} for e in payload.get("evidence", [])],
         "falsification": payload.get("falsification", []),
+        "fulltext_passages": payload.get("fulltext_index", {}).get("hits", [])[:12],
     }
     system = ("你是勘文 LitAudit 的研究助手。根据当前 run 的结构化数据直接回答用户追问，不要重新检索。"
               "若指定 target_paper_id，只聚焦该论文。不得编造论文、证据、页码或结论；摘要级信息与页码级证据必须明确区分；冲突和 pending 必须保留。"
@@ -254,14 +266,20 @@ def _llm_direct_answer(payload: dict, message: str, intent: Intent, settings) ->
               "不要输出未绑定 Claim 的研究事实，不添加固定总论或研究地图格式；默认控制在 4 至 10 条陈述。")
     system += ('若只有摘要，可返回 {"paper_id":"论文编号","quote":"摘要连续原文摘录",'
                '"certainty":"abstract_only"}；quote 不可改写或翻译。')
+    system += ('对 fulltext_passages 中的正文，可返回 {"passage_id":"现有片段编号",'
+               '"quote":"片段连续原文摘录","certainty":"fulltext_only"}。优先选择回答方法、数据、实验条件的正文片段，'
+               'quote必须逐字摘录；它提供正文阅读线索，不表示该片段已被人工判决为支持某个Claim。')
     request_body = {"model": settings.llm_model, "temperature": 0.1, "response_format": {"type": "json_object"}, "messages": [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(compact, ensure_ascii=False)}]}
     request = Request(settings.llm_base_url.rstrip("/") + "/chat/completions", data=json.dumps(request_body, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json", "Authorization": f"Bearer {settings.llm_api_key}"}, method="POST")
     last_audit = None
     for attempt in range(2):
         try:
             request.data = json.dumps(request_body, ensure_ascii=False).encode("utf-8")
+            from src.tasks import check_cancelled
+            check_cancelled()
             with urlopen(request, timeout=45) as response:
                 data = json.loads(response.read().decode("utf-8"))
+                check_cancelled()
             content = data["choices"][0]["message"]["content"]
             result = _parse_llm_json(content)
             audit = audit_overview_statements(payload, result.get("statements") if isinstance(result, dict) else None)
@@ -312,6 +330,7 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
         "claims": [{k: c.get(k) for k in ("claim_id", "text", "status", "decision_reason")} for c in claims],
         "evidence": [{k: e.get(k) for k in ("evidence_id", "claim_id", "paper_id", "verdict", "locator", "extraction_status", "snippet")} for e in evidence],
         "falsification": falsification,
+        "fulltext_passages": payload.get("fulltext_index", {}).get("hits", [])[:12],
         "intent": asdict(intent),
     }
     system = ("你是勘文 LitAudit 的研究对话助手，遵守 conversational-research-routing 路由规则。"
@@ -325,6 +344,8 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
               "每条陈述仅绑定一个 Claim；evidence_ids 中每条 Evidence 的 claim_id 必须与该陈述的 claim_id 完全一致。不要把不同 Claim 合并到一条陈述。"
               '摘要线索格式为 {"paper_id":"现有论文编号", "quote":"摘要中逐字连续摘录", "certainty":"abstract_only"}，quote 不得翻译、改写或省略。'
               "没有可用证据时展示摘要线索，不生成未绑定引用的科学结论。")
+    system += ('正文线索可以使用 {"passage_id":"fulltext_passages中的编号",'
+               '"quote":"正文连续原文摘录","certainty":"fulltext_only"}，不得改写或升级为已支持论断。')
     if not papers and not claims:
         payload["answer_audit"] = {"ok": True, "errors": [], "citations": [], "kind": "retrieval_status_only"}
         failures = [r for r in live.get("retrieval", []) if r.get("status") != "success"]
@@ -334,8 +355,11 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
     for attempt in range(2):
         try:
             request.data = json.dumps(request_body, ensure_ascii=False).encode("utf-8")
+            from src.tasks import check_cancelled
+            check_cancelled()
             with urlopen(request, timeout=45) as response:
                 data = json.loads(response.read().decode("utf-8"))
+                check_cancelled()
             content = data["choices"][0]["message"]["content"].strip()
             result = _parse_llm_json(content)
             audit = audit_overview_statements(payload, result.get("statements") if isinstance(result, dict) else None)
@@ -355,7 +379,7 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
 def _answer_error(payload: dict, intent: Intent, audit: dict | None, error: str) -> dict:
     visible = scoped_payload(payload)
     return {"overview": "", "overview_mode": "llm_error", "intent": asdict(intent),
-            "error": "answer_audit_rejected" if audit and audit.get("errors") else error,
+            "error": "no_fulltext" if audit and "no_fulltext" in audit.get("errors", []) else "no_materials" if audit and "no_materials" in audit.get("errors", []) else "answer_audit_rejected" if audit and audit.get("errors") else error,
             "answer_audit": audit, "papers": visible.get("papers", []),
             "run_id": payload.get("run_id"), "actions": [], "map": {}, "ask": {"papers": []},
             "paper_selection": {"mode": "llm_error", "matched_count": len(visible.get("papers", [])),
@@ -395,12 +419,12 @@ def build_chat_response(payload: dict, message: str, intent: Intent, settings) -
         return {"overview": answer, "overview_mode": "direct_answer", "answer_audit": answer_audit, "intent": asdict(intent), "papers": [], "paper_selection": {"mode": "direct_answer", "matched_count": 0, "total_run_count": len(payload.get("papers", [])), "added_count": 0, "added_paper_ids": [], "message": "复用当前研究结果，未重新检索。", "retrieval_status": "not_started", "retrieval_failures": []}, "map": {}, "ask": {"papers": []}, "run_id": payload.get("run_id"), "actions": [], "limitations": []}
     if intent.needs_clarification:
         return {
-            "overview": _clarification_overview(message, intent),
+            "overview": "补充这一点可以缩小检索范围，也可以直接按原问题检索。",
             "overview_mode": "clarification",
             "intent": asdict(intent),
             "clarification_questions": intent.clarification_questions or [],
             "papers": [],
-            "paper_selection": {"mode": "clarification", "matched_count": 0, "total_run_count": len(payload.get("papers", [])), "added_count": 0, "added_paper_ids": [], "message": "尚未检索；请先补充研究边界。", "retrieval_status": "not_started", "retrieval_failures": []},
+            "paper_selection": {"mode": "clarification", "matched_count": 0, "total_run_count": len(payload.get("papers", [])), "added_count": 0, "added_paper_ids": [], "message": "可补充检索范围，或直接按原问题检索。", "retrieval_status": "not_started", "retrieval_failures": []},
             "map": {},
             "ask": {"papers": []},
             "run_id": payload.get("run_id"),
@@ -486,7 +510,8 @@ def _write_conversation(path: Path, conversation: dict) -> None:
             json.dump(conversation, stream, ensure_ascii=False, indent=2)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, path)
+        from src.io_utils import replace_with_retry
+        replace_with_retry(temporary, path)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
@@ -496,9 +521,10 @@ def _write_conversation(path: Path, conversation: dict) -> None:
 def load_conversation(runs_dir: Path, run_id: str) -> dict:
     path = resolve_run_dir(runs_dir, run_id) / "output" / "conversation.json"
     if not path.exists():
-        return {"run_id": run_id, "messages": []}
+        return {"run_id": run_id, "conversation_id": run_id, "messages": []}
     try:
         conversation = json.loads(path.read_text(encoding="utf-8"))
+        conversation.setdefault("conversation_id", run_id)
         conversation["messages"] = _visible_messages(conversation.get("messages") or [])
         return conversation
     except json.JSONDecodeError as exc:
@@ -511,6 +537,20 @@ def save_message(runs_dir: Path, run_id: str, role: str, content: str, response:
     conversation.setdefault("messages", []).append({"role": role, "content": content, "created_at": datetime.now(timezone.utc).isoformat(), "response": response})
     path = resolve_run_dir(runs_dir, run_id) / "output" / "conversation.json"
     _write_conversation(path, conversation)
+    return conversation
+
+
+@_locked_conversation
+def save_turn(runs_dir: Path, run_id: str, message: str, answer: str, response: dict | None = None) -> dict:
+    """Persist a question and its answer as one atomic, explicitly paired turn."""
+    conversation = load_conversation(runs_dir, run_id)
+    turn_id = uuid4().hex
+    created_at = datetime.now(timezone.utc).isoformat()
+    conversation.setdefault("messages", []).extend([
+        {"role": "user", "content": message, "turn_id": turn_id, "created_at": created_at, "response": None},
+        {"role": "assistant", "content": answer, "turn_id": turn_id, "created_at": created_at, "response": response},
+    ])
+    _write_conversation(resolve_run_dir(runs_dir, run_id) / "output" / "conversation.json", conversation)
     return conversation
 
 
@@ -554,17 +594,45 @@ def list_conversations(runs_dir: Path) -> list[dict]:
             conversation = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
+        if conversation.get("continued_in"):
+            continue
         messages = _visible_messages(conversation.get("messages") or [])
         first_user = next((item for item in messages if item.get("role") == "user"), {})
         last_message = messages[-1] if messages else {}
         conversations.append({
             "run_id": path.parents[1].name,
+            "conversation_id": conversation.get("conversation_id", path.parents[1].name),
             "title": (conversation.get("title") or first_user.get("content") or "未命名对话")[:80],
             "message_count": len(messages),
             "updated_at": last_message.get("created_at") or "",
         })
     conversations.sort(key=lambda item: item["updated_at"], reverse=True)
-    return conversations
+    unique = {}
+    for item in conversations:
+        unique.setdefault(item['conversation_id'], item)
+    return list(unique.values())
+
+
+@_locked_conversation
+def continue_conversation(runs_dir: Path, run_id: str, next_run_id: str) -> None:
+    """Publish a completed research snapshot as the same sidebar conversation."""
+    if run_id == next_run_id or run_id in {"demo", "phase2-real"}:
+        return
+    previous = load_conversation(runs_dir, run_id)
+    if not previous.get("messages"):
+        return
+    with _conversation_locks_guard:
+        lock = _conversation_locks.setdefault(resolve_run_dir(runs_dir, next_run_id), threading.RLock())
+    with lock:
+        current = load_conversation(runs_dir, next_run_id)
+        if not current.get("messages"):
+            return
+        if previous.get("title"):
+            current["title"] = previous["title"]
+        current["conversation_id"] = previous.get("conversation_id", run_id)
+        _write_conversation(resolve_run_dir(runs_dir, next_run_id) / "output/conversation.json", current)
+    previous["continued_in"] = next_run_id
+    _write_conversation(resolve_run_dir(runs_dir, run_id) / "output/conversation.json", previous)
 
 
 @_locked_conversation

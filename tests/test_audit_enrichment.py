@@ -37,7 +37,8 @@ def test_real_pdf_audit_freezes_files_and_preserves_gold(tmp_path):
         if span.extraction_status.value == "verified":
             snapshot = next(s for s in enriched.source_snapshots if s.snapshot_id == span.snapshot_id)
             from pathlib import Path
-            assert sha256(Path(snapshot.response_path).read_bytes()).hexdigest() == span.document_version
+            from src.run_paths import resolve_run_file
+            assert sha256(resolve_run_file(tmp_path / "audit", snapshot.response_path).read_bytes()).hexdigest() == span.document_version
     assert any(a.kind.value == "resolve_conflict" for a in enriched.next_actions)
 
 
@@ -135,12 +136,15 @@ def test_live_report_excludes_inherited_gold(tmp_path):
 
 
 def test_fulltext_get_serves_pdf_but_rejects_outside_run(tmp_path, monkeypatch):
+    from datetime import date
     import json
     import threading
     from urllib.request import urlopen
     from urllib.error import HTTPError
     import pytest
     from src.io_utils import write_json
+    from src.pipeline import snapshot_dataset
+    from src.schema import Dataset, PaperCard
     from src.ui.server import make_server
     run = tmp_path / "audit-test"
     run.mkdir()
@@ -148,6 +152,15 @@ def test_fulltext_get_serves_pdf_but_rejects_outside_run(tmp_path, monkeypatch):
     pdf.write_bytes(b"%PDF-1.7 test")
     outside = tmp_path / "private.txt"
     outside.write_text("private")
+    # Original documents are served only for papers in a valid research scope.
+    # Both IDs are visible so p2 still exercises outside-run path rejection.
+    papers = [PaperCard(paper_id=pid, title="Source " + pid, source="test",
+                        retrieved_at=date(2026, 1, 1), dedup_key=pid,
+                        url="https://example.test/" + pid, decision="include", reason="Scope fixture")
+              for pid in ["p1", "p2"]]
+    snapshot_dataset(Dataset(papers=papers, paper_cards=[p.model_copy(deep=True) for p in papers]), run / "output")
+    write_json(run / "run_manifest.json", {"run_id": "audit-test", "offline": True,
+                                           "status": "completed", "question": "Inspect original sources"})
     write_json(run / "output" / "fulltext_audit.json", {"documents": [
         {"paper_id": "p1", "response_path": str(pdf)},
         {"paper_id": "p2", "response_path": str(outside)},

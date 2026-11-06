@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+import os
 import sys
+from pathlib import Path
 
 from src.ask import ask
 from src.config import ROOT, load_settings
@@ -25,6 +28,47 @@ def _offline_from_args(args: argparse.Namespace) -> bool | None:
     if getattr(args, "online", False):
         return False
     return None
+
+
+def runtime_capabilities(settings) -> dict:
+    """Inspect local readiness without model loading, network calls or secrets."""
+    dependencies = ("torch", "transformers", "adapters", "networkx", "numpy")
+    def available(name):
+        try:
+            return importlib.util.find_spec(name) is not None
+        except (ImportError, ValueError):
+            return False
+    missing_dependencies = [name for name in dependencies if not available(name)]
+    hf_home = Path(os.getenv("HF_HOME", str(Path.home() / ".cache" / "huggingface")))
+    hub = Path(os.getenv("HF_HUB_CACHE", str(hf_home / "hub")))
+    requirements = {
+        "allenai/specter2_base": (("config.json",), ("pytorch_model.bin", "model.safetensors"), ("vocab.txt", "tokenizer.json")),
+        "allenai/specter2": (("adapter_config.json",), ("pytorch_adapter.bin", "adapter_model.safetensors")),
+        "allenai/specter2_adhoc_query": (("adapter_config.json",), ("pytorch_adapter.bin", "adapter_model.safetensors")),
+    }
+    missing_models = []
+    for repo, groups in requirements.items():
+        snapshots = hub / ("models--" + repo.replace("/", "--")) / "snapshots"
+        complete = snapshots.exists() and any(
+            all(any((snapshot / name).is_file() for name in alternatives) for alternatives in groups)
+            for snapshot in snapshots.iterdir() if snapshot.is_dir()
+        )
+        if not complete:
+            missing_models.append(repo)
+    writable_parent = settings.runs_dir.resolve()
+    while not writable_parent.exists() and writable_parent != writable_parent.parent:
+        writable_parent = writable_parent.parent
+    writable = os.access(writable_parent, os.W_OK)
+    llm_configured = bool(settings.llm_api_key)
+    model_ready = not missing_dependencies and not missing_models
+    return {
+        "llm": {"configured": llm_configured, "model": settings.llm_model},
+        "semantic_model": {"ready": model_ready, "missing_dependencies": missing_dependencies,
+                           "missing_models": missing_models,
+                           "setup_command": 'pip install -e ".[map]" && python -m src.cli download-model'},
+        "storage": {"writable": writable},
+        "ready_for_live_research": bool(llm_configured and model_ready and writable),
+    }
 
 
 def cmd_doctor(_: argparse.Namespace) -> int:
@@ -50,6 +94,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
             "root": str(settings.root),
             "missing_files": missing,
             "stats": dataset_stats(dataset) if dataset is not None else None,
+            "capabilities": runtime_capabilities(settings),
         }
     )
     ok = not missing and dataset is not None and dataset_stats(dataset)["error_count"] == 0
@@ -82,6 +127,12 @@ def cmd_run(args: argparse.Namespace) -> int:
         question=args.question,
     )
     _print(result)
+    return 0
+
+
+def cmd_retry_map(args: argparse.Namespace) -> int:
+    from src.pipeline import retry_map
+    _print(retry_map(load_settings(), args.run_id))
     return 0
 
 
@@ -134,7 +185,7 @@ def cmd_ui(args: argparse.Namespace) -> int:
 
 def _add_online_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--offline", action="store_true", help="只读本地金标/快照，不调用检索 API")
-    parser.add_argument("--online", action="store_true", help="调用 arXiv / OpenAlex / Semantic Scholar")
+    parser.add_argument("--online", action="store_true", help="调用 arXiv / OpenAlex")
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
@@ -167,6 +218,10 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--question", help="科研问题或 idea，在线检索时写入检索式")
     run.add_argument("--allow-errors", action="store_true")
     run.set_defaults(func=cmd_run)
+
+    retry = sub.add_parser("retry-map", help="修复模型后重试已有研究的地图，保留论文与证据")
+    retry.add_argument("run_id")
+    retry.set_defaults(func=cmd_retry_map)
 
     replay = sub.add_parser("replay", help="回放已落盘的 run")
     replay.add_argument("run_id", nargs="?")

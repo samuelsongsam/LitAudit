@@ -1,10 +1,2 @@
-pydantic>=2.7
-python-dotenv>=1.0
-pypdf>=5.0
-pytest>=8.0
-adapters>=1.0
-networkx>=3.0
-numpy>=1.24
-pyvis>=0.3
-torch>=2.0
-transformers>=4.40
+# Full development profile. Lightweight install: pip install -e ".[dev,documents]"
+-e .[dev,documents,map]

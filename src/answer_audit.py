@@ -94,11 +94,11 @@ def audit_answer_statements(payload: dict[str, Any], statements: object) -> dict
         if not claim_text:
             errors.append(f"{prefix}:empty_claim_text")
         if certainty == "uncertain":
-            rendered = f"待核验论断 [{claim_id}]：\n「{claim_text}」\n本条仅列出待核验内容，不作确定结论。"
+            rendered = f"待核验论断 [{claim_id}]：\n「{claim_text}」"
         elif certainty == "qualified":
-            rendered = f"有限支持 [{claim_id}]：\n「{claim_text}」\n仅在所引证据范围内成立，不应扩展为无条件结论。"
+            rendered = f"有限支持 [{claim_id}]：\n「{claim_text}」"
         else:
-            rendered = f"已有证据支持的论断 [{claim_id}]：\n「{claim_text}」\n定位核验不代表整篇全文审阅。"
+            rendered = f"已有证据支持的论断 [{claim_id}]：\n「{claim_text}」"
         accepted.append(rendered)
         citations.append({"statement": index, "claim_id": claim_id, "evidence_ids": evidence_ids, "certainty": certainty})
 
@@ -125,13 +125,27 @@ arbitrary model-generated paraphrase. Operational counts are rendered by UI.
         if not isinstance(item, dict):
             errors.append(f"statement[{i}]:not_object")
             continue
-        if item.get("certainty") == "abstract_only":
+        if item.get("certainty") == "fulltext_only":
+            passages = {p.get("passage_id"): p for p in payload.get("fulltext_index", {}).get("hits", [])}
+            passage = passages.get(item.get("passage_id"))
+            quote = item.get("quote")
+            if (not passage or passage.get("paper_id") not in papers or
+                    not isinstance(quote, str) or not quote.strip() or quote not in (passage.get("text") or "") or
+                    not isinstance(passage.get("page"), int) or passage["page"] < 1):
+                errors.append(f"statement[{i}]:invalid_fulltext_excerpt")
+                continue
+            paper = papers[passage["paper_id"]]
+            answers.append(f"正文线索 · {paper.get('title')} [{paper['paper_id']}] · 第 {passage['page']} 页\n"
+                           f"{quote}\n原文定位线索；可在全文工作区确认并加入人工证据。")
+            citations.append({"statement": i, "paper_id": passage["paper_id"],
+                              "passage_id": passage["passage_id"], "page": passage["page"], "certainty": "fulltext_only"})
+        elif item.get("certainty") == "abstract_only":
             paper = papers.get(item.get("paper_id"))
             quote = item.get("quote")
             if not paper or not isinstance(quote, str) or not quote.strip() or quote not in (paper.get("abstract") or ""):
                 errors.append(f"statement[{i}]:invalid_abstract_excerpt")
                 continue
-            answers.append(f"摘要级线索 · {paper.get('title')} [{paper['paper_id']}]\n{quote}\n尚未核验全文，不能据此形成确定结论。")
+            answers.append(f"摘要级线索 · {paper.get('title')} [{paper['paper_id']}]\n{quote}")
             citations.append({"statement": i, "paper_id": paper["paper_id"], "certainty": "abstract_only"})
         else:
             result = audit_answer_statements(payload, [item])

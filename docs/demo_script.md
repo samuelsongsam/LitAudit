@@ -26,13 +26,13 @@ python -m src.cli ui --run-id phase2-real
    顶部工作区显示当前研究问题、scope v0.1、候选数量、页码证据数量和待处理项。说明这是本地关键词检索，不会编造论文，也不会写长综述。在线结果会显示实际输入的问题，基准结果显示固定主问题。
 
 3. **筛选漏斗（2 分钟）**  
-   7 篇候选：PaperQA、SciMON 为 include；STORM、WebGPT、Toolformer 以及两篇风险论文为 exclude。在线 run 会先合并三方重复结果，再用 SPECTER2 查询 adapter 与论文 proximity adapter 统一重排。打开筛选日志，指出历史 pending 记录仍在。点 Semantic Scholar `rate_limited` / HTTP 429，强调失败不能写成零结果成功。exclude 没有从界面消失。
+   7 篇候选：PaperQA、SciMON 为 include；STORM、WebGPT、Toolformer 以及两篇风险论文为 exclude。打开筛选日志，指出历史 pending 记录仍在。点 Semantic Scholar `rate_limited` / HTTP 429，强调失败不能写成零结果成功。exclude 没有从界面消失。
 
 4. **研究地图（2 分钟）**  
-   进入 SVG 论文关系图：论文变成可拖动方框，连线表示 Title + Abstract 经 SPECTER2 向量计算后的语义相似关系，线越粗表示余弦相似度越高。先点“重新布局”，展示论文框自动避让；拖动 PaperQA 或风险论文，展示连线实时跟随且端点停在方框边界。滚轮缩放画布，点击连线查看相似度和两端论文。打开矛盾对：`claim-008` 上 paper-001 与 paper-006/007 冲突仍保留在审计信息里，但语义图边不是引用图谱，也不是证据支持关系。点 `paper-001`，`parse_status=pdf_partial_verified`，并读 parse_error：指定页已核验，不是 20 页逐页读完。
+   进入 SVG 论文关系图：论文变成可拖动方框，实线箭头表示证据冲突，虚线箭头表示反证命中。先点“重新布局”，展示论文框自动避让；拖动 PaperQA 或风险论文，展示连线实时跟随且箭头停在方框边界。同一论文对的实线/虚线采用不同弧度，箭头帽与关系线同色。滚轮缩放画布，点击箭头查看关联 Claim、Evidence 或反证命中。打开矛盾对：`claim-008` 上 paper-001 与 paper-006/007 冲突。说明这些边来自证据冲突和反证据命中，不是引用图谱，也不是关键词相似关系。点 `paper-001`，`parse_status=pdf_partial_verified`，并读 parse_error：指定页已核验，不是 20 页逐页读完。
 
 5. **证据卡（2 分钟）**  
-   打开 `claim-001`（supported，verified 第 1 页）和 `claim-008`（pending，正反证据同时可见）。说明已获取全文会生成按页切片的 BM25 + SPECTER2 混合检索索引；命中仍需通过 Claim/Evidence 审计。强调没有 Evidence 不能 supported；冲突必须 pending。
+   打开 `claim-001`（supported，verified 第 1 页）和 `claim-008`（pending，正反证据同时可见）。强调没有 Evidence 不能 supported；冲突必须 pending。
 
 6. **证伪报告（1.5 分钟）**  
    `hit-001`、`hit-002` 来自 exclude 论文。威胁是 overlap 不是 fatal，因为任务是通用 RAG/QA。这就是「杀手论文」模块：系统强制保留能削弱强断言的证据。
@@ -53,4 +53,4 @@ python -m src.cli ui --run-id phase2-real
 - 不要把 429 说成没检索到
 - 不要把 fixture 算进真实统计
 - 不要把审计报告说成长综述或因果结论
-- 不要把 SPECTER2 语义近邻线说成论文引用关系；引文扩展是独立数据产物
+- 不要把证据冲突/反证箭头说成论文引用关系；当前没有已核验引用边

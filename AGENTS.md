@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-LitAudit 是一个可核验的文献调研智能体，支持 arXiv / OpenAlex / Semantic Scholar 在线检索、摘要筛选、证据核验与反证据报告。
+LitAudit 是一个可核验的文献调研智能体，支持 arXiv / OpenAlex 在线检索、摘要筛选、证据核验与反证据报告。
 
 ## 快速启动
 
@@ -32,8 +32,8 @@ python -m src.cli ui --run-id phase2-real
 | `LITAUDIT_LLM_API_KEY` | LLM 密钥（DeepSeek 或 OpenAI 兼容） |
 | `LITAUDIT_LLM_BASE_URL` | 如 `https://api.deepseek.com/v1` |
 | `LITAUDIT_LLM_MODEL` | 如 `deepseek-chat` |
-| `OPENALEX_MAILTO` | 可选，降低 OpenAlex 限流 |
-| `SEMANTIC_SCHOLAR_API_KEY` | 可选，降低 S2 429 |
+| `OPENALEX_MAILTO` | 可选，联系邮箱 |
+| `OPENALEX_API_KEY` | 可选，使用 OpenAlex 账户的检索额度 |
 
 ### 验证 Secrets 已注入
 
@@ -51,8 +51,7 @@ python -m pytest -q
 
 ### 在线检索说明
 
-- arXiv / OpenAlex 无需密钥，云端一般可访问
-- Semantic Scholar 无密钥时容易 429（限流），配 `SEMANTIC_SCHOLAR_API_KEY` 可改善
+- arXiv 可公开检索。OpenAlex 支持匿名检索，也可配置 API Key 使用账户额度
 - 检索结果写入 `runs/live_*/`，不覆盖 `runs/phase2-real/`
 
 ### 不要做的事

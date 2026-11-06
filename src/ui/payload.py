@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from src.ask import ask
-from src.config import ROOT, load_settings
+from src.config import ROOT
 from src.eval_metrics import evaluate_payload
 from src.io_utils import read_json
 from src.map_builder import build_map
@@ -106,7 +106,7 @@ def describe_run(runs_dir: Path, run_id: str) -> dict:
 
 def _retrieval_status_label(run) -> str:
     if run.http_status == 429 or run.status == "rate_limited":
-        return "Semantic Scholar 暂时限流（未取得该源结果）" if run.source == "semantic_scholar" else "文献库暂时限流（未取得该源结果）"
+        return "文献库暂时限流（未取得该源结果）"
     if run.status == "success":
         return "成功"
     return "该源请求失败"
@@ -123,7 +123,6 @@ def _retrieval_note(run) -> str:
 
 
 def _retrieval_summary(dataset, manifest: dict) -> dict:
-    settings = load_settings()
     live = manifest.get("live") or {}
     live_ids = {item.get("retrieval_id") for item in live.get("retrieval", []) if item.get("retrieval_id")}
     is_live = not manifest.get("offline", True) and bool(live)
@@ -136,8 +135,6 @@ def _retrieval_summary(dataset, manifest: dict) -> dict:
 
     round_failures = [run for run in round_runs if run.is_failure]
     hints: list[str] = []
-    if any(run.source == "semantic_scholar" and run.is_failure for run in round_runs) and not settings.semantic_scholar_api_key:
-        hints.append("Semantic Scholar 未配置 API Key，容易触发 429；可在 .env 填写 SEMANTIC_SCHOLAR_API_KEY。")
     if round_failures and any(not run.is_failure for run in round_runs):
         hints.append("部分检索源失败不代表整次检索失败；成功源返回的论文仍可使用。")
     if is_live:
@@ -154,7 +151,6 @@ def _retrieval_summary(dataset, manifest: dict) -> dict:
         "history_runs": [_serialize(run) for run in history_runs],
         "round_failure_count": len(round_failures),
         "round_success_count": sum(1 for run in round_runs if not run.is_failure),
-        "semantic_scholar_key_configured": bool(settings.semantic_scholar_api_key),
         "hints": hints,
     }
 
@@ -296,13 +292,33 @@ def _run_map(runs_dir: Path, run_id: str, dataset) -> dict:
     path = resolve_run_dir(runs_dir, run_id) / "output" / "map.json"
     if path.exists():
         saved = read_json(path)
+        if saved.get("status") in {"unavailable", "pending"}:
+            return saved
         if (
             saved.get("algorithm") == "specter2_cosine_network"
             and saved.get("layout") == "specter2_cosine_mds"
             and isinstance(saved.get("similarity_matrix"), dict)
         ):
             return saved
-    return build_map(dataset, run_id)
+    try:
+        return build_map(dataset, run_id)
+    except Exception as exc:
+        from src.pipeline import unavailable_map
+        return unavailable_map(run_id, exc)
+
+
+def build_map_topic_payload(runs_dir: Path, run_id: str) -> dict:
+    """Read the graph and paper text needed by topic annotation."""
+    loaded = load_run(runs_dir, run_id)
+    dataset = loaded["dataset"]
+    manifest = loaded["manifest"]
+    return {
+        "run_id": run_id,
+        "offline": bool(manifest.get("offline", True)),
+        "live": manifest.get("live"),
+        "map": _visible_live_map(_run_map(runs_dir, run_id, dataset), manifest),
+        "papers": [paper.model_dump(include={"paper_id", "title", "abstract", "year"}) for paper in dataset.papers],
+    }
 
 
 def build_payload(runs_dir, run_id: str) -> dict:
@@ -328,6 +344,10 @@ def build_payload(runs_dir, run_id: str) -> dict:
     display = describe_run(runs_dir, run_id)
     stats = loaded.get("stats") or dataset_stats(dataset)
     map_payload = _visible_live_map(_run_map(runs_dir, run_id, dataset), manifest)
+    from src.map_topics import merge_map_topics
+    map_payload = merge_map_topics({'run_id': run_id, 'map': map_payload, 'papers': papers,
+                                    'offline': bool(manifest.get('offline', True)),
+                                    'live': manifest.get('live')}, runs_dir)
     context = _workspace_context(dataset, manifest, display, stats, map_payload)
     retrieval_summary = _retrieval_summary(dataset, manifest)
     payload = {
@@ -361,6 +381,16 @@ def build_payload(runs_dir, run_id: str) -> dict:
         "citation_graph": read_json(resolve_run_dir(runs_dir, run_id) / "output" / "citation_graph.json") if (resolve_run_dir(runs_dir, run_id) / "output" / "citation_graph.json").exists() else {},
     }
     payload["eval"] = evaluate_payload(payload)
+    from src.research_workspace import workspace_payload
+    payload["research_workspace"] = workspace_payload(runs_dir, run_id)
+    context_path = resolve_run_dir(runs_dir, run_id) / "output/research_context.json"
+    from src.research_workspace import _lock
+    with _lock(context_path.parent.parent):
+        payload["research_context"] = read_json(context_path) if context_path.exists() else {}
+    from src.paper_library import library_payload
+    payload["library"] = library_payload(runs_dir, run_id)
+    structure_path = resolve_run_dir(runs_dir, run_id) / "output" / "document_structure.json"
+    payload["document_structure"] = read_json(structure_path) if structure_path.exists() else {}
     return payload
 
 
@@ -408,7 +438,7 @@ def build_audit_report(runs_dir: Path, run_id: str) -> tuple[str, str]:
             "evidence_spans": [s for s in dataset.evidence_spans if s.paper_id in ids],
         })
     stats = dataset_stats(dataset)
-    map_payload = _visible_live_map(build_map(dataset, run_id), manifest)
+    map_payload = _visible_live_map(_run_map(runs_dir, run_id, dataset), manifest)
     display = describe_run(runs_dir, run_id)
     context = _workspace_context(dataset, manifest, display, stats, map_payload)
     counts = stats.get("decision_counts", {})
@@ -511,6 +541,27 @@ def build_audit_report(runs_dir: Path, run_id: str) -> tuple[str, str]:
         ]
     for limitation in limitations:
         lines.append(f"- {_md_cell(limitation)}")
+    reviews = audit_payload.get("research_workspace", {}).get("reviews", [])
+    if reviews:
+        lines.extend(["", "## 人工阅读与方法确认", "", "以下记录来自用户人工确认，独立于原有论断判决。", "",
+                      "| 论文 | 页码 | 字段 | 人工状态 | 人工修订值 | 用户论断 | 备注 | 原文 |", "| --- | ---: | --- | --- | --- | --- | --- | --- |"])
+        for review in reviews:
+            lines.append("| " + " | ".join(_md_cell(review.get(k)) for k in
+                         ("paper_id", "page", "field", "status", "display_value", "claim", "note")) + " | " +
+                         _md_cell(review.get("quote") or review.get("text")) + " |")
+    research_context = audit_payload.get("research_context") or {}
+    if research_context:
+        lines.extend(["", "## 我的研究条件", ""])
+        for key, value in research_context.get("user_resources", {}).items():
+            lines.append(f"- {_md_cell({'data':'数据','compute':'算力','time':'时间'}.get(key,key))}：{_md_cell(value)}")
+    reading_notes = [item for item in audit_payload.get("library", {}).get("items", [])
+                     if item.get("notes") or item.get("favorite") or item.get("reading_status") != "unread"]
+    if reading_notes:
+        lines.extend(["", "## 阅读进度与笔记", "", "以下为用户保存的阅读记录，独立于论文事实与论断判决。", ""])
+        for item in reading_notes:
+            lines.extend([f"### {_md_cell(item['title'])}", "",
+                          f"状态：{_md_cell(item['reading_status'])}；收藏：{'是' if item['favorite'] else '否'}；标签：{_md_cell('、'.join(item['tags']))}",
+                          "", _md_cell(item.get("notes")), ""])
     lines.extend(["", "---", "", "证据链原则：Claim -> Evidence -> PaperCard。没有有效 Evidence 或存在未解决冲突时，不将 Claim 写成确定支持。", ""])
     filename = f"litaudit-{run_id}-audit.md"
     return "\n".join(lines), filename

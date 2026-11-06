@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.getenv("LITAUDIT_HOME", str(Path(__file__).resolve().parents[1]))).resolve()
 
 
 @dataclass(frozen=True)
@@ -17,12 +17,12 @@ class Settings:
     runs_dir: Path
     offline: bool
     log_level: str
-    semantic_scholar_api_key: str | None = None
     openalex_mailto: str | None = None
     live_limit: int = 12
-    llm_api_key: str | None = None
+    llm_api_key: str | None = field(default=None, repr=False)
     llm_base_url: str = "https://api.openai.com/v1"
     llm_model: str = "gpt-4o-mini"
+    openalex_api_key: str | None = field(default=None, repr=False)
 
 
 def load_settings(
@@ -54,8 +54,8 @@ def load_settings(
         runs_dir=resolved_runs,
         offline=env_offline if offline is None else offline,
         log_level=os.getenv("LITAUDIT_LOG_LEVEL", "INFO"),
-        semantic_scholar_api_key=os.getenv("SEMANTIC_SCHOLAR_API_KEY") or None,
         openalex_mailto=os.getenv("OPENALEX_MAILTO") or None,
+        openalex_api_key=(os.getenv("OPENALEX_API_KEY") or "").strip() or None,
         live_limit=max(1, live_limit),
         llm_api_key=os.getenv("LITAUDIT_LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or None,
         llm_base_url=os.getenv("LITAUDIT_LLM_BASE_URL", "https://api.openai.com/v1"),
