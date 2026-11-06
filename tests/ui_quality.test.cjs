@@ -18,6 +18,16 @@ function app(storage = new Map()) {
   return context;
 }
 
+test('missing materials offers PDF import while connection failures offer settings',()=>{
+  const c=app();
+  for(const error of ['no_fulltext','no_materials','answer_audit_rejected','missing_llm_api_key']){
+    c.error=error;
+    const html=vm.runInContext("chatMessage({role:'assistant',response:{overview_mode:'llm_error',error}})",c);
+    assert.equal(html.includes('data-open-sources'),error==='missing_llm_api_key');
+    assert.equal(html.includes('data-open-chat-tool="import"'),['no_fulltext','no_materials'].includes(error));
+  }
+});
+
 test('reading selector is independent of an old fulltext filter and sends an explicit scope',async()=>{
   const c=app();vm.runInContext(`state.fulltext.paperId='p1';state.readingMode=true;state.readingPaperId='p2';
     api=async(path,options)=>{captured=JSON.parse(options.body);return{status:'needs_clarification',response:{overview:''}};};`,c);

@@ -1066,6 +1066,8 @@ function conversationHistoryView() {
 
 function llmErrorText(response) {
   const code = String(response?.error || "");
+  if (code === "no_fulltext") return "当前选择的论文尚无可检索正文。请获取全文或导入 PDF 后进行全文分析；也可关闭正文阅读模式，基于已有摘要提问。";
+  if (code === "no_materials") return "当前范围内没有可用于回答的摘要或正文，请补充文献材料或调整范围。";
   if (code === "answer_audit_rejected") return "回答未通过引用完整性检查，未展示未经支持的陈述。已有论文与审计数据已保留，可查看证据后重新提问。";
   const reasons = {
     no_fulltext: "当前选择的论文尚无可检索正文，请先获取全文或调整论文范围。",
@@ -1176,7 +1178,7 @@ function bindClarification(stage) {
 function chatMessage(item,messageIndex=0) {
   if(item.role==='user')return `<div class="chat-message user"><div class="chat-role">你</div><div class="chat-bubble">${esc(item.content)}</div></div>`;
   const response=item.response||{};
-  if(response.overview_mode==='llm_error')return `<div class="chat-message assistant"><div class="chat-role">勘文</div><article class="chat-bubble assistant-bubble"><p role="status">${esc(llmErrorText(response))}</p><div class="panel-actions"><button class="ghost" type="button" data-open-sources>连接设置</button></div></article></div>`;
+  if(response.overview_mode==='llm_error')return `<div class="chat-message assistant"><div class="chat-role">勘文</div><article class="chat-bubble assistant-bubble"><p role="status">${esc(llmErrorText(response))}</p><div class="panel-actions">${['no_fulltext','no_materials'].includes(response.error)?'<button class="ghost" type="button" data-open-chat-tool="import">导入 PDF</button>':(response.error==='missing_llm_api_key'||String(response.error||'').startsWith('llm_request_failed:'))?'<button class="ghost" type="button" data-open-sources>连接设置</button>':''}</div></article></div>`;
   if(response.overview_mode==='clarification')return clarificationMessage(item,messageIndex);
   if(response.overview_mode==='map_answer')return `<div class="chat-message assistant"><div class="chat-role">勘文 · 研究地图</div><article class="chat-bubble assistant-bubble">${mapAnswerView(response,item.content)}</article></div>`;
   if(['direct_answer','method_evidence'].includes(response.overview_mode))return `<div class="chat-message assistant direct"><div class="chat-role">勘文</div><article class="chat-bubble assistant-bubble">${readingScopeView(response)}${readingAnswerView(response,item.content)}</article></div>`;

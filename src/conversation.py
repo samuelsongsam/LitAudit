@@ -201,6 +201,12 @@ def classify_intent(message: str, payload: dict | None = None, settings=None, cl
             query = " ".join(dict.fromkeys([clarification_topic.strip(), *choices]))
             return Intent("new_topic", 1.0, "按用户补充的研究范围检索", True,
                           expanded_query=query, route_source="user_clarification")
+    if (_payload_has_research_data(payload)
+            and re.search(r'(?:根据|基于|结合).{0,12}(?:以上|上述|当前|这些|刚才).{0,12}(?:结果|论文|文献|材料)', text)
+            and re.search(r'总结|汇报|概述|归纳|综述', text)
+            and not re.search(r'重新检索|补充检索|搜索更多', text)):
+        return Intent('follow_up', 1.0, '用户要求总结当前材料', False,
+                      direct_answer=True, route_source='user_material_summary')
     llm_route = _llm_route(text, payload, settings, clarification_context, clarification_topic)
     action = llm_route["action"]
     if action == "error":
@@ -225,6 +231,9 @@ def classify_intent(message: str, payload: dict | None = None, settings=None, cl
 
 
 def _llm_direct_answer(payload: dict, message: str, intent: Intent, settings) -> tuple[str, dict] | None:
+    if payload.get("reading_mode") == "materials":
+        from src.material_answer import material_answer
+        return material_answer({**payload, "answer_target_paper_id": intent.target_paper_id}, message, settings)
     if payload.get("research_agenda"):
         from src.grounded_reading import grounded_answer
         return grounded_answer(payload, message, settings, payload.get("user_resources"))
@@ -370,7 +379,7 @@ def _llm_overview(payload: dict, intent: Intent, settings) -> tuple[str, str]:
 def _answer_error(payload: dict, intent: Intent, audit: dict | None, error: str) -> dict:
     visible = scoped_payload(payload)
     return {"overview": "", "overview_mode": "llm_error", "intent": asdict(intent),
-            "error": "no_fulltext" if audit and "no_fulltext" in audit.get("errors", []) else "answer_audit_rejected" if audit and audit.get("errors") else error,
+            "error": "no_fulltext" if audit and "no_fulltext" in audit.get("errors", []) else "no_materials" if audit and "no_materials" in audit.get("errors", []) else "answer_audit_rejected" if audit and audit.get("errors") else error,
             "answer_audit": audit, "papers": visible.get("papers", []),
             "run_id": payload.get("run_id"), "actions": [], "map": {}, "ask": {"papers": []},
             "paper_selection": {"mode": "llm_error", "matched_count": len(visible.get("papers", [])),
@@ -584,6 +593,8 @@ def list_conversations(runs_dir: Path) -> list[dict]:
             conversation = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
+        if conversation.get("continued_in"):
+            continue
         messages = _visible_messages(conversation.get("messages") or [])
         first_user = next((item for item in messages if item.get("role") == "user"), {})
         last_message = messages[-1] if messages else {}
@@ -595,6 +606,28 @@ def list_conversations(runs_dir: Path) -> list[dict]:
         })
     conversations.sort(key=lambda item: item["updated_at"], reverse=True)
     return conversations
+
+
+@_locked_conversation
+def continue_conversation(runs_dir: Path, run_id: str, next_run_id: str) -> None:
+    """Publish a completed research snapshot as the same sidebar conversation."""
+    if run_id == next_run_id or run_id in {"demo", "phase2-real"}:
+        return
+    previous = load_conversation(runs_dir, run_id)
+    if not previous.get("messages"):
+        return
+    with _conversation_locks_guard:
+        lock = _conversation_locks.setdefault(resolve_run_dir(runs_dir, next_run_id), threading.RLock())
+    with lock:
+        current = load_conversation(runs_dir, next_run_id)
+        if not current.get("messages"):
+            return
+        if previous.get("title"):
+            current["title"] = previous["title"]
+        current["conversation_id"] = previous.get("conversation_id", run_id)
+        _write_conversation(resolve_run_dir(runs_dir, next_run_id) / "output/conversation.json", current)
+    previous["continued_in"] = next_run_id
+    _write_conversation(resolve_run_dir(runs_dir, run_id) / "output/conversation.json", previous)
 
 
 @_locked_conversation

@@ -530,7 +530,9 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             if intent.direct_answer or intent.needs_clarification:
                 if intent.direct_answer and current_payload:
                     self._attach_fulltext(current_payload, message, intent)
-                    current_payload["reading_mode"] = "grounded"
+                    current_payload["reading_mode"] = "grounded" if (
+                        body.get("reading_mode") is True or selection or cluster_scope or research_agenda
+                    ) else "materials"
                     current_payload["user_resources"] = resources
                 report_progress("answer")
                 response = build_chat_response(current_payload or {"run_id": None, "papers": []}, message, intent, settings)
@@ -539,7 +541,7 @@ class LitAuditHandler(BaseHTTPRequestHandler):
                 if selection:
                     response['reading_selection'] = selection
                 if response.get("overview_mode") == "llm_error":
-                    status = "insufficient_evidence" if response.get("error") == "no_fulltext" else "llm_unavailable"
+                    status = "insufficient_evidence" if response.get("error") in {"no_fulltext", "no_materials"} else "llm_unavailable"
                     self._json({"conversation_id": requested_run, "run_id": requested_run, "status": status, "action": "reuse_run" if requested_run else "no_run", "response": response})
                     return
                 if intent.direct_answer and requested_run:
@@ -559,7 +561,8 @@ class LitAuditHandler(BaseHTTPRequestHandler):
                 result = run_pipeline(settings, source="data", question=intent.expanded_query or message, live=True, **options)
                 run_id = result["run_id"]
                 current_payload = build_payload(settings.runs_dir, run_id)
-                for previous in body.get("conversation_context") or []:
+                saved_history = load_conversation(settings.runs_dir, requested_run).get("messages", []) if requested_run else []
+                for previous in saved_history or body.get("conversation_context") or []:
                     if isinstance(previous, dict) and previous.get("role") in {"user", "assistant"} and isinstance(previous.get("content"), str):
                         save_message(settings.runs_dir, run_id, previous["role"], previous["content"], previous.get("response"))
             else:
@@ -577,6 +580,9 @@ class LitAuditHandler(BaseHTTPRequestHandler):
                 run_id = fork_workspace(settings.runs_dir, run_id)["run_id"]
                 response["run_id"] = run_id
             save_turn(settings.runs_dir, run_id, message, response["overview"], response)
+            if requested_run and requested_run != run_id:
+                from src.conversation import continue_conversation
+                continue_conversation(settings.runs_dir, requested_run, run_id)
             self._save_research_context(run_id, constraints, resources)
             self._json({"conversation_id": run_id, "run_id": run_id, "status": "completed", "action": "new_run" if intent.needs_retrieval else "reuse_run", "response": response})
         except FileNotFoundError as exc:
