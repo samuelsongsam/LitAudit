@@ -1,0 +1,1015 @@
+{
+  "run_id": "workspace_20261107T043815Z_1abf5b55",
+  "conversation_id": "public-dialogue",
+  "messages": [
+    {
+      "role": "user",
+      "content": "根据以上检索结果，用中文总结这个方向主要解决什么问题、有哪些技术路线。只使用当前材料，每个主要观点附论文引用。",
+      "turn_id": "22999dc81d2545ef80dedaa1d6af44d7",
+      "created_at": "2026-11-07T04:37:27.521699+00:00",
+      "response": null
+    },
+    {
+      "role": "assistant",
+      "content": "以下基于当前论文摘要归纳，未经全文核验。\n\n该方向主要解决大语言模型推理中预填充（prefill）与解码（decode）两个阶段特性不同导致的效率问题：预填充是计算密集型，解码是内存带宽密集型，二者相互干扰且资源需求不匹配。\n[paper-011] · 摘要；[paper-012] · 摘要；[paper-013] · 摘要\n\n技术路线之一是预填充-解码分离（PD disaggregation），将两个阶段放在不同硬件上运行以减少干扰，但会引入阶段不均衡和跨设备KV缓存传输开销。\n[paper-012] · 摘要；[paper-013] · 摘要\n\n技术路线之二是混合批处理与注意力内核优化，将不同请求的预填充和解码阶段合并到同一批次中，并设计能同时高效计算两阶段注意力的GPU内核。\n[paper-011] · 摘要\n\n技术路线之三是专用硬件设计，针对预填充和解码的不同特性定制芯片，例如预填充芯片采用更大脉动阵列和低成本GDDR内存，解码芯片保留高内存带宽但降低计算能力。\n[paper-012] · 摘要\n\n技术路线之四是模型剪枝与预填充共享，使剪枝与PD分离部署深度结合，或让多个微调模型共享预填充模块和KV缓存以减少冗余计算和存储。\n[paper-009] · 摘要；[paper-010] · 摘要\n\n技术路线之五是资源分配与调度优化，包括基于SLO和吞吐需求的理论建模来确定P/D资源数量，以及功率感知的资源配置框架来权衡服务容量与功耗。\n[paper-014] · 摘要；[paper-016] · 摘要\n\n技术路线之六是统一聚合与分离架构，根据SLO动态调整预填充和解码的资源配置，在紧TTFT和松TPOT时偏向聚合，在紧TPOT和松TTFT时偏向分离，平衡SLO时采用混合模式。\n[paper-019] · 摘要\n\n技术路线之七是面向智能体推理的异构系统与仿真框架，探索预填充-解码-注意力-FFN多级分离在异构NPU上的收益，当前材料显示仿真中四路分离在不同模型上对提升吞吐最一致。\n[paper-018] · 摘要",
+      "turn_id": "22999dc81d2545ef80dedaa1d6af44d7",
+      "created_at": "2026-11-07T04:37:27.521699+00:00",
+      "response": {
+        "overview": "以下基于当前论文摘要归纳，未经全文核验。\n\n该方向主要解决大语言模型推理中预填充（prefill）与解码（decode）两个阶段特性不同导致的效率问题：预填充是计算密集型，解码是内存带宽密集型，二者相互干扰且资源需求不匹配。\n[paper-011] · 摘要；[paper-012] · 摘要；[paper-013] · 摘要\n\n技术路线之一是预填充-解码分离（PD disaggregation），将两个阶段放在不同硬件上运行以减少干扰，但会引入阶段不均衡和跨设备KV缓存传输开销。\n[paper-012] · 摘要；[paper-013] · 摘要\n\n技术路线之二是混合批处理与注意力内核优化，将不同请求的预填充和解码阶段合并到同一批次中，并设计能同时高效计算两阶段注意力的GPU内核。\n[paper-011] · 摘要\n\n技术路线之三是专用硬件设计，针对预填充和解码的不同特性定制芯片，例如预填充芯片采用更大脉动阵列和低成本GDDR内存，解码芯片保留高内存带宽但降低计算能力。\n[paper-012] · 摘要\n\n技术路线之四是模型剪枝与预填充共享，使剪枝与PD分离部署深度结合，或让多个微调模型共享预填充模块和KV缓存以减少冗余计算和存储。\n[paper-009] · 摘要；[paper-010] · 摘要\n\n技术路线之五是资源分配与调度优化，包括基于SLO和吞吐需求的理论建模来确定P/D资源数量，以及功率感知的资源配置框架来权衡服务容量与功耗。\n[paper-014] · 摘要；[paper-016] · 摘要\n\n技术路线之六是统一聚合与分离架构，根据SLO动态调整预填充和解码的资源配置，在紧TTFT和松TPOT时偏向聚合，在紧TPOT和松TTFT时偏向分离，平衡SLO时采用混合模式。\n[paper-019] · 摘要\n\n技术路线之七是面向智能体推理的异构系统与仿真框架，探索预填充-解码-注意力-FFN多级分离在异构NPU上的收益，当前材料显示仿真中四路分离在不同模型上对提升吞吐最一致。\n[paper-018] · 摘要",
+        "overview_mode": "direct_answer",
+        "answer_audit": {
+          "ok": true,
+          "errors": [],
+          "rejected": [],
+          "citations": [
+            {
+              "statement": 0,
+              "paper_id": "paper-011",
+              "title": "POD-A ttention : Unlocking Full Prefill-Decode Overlap for Faster LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "Each request in LLM inference goes through two phases: compute-bound prefill and memory-bandwidth-bound decode.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 0,
+              "paper_id": "paper-012",
+              "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "LLM inference is composed of two phases with distinct characteristics: a compute-bound prefill phase followed by a memory-bound decode phase.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 0,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "Prefill-decode (PD) disaggregation has emerged as a promising serving paradigm for large language models (LLMs), as it decouples prompt processing (prefill) from autoregressive token generation (decode) to reduce inter-task interference and improve quality of service (QoS).",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 1,
+              "paper_id": "paper-012",
+              "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "prior work proposes prefill-decode disaggregation to run each phase on separate hardware.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 1,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "However, disaggregation also amplifies stage imbalance: the prefill cluster (P-C) can become compute-limited, the decode cluster (D-C) is often bandwidth-limited, and the required cross-device KV cache transfer introduces additional communication overhead.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 2,
+              "paper_id": "paper-011",
+              "title": "POD-A ttention : Unlocking Full Prefill-Decode Overlap for Faster LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "recent systems use hybrid batching that combines the prefill and decode phases of different requests into the same batch.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 2,
+              "paper_id": "paper-011",
+              "title": "POD-A ttention : Unlocking Full Prefill-Decode Overlap for Faster LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "POD-Attention - the first GPU kernel that efficiently computes attention for hybrid batches.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 3,
+              "paper_id": "paper-012",
+              "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "SPAD (Specialized Prefill and Decode hardware), adopting a less-is-more methodology to design specialized chips tailored to the distinct characteristics of prefill and decode phases.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 3,
+              "paper_id": "paper-012",
+              "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "The proposed Prefill Chips have larger systolic arrays and use cost-effective GDDR memory, whereas the proposed Decode Chips retain high memory bandwidth but reduce compute capacity.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 4,
+              "paper_id": "paper-009",
+              "title": "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference",
+              "certainty": "abstract_only",
+              "quote": "we propose a pruning method that is highly integrated with PD disaggregation, enabling more precise pruning of blocks.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 4,
+              "paper_id": "paper-010",
+              "title": "PrefillShare: A Shared Prefill Module for KV Reuse in Multi-LLM Disaggregated Serving",
+              "certainty": "abstract_only",
+              "quote": "PrefillShare factorizes the model into prefill and decode modules, freezes the prefill module, and fine-tunes only the decode module. This design allows multiple task-specific models to share a prefill module and the KV cache generated for the same prompt.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 5,
+              "paper_id": "paper-014",
+              "title": "SLO-Aware Compute Resource Allocation for Prefill-Decode Disaggregated LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "we propose a hybrid approach that combines theoretical modeling with empirical benchmarking. First, we present a theoretical model for calculating P/D resource counts, which is based on total throughput requirements, request input and output lengths, as well as prefill and decode throughput.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 5,
+              "paper_id": "paper-016",
+              "title": "Analytical Power-Aware Provisioning for Prefill-Decode Disaggregated AI Inference",
+              "certainty": "abstract_only",
+              "quote": "This paper develops an analytical framework for power-aware provisioning of PD-disaggregated AI inference.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 6,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "aggregation is optimal for tight time-to-first-token (TTFT) and relaxed time-per-output-token (TPOT), while disaggregation excels for strict TPOT and relaxed TTFT.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 6,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "TaiChi uses a unified disaggregation-aggregation architecture with differentiated-capability GPU instances",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 7,
+              "paper_id": "paper-018",
+              "title": "When Does Disaggregation Pay? Simulating Prefill--Decode--Attention--FFN Specialization for Agentic LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "we propose a novel simulation framework for disaggregated serving, termed \\textbf{HeteroPanacea}, that enables system-level simulation across three dimensions: 1) disaggregated quantization, 2) automated intra- and inter-device parallelization scheduling, and 3) PDAF (prefill-decode-attention-FFN) NPU architectural heterogeneity.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 7,
+              "paper_id": "paper-018",
+              "title": "When Does Disaggregation Pay? Simulating Prefill--Decode--Attention--FFN Specialization for Agentic LLM Inference",
+              "certainty": "abstract_only",
+              "quote": "demonstrate 4 way Prefill Decode Attention FFN disaggregation is the most consistent for increasing throughput across different models, assuming custom NPUs.",
+              "page": null,
+              "passage_id": null
+            }
+          ],
+          "scope_paper_ids": [],
+          "kind": "material_summary",
+          "review": {
+            "accepted_ids": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          }
+        },
+        "intent": {
+          "kind": "follow_up",
+          "confidence": 1.0,
+          "reason": "用户要求总结当前材料",
+          "needs_retrieval": false,
+          "target_paper_id": null,
+          "branch": null,
+          "needs_clarification": false,
+          "direct_answer": true,
+          "clarification_questions": null,
+          "expanded_query": null,
+          "answer": null,
+          "route_source": "user_material_summary",
+          "route_error": null
+        },
+        "papers": [],
+        "paper_selection": {
+          "mode": "direct_answer",
+          "matched_count": 0,
+          "total_run_count": 12,
+          "added_count": 0,
+          "added_paper_ids": [],
+          "message": "复用当前研究结果，未重新检索。",
+          "retrieval_status": "not_started",
+          "retrieval_failures": []
+        },
+        "map": {},
+        "ask": {
+          "papers": []
+        },
+        "run_id": "public-dialogue",
+        "actions": [],
+        "limitations": []
+      }
+    },
+    {
+      "role": "user",
+      "content": "从当前结果中选择两篇最相关的论文，比较它们怎样划分 prefill 和 decode 资源、怎样处理负载变化，以及适用条件。材料没说明的请标为当前材料未说明。",
+      "turn_id": "12b23241c8a0422ead6f612b5c8cdb13",
+      "created_at": "2026-11-07T04:37:42.842937+00:00",
+      "response": null
+    },
+    {
+      "role": "assistant",
+      "content": "以下基于当前论文摘要归纳，未经全文核验。 部分生成内容未通过引用或数字核验，以下仅保留通过的部分。\n\n在给定材料中，与“划分 prefill 和 decode 资源”及“处理负载变化”最相关的两篇是：一篇提出按工作负载比例把可重构芯粒动态分配给预填充或解码，另一篇提出用统一聚合-分离架构和可配置滑块在聚合与分离之间调整。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n资源划分方式上，前者采用四芯粒多芯片模块，芯粒可重构并按工作负载比例动态指派给预填充或解码；后者采用统一分离-聚合架构，配置预填充偏重与解码偏重两类能力不同的GPU实例，并用三个可配置滑块控制两类实例的比例及块大小。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n适用条件上，前者面向PD分离式LLM推理的专用加速器设计，摘要报告在GPT-2、OPT和Llama 3.2上达到541–4727有效tokens/s，并相对同规模四芯粒PD聚合基线有额外提升；后者面向不同TTFT与TPOT的SLO组合，摘要报告在均衡SLO下相比先进系统goodput最高提升77%。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n两篇论文的实验平台与基线不同：前者是22纳米四芯粒MCM加速器仿真，基线为单芯粒和同规模四芯粒PD聚合；后者是GPU上的服务系统实验，基线为先进服务系统。当前材料未说明二者在相同硬件、模型和负载下评测，因此无法就性能数字进行公平比较。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n关于负载变化的具体检测机制、切换时延和调度细节，当前材料未说明；两篇摘要也未给出在相同动态负载轨迹下的对比结果。\n[paper-013] · 摘要；[paper-019] · 摘要",
+      "turn_id": "12b23241c8a0422ead6f612b5c8cdb13",
+      "created_at": "2026-11-07T04:37:42.842937+00:00",
+      "response": {
+        "overview": "以下基于当前论文摘要归纳，未经全文核验。 部分生成内容未通过引用或数字核验，以下仅保留通过的部分。\n\n在给定材料中，与“划分 prefill 和 decode 资源”及“处理负载变化”最相关的两篇是：一篇提出按工作负载比例把可重构芯粒动态分配给预填充或解码，另一篇提出用统一聚合-分离架构和可配置滑块在聚合与分离之间调整。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n资源划分方式上，前者采用四芯粒多芯片模块，芯粒可重构并按工作负载比例动态指派给预填充或解码；后者采用统一分离-聚合架构，配置预填充偏重与解码偏重两类能力不同的GPU实例，并用三个可配置滑块控制两类实例的比例及块大小。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n适用条件上，前者面向PD分离式LLM推理的专用加速器设计，摘要报告在GPT-2、OPT和Llama 3.2上达到541–4727有效tokens/s，并相对同规模四芯粒PD聚合基线有额外提升；后者面向不同TTFT与TPOT的SLO组合，摘要报告在均衡SLO下相比先进系统goodput最高提升77%。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n两篇论文的实验平台与基线不同：前者是22纳米四芯粒MCM加速器仿真，基线为单芯粒和同规模四芯粒PD聚合；后者是GPU上的服务系统实验，基线为先进服务系统。当前材料未说明二者在相同硬件、模型和负载下评测，因此无法就性能数字进行公平比较。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n关于负载变化的具体检测机制、切换时延和调度细节，当前材料未说明；两篇摘要也未给出在相同动态负载轨迹下的对比结果。\n[paper-013] · 摘要；[paper-019] · 摘要",
+        "overview_mode": "direct_answer",
+        "answer_audit": {
+          "ok": true,
+          "errors": [],
+          "rejected": [
+            "invalid_source_quote"
+          ],
+          "citations": [
+            {
+              "statement": 0,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 0,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "TaiChi uses a unified disaggregation-aggregation architecture with differentiated-capability GPU instances: prefill-heavy (fast prefill, high-interference decode) and decode-heavy (low-interference decode, slow prefill). Three configurable sliders control the ratio between these instances and their chunk sizes.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 1,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "This work presentsPDAcc, a four-chiplet multi-chip-module (MCM) accelerator optimized for PD-disaggregated LLM inference. PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 1,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "TaiChi uses a unified disaggregation-aggregation architecture with differentiated-capability GPU instances: prefill-heavy (fast prefill, high-interference decode) and decode-heavy (low-interference decode, slow prefill). Three configurable sliders control the ratio between these instances and their chunk sizes.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 2,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "Implemented in 22-nm technology as a four-chiplet MCM, PDAcc sustains 541–4727 effective tokens/s on GPT-2, OPT, and Llama 3.2, achieving$5.76\\times $higher prefill throughput and$12.42\\times $higher decode throughput than a single chiplet, and further delivering an additional 1.50–$3.24\\times $improvement over a four-chiplet PD-aggregated baseline with the same MCM scaling.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 2,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "Our experiments show TaiChi improves goodput by up to 77% over state-of-the-art systems under balanced TTFT and TPOT SLOs.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 3,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "Implemented in 22-nm technology as a four-chiplet MCM",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 3,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "Our experiments show TaiChi improves goodput by up to 77% over state-of-the-art systems under balanced TTFT and TPOT SLOs.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 4,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 4,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "TaiChi adapts to various SLO regimes by adjusting sliders.",
+              "page": null,
+              "passage_id": null
+            }
+          ],
+          "scope_paper_ids": [
+            "paper-019",
+            "paper-013"
+          ],
+          "kind": "material_summary",
+          "review": {
+            "accepted_ids": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        },
+        "intent": {
+          "kind": "follow_up",
+          "confidence": 1.0,
+          "reason": "用户要求分析当前材料",
+          "needs_retrieval": false,
+          "target_paper_id": null,
+          "branch": null,
+          "needs_clarification": false,
+          "direct_answer": true,
+          "clarification_questions": null,
+          "expanded_query": null,
+          "answer": null,
+          "route_source": "user_material_analysis",
+          "route_error": null
+        },
+        "papers": [],
+        "paper_selection": {
+          "mode": "direct_answer",
+          "matched_count": 0,
+          "total_run_count": 12,
+          "added_count": 0,
+          "added_paper_ids": [],
+          "message": "复用当前研究结果，未重新检索。",
+          "retrieval_status": "not_started",
+          "retrieval_failures": []
+        },
+        "map": {},
+        "ask": {
+          "papers": []
+        },
+        "run_id": "public-dialogue",
+        "actions": [],
+        "limitations": []
+      }
+    },
+    {
+      "role": "user",
+      "content": "这些方案在完全相同的硬件和负载下，分别能提高多少吞吐量？如果当前材料不能证明条件一致，请直接说明不能公平比较。",
+      "turn_id": "29782c1ba59f496181d897a96d958fbb",
+      "created_at": "2026-11-07T04:37:54.571291+00:00",
+      "response": null
+    },
+    {
+      "role": "assistant",
+      "content": "以下基于当前论文摘要归纳，未经全文核验。\n\n当前材料无法支持在完全相同硬件和负载下对各方案吞吐量提升进行公平比较：所给摘要分别来自不同实验平台与不同基线，材料未说明它们共享相同硬件、模型和负载条件。\n[paper-013] · 摘要；[paper-019] · 摘要\n\nPDAcc 的吞吐数字是在22纳米四芯粒MCM加速器上报告的，覆盖GPT-2、OPT和Llama 3.2，其提升是相对单芯粒及同规模四芯粒PD聚合基线，而非与其他服务系统在同一GPU平台上比较。\n[paper-013] · 摘要\n\nTaiChi 的提升数字是goodput指标，在均衡TTFT与TPOT的SLO条件下相对先进系统最高提升77%，材料未说明其硬件平台与PDAcc相同，也未给出与PDAcc基线的对照。\n[paper-019] · 摘要\n\n两篇材料报告的指标口径不同：PDAcc报告有效tokens/s及相对单芯粒的预填充、解码吞吐倍数，TaiChi报告goodput相对先进系统的提升比例；当前材料未说明二者可在同一指标下换算或对齐。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n关于各方案在相同动态负载轨迹下的吞吐提升，当前材料未说明；因此只能分别陈述各自基线下的报告值，不能合并为同一条件下的比较结论。\n[paper-013] · 摘要；[paper-019] · 摘要",
+      "turn_id": "29782c1ba59f496181d897a96d958fbb",
+      "created_at": "2026-11-07T04:37:54.571291+00:00",
+      "response": {
+        "overview": "以下基于当前论文摘要归纳，未经全文核验。\n\n当前材料无法支持在完全相同硬件和负载下对各方案吞吐量提升进行公平比较：所给摘要分别来自不同实验平台与不同基线，材料未说明它们共享相同硬件、模型和负载条件。\n[paper-013] · 摘要；[paper-019] · 摘要\n\nPDAcc 的吞吐数字是在22纳米四芯粒MCM加速器上报告的，覆盖GPT-2、OPT和Llama 3.2，其提升是相对单芯粒及同规模四芯粒PD聚合基线，而非与其他服务系统在同一GPU平台上比较。\n[paper-013] · 摘要\n\nTaiChi 的提升数字是goodput指标，在均衡TTFT与TPOT的SLO条件下相对先进系统最高提升77%，材料未说明其硬件平台与PDAcc相同，也未给出与PDAcc基线的对照。\n[paper-019] · 摘要\n\n两篇材料报告的指标口径不同：PDAcc报告有效tokens/s及相对单芯粒的预填充、解码吞吐倍数，TaiChi报告goodput相对先进系统的提升比例；当前材料未说明二者可在同一指标下换算或对齐。\n[paper-013] · 摘要；[paper-019] · 摘要\n\n关于各方案在相同动态负载轨迹下的吞吐提升，当前材料未说明；因此只能分别陈述各自基线下的报告值，不能合并为同一条件下的比较结论。\n[paper-013] · 摘要；[paper-019] · 摘要",
+        "overview_mode": "direct_answer",
+        "answer_audit": {
+          "ok": true,
+          "errors": [],
+          "rejected": [],
+          "citations": [
+            {
+              "statement": 0,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "Implemented in 22-nm technology as a four-chiplet MCM, PDAcc sustains 541–4727 effective tokens/s on GPT-2, OPT, and Llama 3.2",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 0,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "Our experiments show TaiChi improves goodput by up to 77% over state-of-the-art systems under balanced TTFT and TPOT SLOs.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 1,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "Implemented in 22-nm technology as a four-chiplet MCM, PDAcc sustains 541–4727 effective tokens/s on GPT-2, OPT, and Llama 3.2, achieving$5.76\\times $higher prefill throughput and$12.42\\times $higher decode throughput than a single chiplet, and further delivering an additional 1.50–$3.24\\times $improvement over a four-chiplet PD-aggregated baseline with the same MCM scaling.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 2,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "Our experiments show TaiChi improves goodput by up to 77% over state-of-the-art systems under balanced TTFT and TPOT SLOs.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 3,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "achieving$5.76\\times $higher prefill throughput and$12.42\\times $higher decode throughput than a single chiplet",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 3,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "improves goodput by up to 77% over state-of-the-art systems",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 4,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 4,
+              "paper_id": "paper-019",
+              "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+              "certainty": "abstract_only",
+              "quote": "TaiChi adapts to various SLO regimes by adjusting sliders.",
+              "page": null,
+              "passage_id": null
+            }
+          ],
+          "scope_paper_ids": [
+            "paper-019",
+            "paper-013"
+          ],
+          "kind": "material_summary",
+          "review": {
+            "accepted_ids": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        },
+        "intent": {
+          "kind": "follow_up",
+          "confidence": 1.0,
+          "reason": "用户要求分析当前材料",
+          "needs_retrieval": false,
+          "target_paper_id": null,
+          "branch": null,
+          "needs_clarification": false,
+          "direct_answer": true,
+          "clarification_questions": null,
+          "expanded_query": null,
+          "answer": null,
+          "route_source": "user_material_analysis",
+          "route_error": null
+        },
+        "papers": [],
+        "paper_selection": {
+          "mode": "direct_answer",
+          "matched_count": 0,
+          "total_run_count": 12,
+          "added_count": 0,
+          "added_paper_ids": [],
+          "message": "复用当前研究结果，未重新检索。",
+          "retrieval_status": "not_started",
+          "retrieval_failures": []
+        },
+        "map": {},
+        "ask": {
+          "papers": []
+        },
+        "run_id": "public-dialogue",
+        "actions": [],
+        "limitations": []
+      }
+    },
+    {
+      "role": "user",
+      "content": "只解释你刚才比较的后一篇，它怎样处理负载变化？不要重新检索，也不要换成其他论文。",
+      "turn_id": "5ab0f97890e9447d889df91a829a3aa7",
+      "created_at": "2026-11-07T04:38:05.290657+00:00",
+      "response": null
+    },
+    {
+      "role": "assistant",
+      "content": "以下基于当前论文摘要归纳，未经全文核验。\n\nPDAcc 采用四芯粒多芯片模块，芯粒可重构，并按工作负载比例动态指派给预填充或解码，以此应对负载变化。\n[paper-013] · 摘要\n\n除动态指派芯粒外，PDAcc 还通过三项技术缓解阶段不均衡：CFHM 复用空闲片上 SRAM 加速预填充，HCWG 利用预填充侧带宽改善解码的跨芯粒权重传递，CCAD 将部分注意力计算跨集群迁移以减少依赖流量。\n[paper-013] · 摘要\n\n该方案面向 PD 分离式 LLM 推理的专用加速器，在 22 纳米四芯粒 MCM 上实现，摘要报告在 GPT-2、OPT 和 Llama 3.2 上达到 541–4727 有效 tokens/s。\n[paper-013] · 摘要\n\n其报告的性能提升是相对单芯粒及同规模四芯粒 PD 聚合基线，而非与其他服务系统在同一平台上比较。\n[paper-013] · 摘要\n\n关于负载变化的检测机制、芯粒重新指派的切换时延与调度细节，当前材料未说明。\n[paper-013] · 摘要",
+      "turn_id": "5ab0f97890e9447d889df91a829a3aa7",
+      "created_at": "2026-11-07T04:38:05.290657+00:00",
+      "response": {
+        "overview": "以下基于当前论文摘要归纳，未经全文核验。\n\nPDAcc 采用四芯粒多芯片模块，芯粒可重构，并按工作负载比例动态指派给预填充或解码，以此应对负载变化。\n[paper-013] · 摘要\n\n除动态指派芯粒外，PDAcc 还通过三项技术缓解阶段不均衡：CFHM 复用空闲片上 SRAM 加速预填充，HCWG 利用预填充侧带宽改善解码的跨芯粒权重传递，CCAD 将部分注意力计算跨集群迁移以减少依赖流量。\n[paper-013] · 摘要\n\n该方案面向 PD 分离式 LLM 推理的专用加速器，在 22 纳米四芯粒 MCM 上实现，摘要报告在 GPT-2、OPT 和 Llama 3.2 上达到 541–4727 有效 tokens/s。\n[paper-013] · 摘要\n\n其报告的性能提升是相对单芯粒及同规模四芯粒 PD 聚合基线，而非与其他服务系统在同一平台上比较。\n[paper-013] · 摘要\n\n关于负载变化的检测机制、芯粒重新指派的切换时延与调度细节，当前材料未说明。\n[paper-013] · 摘要",
+        "overview_mode": "direct_answer",
+        "answer_audit": {
+          "ok": true,
+          "errors": [],
+          "rejected": [],
+          "citations": [
+            {
+              "statement": 0,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 1,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "It further introduces three techniques: copy-less float hybrid-LUT multiply (CFHM) to repurpose idle on-chip SRAM for prefill acceleration, hybrid compressed weight gather (HCWG) to utilize prefill-side bandwidth and improve inter-chip weight delivery for decode, and cross-cluster attention dataflow (CCAD) to reduce dependency traffic by shifting part of attention computation across clusters.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 2,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "Implemented in 22-nm technology as a four-chiplet MCM, PDAcc sustains 541–4727 effective tokens/s on GPT-2, OPT, and Llama 3.2",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 3,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "achieving$5.76\\times $higher prefill throughput and$12.42\\times $higher decode throughput than a single chiplet, and further delivering an additional 1.50–$3.24\\times $improvement over a four-chiplet PD-aggregated baseline with the same MCM scaling.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 4,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios.",
+              "page": null,
+              "passage_id": null
+            }
+          ],
+          "scope_paper_ids": [
+            "paper-013"
+          ],
+          "kind": "material_summary",
+          "review": {
+            "accepted_ids": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        },
+        "intent": {
+          "kind": "paper_explore",
+          "confidence": 1.0,
+          "reason": "沿用最近讨论的论文范围",
+          "needs_retrieval": false,
+          "target_paper_id": "paper-013",
+          "branch": null,
+          "needs_clarification": false,
+          "direct_answer": true,
+          "clarification_questions": null,
+          "expanded_query": null,
+          "answer": null,
+          "route_source": "conversation_references",
+          "route_error": null
+        },
+        "papers": [],
+        "paper_selection": {
+          "mode": "direct_answer",
+          "matched_count": 0,
+          "total_run_count": 12,
+          "added_count": 0,
+          "added_paper_ids": [],
+          "message": "复用当前研究结果，未重新检索。",
+          "retrieval_status": "not_started",
+          "retrieval_failures": []
+        },
+        "map": {},
+        "ask": {
+          "papers": []
+        },
+        "run_id": "public-dialogue",
+        "actions": [],
+        "limitations": []
+      }
+    },
+    {
+      "role": "user",
+      "content": "请从当前论文中选择一篇最相关的，检查它的实验配置和性能结果。如果摘要不足，请尝试获取开放全文并检索实验段落，再给出有出处的回答。",
+      "turn_id": "8cabbe449f3f49bab1e48ba5d6758bee",
+      "created_at": "2026-11-07T04:38:32.251916+00:00",
+      "response": null
+    },
+    {
+      "role": "assistant",
+      "content": "以下基于当前论文摘要归纳，未经全文核验。 部分生成内容未通过引用或数字核验，以下仅保留通过的部分。\n\n在给定材料中，与检查实验配置和性能结果最相关的是PDAcc，其摘要提供了较具体的硬件实现、测试模型和吞吐量数据。\n[paper-013] · 摘要\n\n实验配置方面，PDAcc以22纳米工艺实现为四芯粒多芯片模块，芯粒可重构并按工作负载比例动态指派给预填充或解码。\n[paper-013] · 摘要\n\n测试模型覆盖GPT-2、OPT和Llama 3.2，摘要报告其持续吞吐为541–4727有效tokens/s。\n[paper-013] · 摘要\n\n当前材料仅提供摘要，未说明负载变化的检测机制、芯粒重新指派的切换时延与调度细节，也未给出全文实验段落。\n[paper-013] · 摘要",
+      "turn_id": "8cabbe449f3f49bab1e48ba5d6758bee",
+      "created_at": "2026-11-07T04:38:32.251916+00:00",
+      "response": {
+        "overview": "以下基于当前论文摘要归纳，未经全文核验。 部分生成内容未通过引用或数字核验，以下仅保留通过的部分。\n\n在给定材料中，与检查实验配置和性能结果最相关的是PDAcc，其摘要提供了较具体的硬件实现、测试模型和吞吐量数据。\n[paper-013] · 摘要\n\n实验配置方面，PDAcc以22纳米工艺实现为四芯粒多芯片模块，芯粒可重构并按工作负载比例动态指派给预填充或解码。\n[paper-013] · 摘要\n\n测试模型覆盖GPT-2、OPT和Llama 3.2，摘要报告其持续吞吐为541–4727有效tokens/s。\n[paper-013] · 摘要\n\n当前材料仅提供摘要，未说明负载变化的检测机制、芯粒重新指派的切换时延与调度细节，也未给出全文实验段落。\n[paper-013] · 摘要",
+        "overview_mode": "direct_answer",
+        "answer_audit": {
+          "ok": true,
+          "errors": [],
+          "rejected": [
+            "unsupported_number",
+            "unsupported_number"
+          ],
+          "citations": [
+            {
+              "statement": 0,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "This work presentsPDAcc, a four-chiplet multi-chip-module (MCM) accelerator optimized for PD-disaggregated LLM inference.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 1,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios.",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 1,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "Implemented in 22-nm technology as a four-chiplet MCM",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 2,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "PDAcc sustains 541–4727 effective tokens/s on GPT-2, OPT, and Llama 3.2",
+              "page": null,
+              "passage_id": null
+            },
+            {
+              "statement": 3,
+              "paper_id": "paper-013",
+              "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+              "certainty": "abstract_only",
+              "quote": "PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios.",
+              "page": null,
+              "passage_id": null
+            }
+          ],
+          "scope_paper_ids": [],
+          "kind": "material_summary",
+          "review": {
+            "accepted_ids": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        "intent": {
+          "kind": "follow_up",
+          "confidence": 1,
+          "reason": "用户开启有界全文补证",
+          "needs_retrieval": false,
+          "target_paper_id": "paper-013",
+          "branch": null,
+          "needs_clarification": false,
+          "direct_answer": true,
+          "clarification_questions": null,
+          "expanded_query": null,
+          "answer": null,
+          "route_source": "unknown",
+          "route_error": null
+        },
+        "papers": [],
+        "paper_selection": {
+          "mode": "direct_answer",
+          "matched_count": 0,
+          "total_run_count": 1,
+          "added_count": 0,
+          "added_paper_ids": [],
+          "message": "复用当前研究结果，未重新检索。",
+          "retrieval_status": "not_started",
+          "retrieval_failures": []
+        },
+        "map": {},
+        "ask": {
+          "papers": []
+        },
+        "run_id": "workspace_20261107T043815Z_1abf5b55",
+        "actions": [],
+        "limitations": [],
+        "agent_execution": {
+          "execution_id": "6c20dedef4a7c1d96a4da27462879d78ba925f1fd7c40b360e9bfabe7eea5af4",
+          "status": "completed",
+          "model_calls": 3,
+          "limits": {
+            "steps": 4,
+            "acquisitions": 1,
+            "papers_per_action": 2,
+            "seconds": 90
+          },
+          "steps": [
+            {
+              "tool": "read_papers",
+              "status": "completed"
+            },
+            {
+              "tool": "acquire_fulltext",
+              "status": "completed"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "基于当前研究材料，提出两个值得进一步验证的问题。每个问题说明已有依据、尚未解决的缺口，以及可执行的对照实验。不要把实验设想写成已有结论。",
+      "turn_id": "368086a2d3004b1e823becdeb0b543ac",
+      "created_at": "2026-11-07T04:38:46.595542+00:00",
+      "response": null
+    },
+    {
+      "role": "assistant",
+      "content": "**在Prefill-Decode分离的多模型服务中，共享prefill模块能否降低总prefill负载和尾延迟？**\n\nPrefillShare摘要指出多模型各自冗余执行prefill并维护KV缓存，增加总prefill负载并加剧PD干扰；而PDTrim摘要指出已有方法常忽略PD分离的实际特性。两者结合提示共享prefill可能缓解冗余，但缺乏在PD分离场景下的直接验证。\n\n可这样分析。构建多模型PD分离服务原型，分别实现独立prefill和共享prefill两种模式，在相同请求 trace 下对比总prefill计算量、KV缓存占用和尾延迟。\n\n**在动态工作负载下，主动式PD重叠调度相比反应式调度能否更有效降低尾延迟？**\n\nNexus摘要指出现有方法反应式应对性能问题而非预判，限制动态负载下的适应性；POD-Attention摘要显示全PD重叠可提升注意力计算速度，但未涉及调度策略的主动性。两者结合提示主动调度可能改善动态负载下的尾延迟，但缺乏直接比较。\n\n可这样分析。实现反应式和主动式两种PD重叠调度器，在动态变化的请求负载下运行，比较尾延迟和吞吐量。",
+      "turn_id": "368086a2d3004b1e823becdeb0b543ac",
+      "created_at": "2026-11-07T04:38:46.595542+00:00",
+      "response": {
+        "overview": "**在Prefill-Decode分离的多模型服务中，共享prefill模块能否降低总prefill负载和尾延迟？**\n\nPrefillShare摘要指出多模型各自冗余执行prefill并维护KV缓存，增加总prefill负载并加剧PD干扰；而PDTrim摘要指出已有方法常忽略PD分离的实际特性。两者结合提示共享prefill可能缓解冗余，但缺乏在PD分离场景下的直接验证。\n\n可这样分析。构建多模型PD分离服务原型，分别实现独立prefill和共享prefill两种模式，在相同请求 trace 下对比总prefill计算量、KV缓存占用和尾延迟。\n\n**在动态工作负载下，主动式PD重叠调度相比反应式调度能否更有效降低尾延迟？**\n\nNexus摘要指出现有方法反应式应对性能问题而非预判，限制动态负载下的适应性；POD-Attention摘要显示全PD重叠可提升注意力计算速度，但未涉及调度策略的主动性。两者结合提示主动调度可能改善动态负载下的尾延迟，但缺乏直接比较。\n\n可这样分析。实现反应式和主动式两种PD重叠调度器，在动态变化的请求负载下运行，比较尾延迟和吞吐量。",
+        "overview_mode": "direct_answer",
+        "answer_audit": {
+          "ok": true,
+          "kind": "research_agenda",
+          "questions": [
+            {
+              "id": 0,
+              "question": "在Prefill-Decode分离的多模型服务中，共享prefill模块能否降低总prefill负载和尾延迟？",
+              "motivation": "PrefillShare摘要指出多模型各自冗余执行prefill并维护KV缓存，增加总prefill负载并加剧PD干扰；而PDTrim摘要指出已有方法常忽略PD分离的实际特性。两者结合提示共享prefill可能缓解冗余，但缺乏在PD分离场景下的直接验证。",
+              "analysis_plan": "构建多模型PD分离服务原型，分别实现独立prefill和共享prefill两种模式，在相同请求 trace 下对比总prefill计算量、KV缓存占用和尾延迟。",
+              "design": {
+                "comparison": "实验组：共享prefill模块的多模型PD分离服务；对照组：各模型独立prefill的PD分离服务。",
+                "control": "固定模型集合、请求到达率、输入输出长度分布、硬件资源和调度策略。",
+                "metrics": "总prefill计算量（FLOPs）、KV缓存总占用、P99尾延迟、prefill-decode干扰导致的延迟波动。"
+              },
+              "sources": [
+                {
+                  "paper_id": "paper-010",
+                  "title": "PrefillShare: A Shared Prefill Module for KV Reuse in Multi-LLM Disaggregated Serving",
+                  "source_kind": "abstract",
+                  "url": "https://arxiv.org/abs/2602.12029v2",
+                  "quote": "Consequently, each model redundantly executes the prefill stage and maintains its own key-value (KV) cache, increasing aggregate prefill load and worsening tail latency by intensifying prefill-decode interference in existing LLM serving stacks.",
+                  "attribution": "该摘要指出多模型各自冗余执行prefill并维护KV缓存，增加总prefill负载并加剧PD干扰。",
+                  "certainty": "abstract_only"
+                },
+                {
+                  "paper_id": "paper-009",
+                  "title": "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference",
+                  "source_kind": "abstract",
+                  "url": "https://arxiv.org/abs/2509.04467v4",
+                  "quote": "However, existing methods often ignore the characteristics of prefill-decode (PD) disaggregation in practice.",
+                  "attribution": "该摘要指出已有方法常忽略PD分离的实际特性。",
+                  "certainty": "abstract_only"
+                }
+              ],
+              "scope": "cross_paper",
+              "provenance": "model_reviewed"
+            },
+            {
+              "id": 1,
+              "question": "在动态工作负载下，主动式PD重叠调度相比反应式调度能否更有效降低尾延迟？",
+              "motivation": "Nexus摘要指出现有方法反应式应对性能问题而非预判，限制动态负载下的适应性；POD-Attention摘要显示全PD重叠可提升注意力计算速度，但未涉及调度策略的主动性。两者结合提示主动调度可能改善动态负载下的尾延迟，但缺乏直接比较。",
+              "analysis_plan": "实现反应式和主动式两种PD重叠调度器，在动态变化的请求负载下运行，比较尾延迟和吞吐量。",
+              "design": {
+                "comparison": "实验组：主动式PD重叠调度（基于负载预测提前调整）；对照组：反应式PD重叠调度（问题出现后调整）。",
+                "control": "固定硬件配置、模型、请求长度分布和负载变化模式。",
+                "metrics": "P99尾延迟、吞吐量、调度决策延迟、PD重叠率。"
+              },
+              "sources": [
+                {
+                  "paper_id": "paper-017",
+                  "title": "Nexus:Proactive Intra-GPU Disaggregation of Prefill and Decode in LLM Serving",
+                  "source_kind": "abstract",
+                  "url": "https://arxiv.org/abs/2507.06608v5",
+                  "quote": "However, these methods respond reactively to performance issues rather than anticipating them, limiting adaptability under dynamic workloads.",
+                  "attribution": "该摘要指出现有方法反应式应对性能问题而非预判，限制动态负载下的适应性。",
+                  "certainty": "abstract_only"
+                },
+                {
+                  "paper_id": "paper-011",
+                  "title": "POD-A ttention : Unlocking Full Prefill-Decode Overlap for Faster LLM Inference",
+                  "source_kind": "abstract",
+                  "url": "https://doi.org/10.1145/3676641.3715996",
+                  "quote": "POD-Attention speeds up attention computation by up to $59\\%$ (mean $28\\%$), enabling higher throughput and lower latency LLM inference compared to the use of independently optimized prefill and decode atte",
+                  "attribution": "该摘要显示POD-Attention通过全PD重叠加速注意力计算，提升吞吐和降低延迟。",
+                  "certainty": "abstract_only"
+                }
+              ],
+              "scope": "cross_paper",
+              "provenance": "model_reviewed"
+            }
+          ],
+          "citations": [
+            {
+              "paper_id": "paper-010",
+              "title": "PrefillShare: A Shared Prefill Module for KV Reuse in Multi-LLM Disaggregated Serving",
+              "source_kind": "abstract",
+              "url": "https://arxiv.org/abs/2602.12029v2",
+              "quote": "Consequently, each model redundantly executes the prefill stage and maintains its own key-value (KV) cache, increasing aggregate prefill load and worsening tail latency by intensifying prefill-decode interference in existing LLM serving stacks.",
+              "attribution": "该摘要指出多模型各自冗余执行prefill并维护KV缓存，增加总prefill负载并加剧PD干扰。",
+              "certainty": "abstract_only"
+            },
+            {
+              "paper_id": "paper-009",
+              "title": "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference",
+              "source_kind": "abstract",
+              "url": "https://arxiv.org/abs/2509.04467v4",
+              "quote": "However, existing methods often ignore the characteristics of prefill-decode (PD) disaggregation in practice.",
+              "attribution": "该摘要指出已有方法常忽略PD分离的实际特性。",
+              "certainty": "abstract_only"
+            },
+            {
+              "paper_id": "paper-017",
+              "title": "Nexus:Proactive Intra-GPU Disaggregation of Prefill and Decode in LLM Serving",
+              "source_kind": "abstract",
+              "url": "https://arxiv.org/abs/2507.06608v5",
+              "quote": "However, these methods respond reactively to performance issues rather than anticipating them, limiting adaptability under dynamic workloads.",
+              "attribution": "该摘要指出现有方法反应式应对性能问题而非预判，限制动态负载下的适应性。",
+              "certainty": "abstract_only"
+            },
+            {
+              "paper_id": "paper-011",
+              "title": "POD-A ttention : Unlocking Full Prefill-Decode Overlap for Faster LLM Inference",
+              "source_kind": "abstract",
+              "url": "https://doi.org/10.1145/3676641.3715996",
+              "quote": "POD-Attention speeds up attention computation by up to $59\\%$ (mean $28\\%$), enabling higher throughput and lower latency LLM inference compared to the use of independently optimized prefill and decode atte",
+              "attribution": "该摘要显示POD-Attention通过全PD重叠加速注意力计算，提升吞吐和降低延迟。",
+              "certainty": "abstract_only"
+            }
+          ],
+          "considered_paper_ids": [
+            "paper-008",
+            "paper-009",
+            "paper-010",
+            "paper-011",
+            "paper-012",
+            "paper-013",
+            "paper-014",
+            "paper-015",
+            "paper-016",
+            "paper-017",
+            "paper-018",
+            "paper-019"
+          ],
+          "evidence_paper_ids": [
+            "paper-010",
+            "paper-009",
+            "paper-017",
+            "paper-011"
+          ],
+          "answer_status": "answered",
+          "model_status": null,
+          "generation": {
+            "attempts": 1,
+            "valid_drafts": 3,
+            "review_calls": 1,
+            "accepted_questions": 3,
+            "evidence_atoms": 8,
+            "rejections": {}
+          },
+          "human_verified": false,
+          "errors": []
+        },
+        "intent": {
+          "kind": "follow_up",
+          "confidence": 1.0,
+          "reason": "用户选择当前正文问答",
+          "needs_retrieval": false,
+          "target_paper_id": null,
+          "branch": null,
+          "needs_clarification": false,
+          "direct_answer": true,
+          "clarification_questions": null,
+          "expanded_query": null,
+          "answer": null,
+          "route_source": "user_reading_scope",
+          "route_error": null
+        },
+        "papers": [],
+        "paper_selection": {
+          "mode": "direct_answer",
+          "matched_count": 0,
+          "total_run_count": 12,
+          "added_count": 0,
+          "added_paper_ids": [],
+          "message": "复用当前研究结果，未重新检索。",
+          "retrieval_status": "not_started",
+          "retrieval_failures": []
+        },
+        "map": {},
+        "ask": {
+          "papers": []
+        },
+        "run_id": "workspace_20261107T043815Z_1abf5b55",
+        "actions": [],
+        "limitations": [],
+        "reading_scope": {
+          "paper_ids": [
+            "paper-008",
+            "paper-009",
+            "paper-010",
+            "paper-011",
+            "paper-012",
+            "paper-013",
+            "paper-014",
+            "paper-015",
+            "paper-016",
+            "paper-017",
+            "paper-018",
+            "paper-019"
+          ],
+          "titles": [
+            "Disaggregated Prefill and Decode Architectures",
+            "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference",
+            "PrefillShare: A Shared Prefill Module for KV Reuse in Multi-LLM Disaggregated Serving",
+            "POD-A ttention : Unlocking Full Prefill-Decode Overlap for Faster LLM Inference",
+            "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+            "SLO-Aware Compute Resource Allocation for Prefill-Decode Disaggregated LLM Inference",
+            "TPLA: Tensor Parallel Latent Attention for Efficient Disaggregated Prefill & Decode Inference",
+            "Analytical Power-Aware Provisioning for Prefill-Decode Disaggregated AI Inference",
+            "Nexus:Proactive Intra-GPU Disaggregation of Prefill and Decode in LLM Serving",
+            "When Does Disaggregation Pay? Simulating Prefill--Decode--Attention--FFN Specialization for Agentic LLM Inference",
+            "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving"
+          ],
+          "source": "current_research",
+          "ambiguous_name": false,
+          "excluded_paper_ids": [],
+          "notice": "本轮只使用当前所示论文范围内的正文。",
+          "available_fulltext_paper_ids": [],
+          "evidence_window_paper_ids": []
+        }
+      }
+    }
+  ]
+}

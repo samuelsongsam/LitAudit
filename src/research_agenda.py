@@ -314,9 +314,10 @@ def research_agenda_answer(payload: dict, question: str, call) -> tuple[str, dic
         for row in local_research_questions(evidence, study_question, limit=4):
             unique.setdefault(row['question'], {**row, 'provenance': 'local_evidence'})
     ranked = list(unique.values())
-    selected = ranked[:4]
+    requested_count = 2 if re.search(r'(?:两|2)个', question) else 4
+    selected = ranked[:requested_count]
     if multi_source and not any(row['scope'] == 'cross_paper' for row in selected):
-        cross_paper = next((row for row in ranked[4:] if row['scope'] == 'cross_paper'), None)
+        cross_paper = next((row for row in ranked[requested_count:] if row['scope'] == 'cross_paper'), None)
         if cross_paper:
             selected[-1] = cross_paper
     questions = [{**row, 'id': index} for index, row in enumerate(selected)]

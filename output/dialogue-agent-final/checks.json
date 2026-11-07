@@ -1,0 +1,10 @@
+[
+  {
+    "check": "turn_5_answer",
+    "passed": true
+  },
+  {
+    "check": "agent_obtained_cited_fulltext",
+    "passed": true
+  }
+]

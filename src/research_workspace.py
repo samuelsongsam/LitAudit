@@ -323,7 +323,8 @@ def _field_candidate(passage: Passage, field: str, run_id: str, chosen_quote: st
 
 
 def search_fulltext(runs_dir: Path, run_id: str, query: str,
-                    paper_ids: list[str] | None = None, section: str | None = None) -> dict:
+                    paper_ids: list[str] | None = None, section: str | None = None,
+                    semantic_rerank: bool = True) -> dict:
     if not isinstance(query, str) or not query.strip() or len(query) > 2000:
         raise ValueError("请输入不超过2000字的全文检索问题")
     if section is not None and (not isinstance(section, str) or len(section) > 100):
@@ -331,7 +332,7 @@ def search_fulltext(runs_dir: Path, run_id: str, query: str,
     papers, pages, missing = _corpus(runs_dir, run_id, paper_ids)
     # Filtering is performed after chapter inheritance, so a method's
     # continuation page remains searchable without repeating the heading.
-    result = build_fulltext_search(query.strip(), papers, pages, section=section)
+    result = build_fulltext_search(query.strip(), papers, pages, section=section, semantic_rerank=semantic_rerank)
     for item in result["hits"]:
         item.update(title=papers[item["paper_id"]].title or item["paper_id"],
                     pdf_url=f"/api/fulltext/{quote(run_id, safe='')}/{quote(item['paper_id'], safe='')}#page={item['page']}")

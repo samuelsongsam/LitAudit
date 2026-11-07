@@ -1,0 +1,317 @@
+{
+  "algorithm": "bm25_passage_ranking",
+  "weights": {
+    "bm25": 1.0,
+    "specter2": 0.0
+  },
+  "passage_count": 70,
+  "total_passage_count": 70,
+  "section_filter": null,
+  "indexed_paper_count": 1,
+  "expanded_query": "Prefill-Decode 分离、多机多卡、资源调度和通信开销 resources hardware memory cost",
+  "candidate_policy": "bm25_first40_with_zero_overlap_paper_coverage",
+  "candidate_count": 40,
+  "section_policy": "reference_downweight",
+  "context_policy": "adjacent_text_with_separate_page_locations",
+  "embedding": {
+    "backend": "not_run",
+    "reason": "lexical acquisition preview"
+  },
+  "hits": [
+    {
+      "passage_id": "paper-009:p1:c2",
+      "paper_id": "paper-009",
+      "page": 1,
+      "section": "abstract",
+      "text": "Abstract\nLarge Language Models (LLMs) demonstrate\nexceptional capabilities across various tasks,\nbut their deployment is constrained by high\ncomputational and memory costs. Model prun-\ning provides an effective means to alleviate\nthese demands. However, existing methods of-\nten ignore the characteristics of prefill-decode\n(PD) disaggregation in practice. In this paper,\nwe propose a pruning method that is highly\nintegrated with PD disaggregation, enabling\nmore precise pruning of blocks. Our approach\nconstructs pruning and distillation sets to per-\nform iterative block removal, obtaining better\npruning solutions. Moreover, we analyze the\npruning sensitivity of the prefill and decode\nstages and identify removable blocks specific\nto each stage, making it well suited for PD\ndisaggregation deployment. Extensive experi-\nments demonstrate our approach consistently\nachieves strong performance in both PD dis-\naggregation and PD unified (non-PD disaggre-\ngation) settings, and can also be extended to\nother non-block pruning methods. Under the\nsame settings, our method achieves improved\nperformance and faster inference.",
+      "text_sha256": "743c1237fad738e4c74a32d5f5bc67218d9df20b3dafa3a71f7f2f655ea22cd3",
+      "bm25_score": 6.570694,
+      "semantic_score": null,
+      "score": 1.0,
+      "char_start": 197,
+      "char_end": 1321,
+      "context": [
+        {
+          "page": 1,
+          "position": "before",
+          "text": "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference\nHao Zhang*, Mengsi Lyu*, Zhuo Chen, Xingrun Xing, Yulong Ao†, Yonghua Lin†\nBeijing Academy of Artificial Intelligence (BAAI)\n"
+        },
+        {
+          "page": 1,
+          "position": "after",
+          "text": "1 Introduction\nLarge Language Models (LLMs) have emerged\nas revolutionary tools, achieving state-of-the-art\n(SOTA) results across diverse tasks and applica-\ntions (Ding et al., 2022; Qin et al., 2023; Zhu et al.,\n2023; Li et al., 2023a). However, the rapid growth\nin model scale has posed significant challenges\nfor their practical deployment (Zhang "
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p1:c1",
+      "paper_id": "paper-009",
+      "page": 1,
+      "section": null,
+      "text": "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference\nHao Zhang*, Mengsi Lyu*, Zhuo Chen, Xingrun Xing, Yulong Ao†, Yonghua Lin†\nBeijing Academy of Artificial Intelligence (BAAI)",
+      "text_sha256": "6944bf219b574352af9d7283876c59dda5071afe17d64b9554bed2c48a48a686",
+      "bm25_score": 5.327825,
+      "semantic_score": null,
+      "score": 0.810847,
+      "char_start": 0,
+      "char_end": 196,
+      "context": [
+        {
+          "page": 1,
+          "position": "after",
+          "text": "Abstract\nLarge Language Models (LLMs) demonstrate\nexceptional capabilities across various tasks,\nbut their deployment is constrained by high\ncomputational and memory costs. Model prun-\ning provides an effective means to alleviate\nthese demands. However, existing methods of-\nten ignore the characteristics of prefill-decode\n(PD) disaggregation in pra"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p9:c4",
+      "paper_id": "paper-009",
+      "page": 9,
+      "section": "references",
+      "text": "a 3 herd\nof models.arXiv preprint arXiv:2407.21783.\nDan Hendrycks, Collin Burns, Steven Basart, Andy Zou,\nMantas Mazeika, Dawn Song, and Jacob Steinhardt.\n2020. Measuring massive multitask language under-\nstanding.arXiv preprint arXiv:2009.03300.\nGeoffrey Hinton, Oriol Vinyals, and Jeff Dean. 2015.\nDistilling the knowledge in a neural network.arXiv\npreprint arXiv:1503.02531.\nCunchen Hu, Heyang Huang, Junhao Hu, Jiang Xu,\nXusheng Chen, Tao Xie, Chenxi Wang, Sa Wang,\nYungang Bao, Ninghui Sun, and 1 others. 2024a.\nMemserve: Context caching for disaggregated llm\nserving with elastic memory pool.arXiv preprint\narXiv:2406.17565.\nCunchen Hu, Heyang Huang, Liangliang Xu, Xusheng\nChen, Jiang Xu, Shuang Chen, Hao Feng, Chenxi\nWang, Sa Wang, Yungang Bao, and 1 others. 2024b.\nInference without interference: Disaggregate llm in-\nference for mixed downstream workloads.arXiv\npreprint arXiv:2401.11181.\n9",
+      "text_sha256": "1b404e73360df73958bc7d24c466e27f6441490fc7ca7fd5d1caae7c29fda50f",
+      "bm25_score": 3.651455,
+      "semantic_score": null,
+      "score": 0.111144,
+      "char_start": 3020,
+      "char_end": 3921,
+      "context": [
+        {
+          "page": 9,
+          "position": "before",
+          "text": "Jianping Gou, Baosheng Yu, Stephen J Maybank, and\nDacheng Tao. 2021. Knowledge distillation: A\nsurvey.International journal of computer vision,\n129(6):1789–1819.\nAaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri,\nAbhinav Pandey, Abhishek Kadian, Ahmad Al-\nDahle, Aiesha Letman, Akhil Mathur, Alan Schelten,\nAlex Vaughan, and 1 others. 2024. The llam"
+        },
+        {
+          "page": 10,
+          "position": "next_page",
+          "text": "Bo-Kyeong Kim, Geonmin Kim, Tae-Ho Kim, Thibault\nCastells, Shinkook Choi, Junho Shin, and Hyoung-\nKyu Song. 2024. Shortened llama: A simple depth\npruning for large language models.arXiv preprint\narXiv:2402.02834, 11.\nC. Li and 1 others. 2023a. Fine-tuning techniques for\nefficient model adaptation.AI Research Journal.\nHaonan Li, Yixuan Zhang, Fajri Koto, Yifei Yang, Hai\nZhao, Yeyun Gong, Nan Duan, and Timothy Bald-\nwin. 2023b. Cmmlu: Measuring massive multitask\nlanguage understanding in chinese.a"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p1:c3",
+      "paper_id": "paper-009",
+      "page": 1,
+      "section": "introduction",
+      "text": "1 Introduction\nLarge Language Models (LLMs) have emerged\nas revolutionary tools, achieving state-of-the-art\n(SOTA) results across diverse tasks and applica-\ntions (Ding et al., 2022; Qin et al., 2023; Zhu et al.,\n2023; Li et al., 2023a). However, the rapid growth\nin model scale has posed significant challenges\nfor their practical deployment (Zhang et al., 2023;\nChoi et al., 2025; Long et al., 2025). To address it,\nvarious techniques have been proposed, including\npruning (Ma et al., 2023; Ashkboos et al., 2024; Li\net al., 2023c; Sun et al., 2025), quantization (Liu\net al., 2021; Zhou et al., 2023b; Cai et al., 2023;\n*These authors contribute equally to this work.\n†Corresponding author.\nZhou et al., 2024) and knowledge distillation (Hin-\nton et al., 2015; Gou et al., 2021; Yang et al., 2021;\nZhang et al., 2024). Among them, pruning stands\nout as an effective strategy for reducing model size\nby eliminating redundant or less critical compo-\nnents, thereby lowering computational and storage\ncosts.\nWhile pruning offers clear benefits, its appli-\ncation to LLMs remains challenging. During in-\nference, the prefill and decode stages are usually",
+      "text_sha256": "2c7bba5fce09f3aba0cd10a88f5e9405cddfbc70bda8a02d3425129fbfc84e19",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 1322,
+      "char_end": 2475,
+      "context": [
+        {
+          "page": 1,
+          "position": "before",
+          "text": "r PD\ndisaggregation deployment. Extensive experi-\nments demonstrate our approach consistently\nachieves strong performance in both PD dis-\naggregation and PD unified (non-PD disaggre-\ngation) settings, and can also be extended to\nother non-block pruning methods. Under the\nsame settings, our method achieves improved\nperformance and faster inference.\n"
+        },
+        {
+          "page": 1,
+          "position": "after",
+          "text": "disaggregated (PD disaggregation) (Zhong et al.,\n2024; Patel et al., 2024; Qin et al., 2024; Dong et al.,\n2025), allowing each stage to be optimized accord-\ning to its specific resource requirements. With-\nout such disaggregation, heterogeneous workloads\nmust conform to a single resource profile, which\nresults in suboptimal utilization and ultimate"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p1:c4",
+      "paper_id": "paper-009",
+      "page": 1,
+      "section": "introduction",
+      "text": "torage\ncosts.\nWhile pruning offers clear benefits, its appli-\ncation to LLMs remains challenging. During in-\nference, the prefill and decode stages are usually\ndisaggregated (PD disaggregation) (Zhong et al.,\n2024; Patel et al., 2024; Qin et al., 2024; Dong et al.,\n2025), allowing each stage to be optimized accord-\ning to its specific resource requirements. With-\nout such disaggregation, heterogeneous workloads\nmust conform to a single resource profile, which\nresults in suboptimal utilization and ultimately de-\ngrades performance. However, existing pruning\nmethods often ignore the characteristics of PD dis-\naggregation deployment in real deployments. In\nsuch systems, the prefill and decode stages exhibit\nmarkedly different sensitivities to pruning, making\nuniform strategies ineffective.\nIn this paper, we propose a pruning method that\nis highly integrated with PD disaggregation, en-\nabling more precise pruning of blocks. (1) Specif-\nically, we introduce a approach for constructing\npruning and distillation sets tailored to block prun-\ning. (2) Building on these sets, we perform an\niterative block removal procedure for LLMs. (3)\nWe further analyze the pruning sensitivity of the",
+      "text_sha256": "68fde826ab4a172332291f23f4eea7918dc8ca6c5e4b531ec834e47018009633",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 2316,
+      "char_end": 3509,
+      "context": [
+        {
+          "page": 1,
+          "position": "before",
+          "text": "bute equally to this work.\n†Corresponding author.\nZhou et al., 2024) and knowledge distillation (Hin-\nton et al., 2015; Gou et al., 2021; Yang et al., 2021;\nZhang et al., 2024). Among them, pruning stands\nout as an effective strategy for reducing model size\nby eliminating redundant or less critical compo-\nnents, thereby lowering computational and s"
+        },
+        {
+          "page": 1,
+          "position": "after",
+          "text": "prefill and decode stages separately, and identify\nremovable blocks specific to each stage. This stage-\naware pruning strategy aligns with the distinct ex-\necution characteristics of prefill and decode, re-\nsulting in particularly efficient PD disaggregation\ndeployment. Compared to prior block pruning ap-\nproaches, our method achieves better soluti"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p1:c5",
+      "paper_id": "paper-009",
+      "page": 1,
+      "section": "introduction",
+      "text": "to block prun-\ning. (2) Building on these sets, we perform an\niterative block removal procedure for LLMs. (3)\nWe further analyze the pruning sensitivity of the\nprefill and decode stages separately, and identify\nremovable blocks specific to each stage. This stage-\naware pruning strategy aligns with the distinct ex-\necution characteristics of prefill and decode, re-\nsulting in particularly efficient PD disaggregation\ndeployment. Compared to prior block pruning ap-\nproaches, our method achieves better solutions. Ex-\ntensive experiments demonstrate that our approach\nconsistently achieves strong performance in both\nPD disaggregation and PD unified (non-PD dis-\n1\narXiv:2509.04467v4 [cs.CL] 14 Dec 2025",
+      "text_sha256": "c2dec21c1a2f0bef7bba1582cd1e2e731d743cdbae93bf8ff89613be4004e66c",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 3350,
+      "char_end": 4054,
+      "context": [
+        {
+          "page": 1,
+          "position": "before",
+          "text": "ill and decode stages exhibit\nmarkedly different sensitivities to pruning, making\nuniform strategies ineffective.\nIn this paper, we propose a pruning method that\nis highly integrated with PD disaggregation, en-\nabling more precise pruning of blocks. (1) Specif-\nically, we introduce a approach for constructing\npruning and distillation sets tailored "
+        },
+        {
+          "page": 2,
+          "position": "next_page",
+          "text": "Embedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\nBlock 6\nBlock 7\nBlock 8\nLM Head\nEmbedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\n Block [6,7]\nBlock 8\nLM Head\nKV Cache (1)\nKV Cache (3)\nKV Cache (6)\nKV Cache (8)\n KV Cache (8)\nKV Cache (6)\nKV Cache (3)\nKV Cache (1)\nDecode Node Prefill Node\nCalibration Set\nPruning Set Pfinal\nDistillation Set D\nRemoval Solution\n Iterative Update\nDecode Removal\nPrefill Removal\nEmbedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\n Block [6,7]\nBlock 8\nLM Head\nDecode Nod"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p2:c1",
+      "paper_id": "paper-009",
+      "page": 2,
+      "section": "introduction",
+      "text": "Embedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\nBlock 6\nBlock 7\nBlock 8\nLM Head\nEmbedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\n Block [6,7]\nBlock 8\nLM Head\nKV Cache (1)\nKV Cache (3)\nKV Cache (6)\nKV Cache (8)\n KV Cache (8)\nKV Cache (6)\nKV Cache (3)\nKV Cache (1)\nDecode Node Prefill Node\nCalibration Set\nPruning Set Pfinal\nDistillation Set D\nRemoval Solution\n Iterative Update\nDecode Removal\nPrefill Removal\nEmbedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\n Block [6,7]\nBlock 8\nLM Head\nDecode Node\nKV Cache (Decode)\nKV Cache (Prefill)\nFigure 1: Overview of our pruning method combined with PD disaggregation. Under PD disaggregation, inputs are\nfirst processed on the prefill node and then dispatched to multiple decode nodes. The prefill node transfers the KV\ncache to the decode nodes, while each decode node also generates its own KV cache. In our method, we construct\npruning and distillation sets and iteratively optimize the block removal based on these sets. The prefill and decode\nnodes apply different removal schemes. In this case, the prefill node prunes Blocks 2 and 4, whereas the decode\nnodes prune Blocks 2, 4 and 5, and further distill Blocks 6 and 7 into a single Block.",
+      "text_sha256": "1fe3e6028083ae17e11a352bbff089b62dc8531538446c3ed9af2627b278a635",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 0,
+      "char_end": 1191,
+      "context": [
+        {
+          "page": 1,
+          "position": "previous_page",
+          "text": "entify\nremovable blocks specific to each stage. This stage-\naware pruning strategy aligns with the distinct ex-\necution characteristics of prefill and decode, re-\nsulting in particularly efficient PD disaggregation\ndeployment. Compared to prior block pruning ap-\nproaches, our method achieves better solutions. Ex-\ntensive experiments demonstrate that our approach\nconsistently achieves strong performance in both\nPD disaggregation and PD unified (non-PD dis-\n1\narXiv:2509.04467v4 [cs.CL] 14 Dec 2025"
+        },
+        {
+          "page": 2,
+          "position": "after",
+          "text": "aggregation) settings. Our method can also be ex-\ntended to other non-block pruning scenarios. Under\nthe same settings, our method achieves improved\nperformance and faster inference. In summary, our\ncontributions can be summarized as follows:\n• We introduce a construction of pruning and\ndistillation sets for block pruning, and lever-\nage them to pe"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p2:c2",
+      "paper_id": "paper-009",
+      "page": 2,
+      "section": "introduction",
+      "text": "In this case, the prefill node prunes Blocks 2 and 4, whereas the decode\nnodes prune Blocks 2, 4 and 5, and further distill Blocks 6 and 7 into a single Block.\naggregation) settings. Our method can also be ex-\ntended to other non-block pruning scenarios. Under\nthe same settings, our method achieves improved\nperformance and faster inference. In summary, our\ncontributions can be summarized as follows:\n• We introduce a construction of pruning and\ndistillation sets for block pruning, and lever-\nage them to perform an iterative block re-\nmoval strategy for LLMs. This can achieve\nsuperior performance over prior methods.\n• We analyze the pruning sensitivity of the pre-\nfill and decode stages and identify removable\nblocks specific to each stage, making it well\nsuited for PD disaggregation deployment.\n• Our approach consistently achieves strong per-\nformance in both PD disaggregation and PD\nunified (non-PD disaggregation) settings, and\ncan also be extended to other non-block prun-\ning methods.",
+      "text_sha256": "758a2b4f43f7c084e0536a24b40ab1c0984a6e595c4b65cdc1c3355992f0367d",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 1032,
+      "char_end": 2031,
+      "context": [
+        {
+          "page": 2,
+          "position": "before",
+          "text": "de and then dispatched to multiple decode nodes. The prefill node transfers the KV\ncache to the decode nodes, while each decode node also generates its own KV cache. In our method, we construct\npruning and distillation sets and iteratively optimize the block removal based on these sets. The prefill and decode\nnodes apply different removal schemes. "
+        },
+        {
+          "page": 2,
+          "position": "after",
+          "text": "2 Related Work\n2.1 PD Disaggregation\nLLM inference can be divided into the prefill and\ndecode stages. The prefill stage processes the entire\ninput sequence to compute contextual representa-\ntions and generate KV Cache. The decode stage\nthen autoregressively generates tokens conditioned\non previously generated outputs. PD disaggrega-\ntion is a techn"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p2:c3",
+      "paper_id": "paper-009",
+      "page": 2,
+      "section": "related_work",
+      "text": "2 Related Work\n2.1 PD Disaggregation\nLLM inference can be divided into the prefill and\ndecode stages. The prefill stage processes the entire\ninput sequence to compute contextual representa-\ntions and generate KV Cache. The decode stage\nthen autoregressively generates tokens conditioned\non previously generated outputs. PD disaggrega-\ntion is a technique that explicitly decouples these\ntwo stages during inference, enabling deployment\nstrategies tailored to the unique resource require-\nments of each stage. DistServe (Zhong et al., 2024)\nis one of the seminal works in PD disaggregation.\nIt assigns the prefill and decode stages to differ-\nent GPUs, allowing for optimizations tailored to\nthe unique characteristics of each stage. Splitwise\n(Patel et al., 2024) disaggregates the prompt com-\nputation and token generation stages and runs them\non different machines. The TetriInfer (Hu et al.,\n2024b) also leverages PD disaggregation to reduce\ninterference between different downstream tasks.\nMemServe (Hu et al., 2024a) further explores mem-\nory optimization techniques within the PD disag-\ngregation architecture. TaiChi (Wang et al., 2025)\n2",
+      "text_sha256": "feb956e76306acfa45e917d9c30961b0a742024f4d496339a2ab90d99c0040d1",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 2032,
+      "char_end": 3177,
+      "context": [
+        {
+          "page": 2,
+          "position": "before",
+          "text": "sitivity of the pre-\nfill and decode stages and identify removable\nblocks specific to each stage, making it well\nsuited for PD disaggregation deployment.\n• Our approach consistently achieves strong per-\nformance in both PD disaggregation and PD\nunified (non-PD disaggregation) settings, and\ncan also be extended to other non-block prun-\ning methods.\n"
+        },
+        {
+          "page": 3,
+          "position": "next_page",
+          "text": "integrates PD disaggregation and aggregation by\nleveraging differentiated GPU roles and adaptive\nscheduling to optimize goodput across diverse SLO\nregimes. Adrenaline (Liang et al., 2025) offloads\npart of decode phase attention computation to pre-\nfill instances, improving LLM serving.\n2.2 Block Pruning\nTo develop a straightforward pruning algorithm\nthat is easy to deploy for LLMs, several studies\nhave proposed removing less important blocks, a\nstrategy that can lead to significant inference acc"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p3:c1",
+      "paper_id": "paper-009",
+      "page": 3,
+      "section": "related_work",
+      "text": "integrates PD disaggregation and aggregation by\nleveraging differentiated GPU roles and adaptive\nscheduling to optimize goodput across diverse SLO\nregimes. Adrenaline (Liang et al., 2025) offloads\npart of decode phase attention computation to pre-\nfill instances, improving LLM serving.\n2.2 Block Pruning\nTo develop a straightforward pruning algorithm\nthat is easy to deploy for LLMs, several studies\nhave proposed removing less important blocks, a\nstrategy that can lead to significant inference accel-\neration and improved computational efficiency. For\nexample, methods (Men et al., 2024) using cosine\nsimilarity to evaluate block importance combined\nwith greedy pruning have been introduced. How-\never, greedy approaches often fail to identify the\nglobally optimal pruning configuration and tend\nto exhibit instability in practice. Techniques like\nLaCo (Yang et al., 2024b) merge subsequent lay-\ners into preceding ones but typically sacrifice ac-\ncuracy compared to direct layer removal. LLM-\nStreamline (Chen et al., 2024) reduces model size\nby distilling multiple consecutive blocks into a sin-\ngle block. However, overly aggressive distillation",
+      "text_sha256": "093fdb52ec4f8a5e5be1546208c5622785ac0ee6068183bdc8f8db574c005b9f",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 0,
+      "char_end": 1151,
+      "context": [
+        {
+          "page": 2,
+          "position": "previous_page",
+          "text": " GPUs, allowing for optimizations tailored to\nthe unique characteristics of each stage. Splitwise\n(Patel et al., 2024) disaggregates the prompt com-\nputation and token generation stages and runs them\non different machines. The TetriInfer (Hu et al.,\n2024b) also leverages PD disaggregation to reduce\ninterference between different downstream tasks.\nMemServe (Hu et al., 2024a) further explores mem-\nory optimization techniques within the PD disag-\ngregation architecture. TaiChi (Wang et al., 2025)\n2"
+        },
+        {
+          "page": 3,
+          "position": "after",
+          "text": "can significantly degrade model performance, and\nthe approach still relies on a greedy block selection\nstrategy. Other methods, such as SLEB (Song et al.,\n2024) and Shortened LLaMA (Kim et al., 2024),\nadopt iterative pruning strategies guided by care-\nfully designed importance metrics. However, these\nmethods require recalculating importance scores\n"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p3:c2",
+      "paper_id": "paper-009",
+      "page": 3,
+      "section": "related_work",
+      "text": "LLM-\nStreamline (Chen et al., 2024) reduces model size\nby distilling multiple consecutive blocks into a sin-\ngle block. However, overly aggressive distillation\ncan significantly degrade model performance, and\nthe approach still relies on a greedy block selection\nstrategy. Other methods, such as SLEB (Song et al.,\n2024) and Shortened LLaMA (Kim et al., 2024),\nadopt iterative pruning strategies guided by care-\nfully designed importance metrics. However, these\nmethods require recalculating importance scores\nusing a calibration set after each block removal, re-\nsulting in substantial computational overhead. Con-\nsequently, developing a block pruning algorithm\nthat is highly accurate remains a difficult and unre-\nsolved challenge.",
+      "text_sha256": "f2410537cf045de63ccd525d20a6bc11e6f1849eb2465a8d3cdd086eff7361a7",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 992,
+      "char_end": 1727,
+      "context": [
+        {
+          "page": 3,
+          "position": "before",
+          "text": "e combined\nwith greedy pruning have been introduced. How-\never, greedy approaches often fail to identify the\nglobally optimal pruning configuration and tend\nto exhibit instability in practice. Techniques like\nLaCo (Yang et al., 2024b) merge subsequent lay-\ners into preceding ones but typically sacrifice ac-\ncuracy compared to direct layer removal. "
+        },
+        {
+          "page": 3,
+          "position": "after",
+          "text": "3 Methodology\nIn this section, we describe our iterative block prun-\ning method that is deeply integrated with PD disag-\ngregation. Our goal is to select thek blocks whose\nremoval minimally impacts performance. Figure 1\nillustrates an overview of our method.\n3.1 Strategic Design of Sets for Pruning and\nDistillation\nWe use a combined pruning and dis"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-009:p3:c3",
+      "paper_id": "paper-009",
+      "page": 3,
+      "section": "methods",
+      "text": "3 Methodology\nIn this section, we describe our iterative block prun-\ning method that is deeply integrated with PD disag-\ngregation. Our goal is to select thek blocks whose\nremoval minimally impacts performance. Figure 1\nillustrates an overview of our method.\n3.1 Strategic Design of Sets for Pruning and\nDistillation\nWe use a combined pruning and distillation strategy\nfor refined block removal. Specifically, we first\nassess the redundancy of each block by calculating\nthe cosine similarity (Men et al., 2024) between its\ninput and output (note that the similarity metric is\nnot a core contribution of ours). We provide further\ndetails on this in Appendix I. The redundancy of\nblocki is mathematically defined as follows:\nri = cos(hi−1,h i)(1)\nHere,ri denotes the redundancy ofblocki and the\ncos measures the similarity between the inputhi−1\nand the output hi ofblocki. Based on this redun-\ndancy metric, we directly identify the Top\n\u0006 k\n2\n\u0007\nblocks with the highest cosine similarity for re-\nmoval. Given their high redundancy, these blocks\nare deemed suitable for direct pruning, thereby\nforming an initial pruning set of\n\u0006 k\n2\n\u0007\nblocks. The\ninitial pruning set Pinitial can be represented as",
+      "text_sha256": "233050674fba4ae61403ad94618f4e8e3a084483d212f330a44e2f84c210c60d",
+      "bm25_score": 0.0,
+      "semantic_score": null,
+      "score": 0.0,
+      "char_start": 1728,
+      "char_end": 2922,
+      "context": [
+        {
+          "page": 3,
+          "position": "before",
+          "text": "trategies guided by care-\nfully designed importance metrics. However, these\nmethods require recalculating importance scores\nusing a calibration set after each block removal, re-\nsulting in substantial computational overhead. Con-\nsequently, developing a block pruning algorithm\nthat is highly accurate remains a difficult and unre-\nsolved challenge.\n"
+        },
+        {
+          "page": 3,
+          "position": "after",
+          "text": "follows:\nPinitial ={block i|r i∈Top\n\u0006 k\n2\n\u0007\n({r1,r 2,...,r L})} (2)\nFor the blocks that are not included in the initial\u0006 k\n2\n\u0007\nblocks designated for pruning, we consider\nincorporating them into the construction of the dis-\ntillation set. To ensure the effectiveness of the\ndistillation, we limit distillation to pairs of consec-\nutive blocks. Specifi"
+        }
+      ]
+    }
+  ]
+}

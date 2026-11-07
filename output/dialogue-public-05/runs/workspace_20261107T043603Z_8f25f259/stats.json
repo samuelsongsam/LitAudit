@@ -1,0 +1,41 @@
+{
+  "research_question_count": 1,
+  "query_plan_count": 0,
+  "query_count": 0,
+  "paper_count": 12,
+  "fixture_paper_count": 0,
+  "paper_card_count": 0,
+  "screening_count": 12,
+  "claim_count": 0,
+  "claim_decision_count": 0,
+  "evidence_count": 0,
+  "verified_evidence_count": 0,
+  "abstract_only_evidence_count": 0,
+  "page_locator_count": 0,
+  "falsification_count": 0,
+  "retrieval_run_count": 1,
+  "retrieval_failure_count": 0,
+  "source_snapshot_count": 1,
+  "evidence_span_count": 0,
+  "decision_trace_count": 0,
+  "open_next_action_count": 11,
+  "decision_counts": {
+    "include": 12,
+    "exclude": 0,
+    "pending": 0
+  },
+  "claim_status_counts": {
+    "supported": 0,
+    "partial": 0,
+    "unsupported": 0,
+    "pending": 0
+  },
+  "evidence_status_counts": {
+    "verified": 0,
+    "abstract_only": 0,
+    "unverified": 0,
+    "failed": 0
+  },
+  "error_count": 0,
+  "generated_at": "2026-11-07T12:36:24"
+}

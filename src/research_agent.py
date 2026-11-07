@@ -34,7 +34,8 @@ def plan(settings, context, deadline):
         raise ConnectionError('model_unconfigured')
     result = post_model_json(settings.llm_base_url.rstrip('/') + '/chat/completions',
                              settings.llm_api_key, body, deadline=deadline)
-    return json.loads(result['choices'][0]['message']['content'])
+    from src.conversation import _parse_llm_json
+    return _parse_llm_json(result['choices'][0]['message']['content'])
 
 
 def execute_tool(settings, run_id, action, deadline):
@@ -48,7 +49,7 @@ def execute_tool(settings, run_id, action, deadline):
     return json.loads(output)
 
 
-def run_agent(settings, run_id, question, request_id, *, planner=plan, executor=execute_tool,
+def run_agent(settings, run_id, question, request_id, *, planner=plan, executor=execute_tool, conversation_context=None,
               clock=monotonic):
     from src.research_workspace import workspace_papers, _lock
     from src.run_paths import resolve_run_dir
@@ -87,24 +88,49 @@ def run_agent(settings, run_id, question, request_id, *, planner=plan, executor=
                 report_progress('agent_plan', run_id=state['run_id'])
                 state['model_calls'] += 1
                 _write_conversation(path, state)
-                raw = planner(settings, {'question': question,
+                try:
+                    raw = planner(settings, {'question': question,
+                    'conversation_context': conversation_context or [],
+                    'validation_feedback': state.get('action_feedback'),
                     'papers': [{'paper_id': pid, 'title': p.title} for pid, p in papers.items()],
                     'history': state['steps'], 'remaining_steps': 4 - len(state['steps']),
                     'acquisition_available': not acquired, 'action_schema': Action.model_json_schema()}, deadline)
+                except (ValueError, KeyError, TypeError):
+                    if not state.get('action_retry'):
+                        state['action_retry'] = True
+                        state['action_feedback'] = '上次响应无法解析；请只返回一个符合schema的JSON对象，不要Markdown或解释。'
+                        _write_conversation(path, state)
+                        continue
+                    raise
                 check_cancelled()
                 if clock() >= deadline:
                     state['status'] = 'budget_exhausted'
                     break
-                action = Action.model_validate(raw)
+                try:
+                    action = Action.model_validate(raw)
+                except ValueError:
+                    state['invalid_action_fields'] = list(raw)[:10] if isinstance(raw, dict) else ['not_object']
+                    if (isinstance(raw, dict) and set(raw) <= {'tool', 'arguments'}
+                            and raw.get('tool') in {'read_papers', 'search_fulltext', 'acquire_fulltext', 'finish'}
+                            and not state.get('action_retry')):
+                        state['action_retry'] = True
+                        state['action_feedback'] = '上次动作格式不符合schema。只用tool、paper_ids、query三个字段，不要嵌套arguments。'
+                        continue
+                    raise
                 if action.tool == 'finish':
-                    if action.paper_ids or action.query:
-                        raise ValueError('finish参数无效')
-                    state['status'] = 'completed'
+                    # finish has no side effects; generated leftover arguments
+                    # are ignored rather than invalidating completed work.
+                    state['status'] = 'insufficient_evidence' if acquired and not state['hits'] else 'completed'
                     break
+                state['last_action'] = action.model_dump()
+                if action.tool in {'read_papers', 'acquire_fulltext'}:
+                    # These tools do not consume query. Ignore surplus natural
+                    # language rather than failing a valid scoped operation.
+                    action.query = ''
                 if (not action.paper_ids or len(set(action.paper_ids)) != len(action.paper_ids)
                         or not set(action.paper_ids) <= allowed
-                        or (action.tool == 'search_fulltext' and not action.query.strip())
-                        or (action.tool != 'search_fulltext' and action.query)):
+                        or (action.tool == 'search_fulltext' and not action.query.strip())):
+                    state['validation_error'] = 'paper_scope_or_missing_search_query'
                     raise ValueError('工具参数超出范围')
                 fingerprint = json.dumps([action.tool, sorted(action.paper_ids), action.query.strip().casefold()])
                 if fingerprint in seen:
@@ -138,8 +164,9 @@ def run_agent(settings, run_id, question, request_id, *, planner=plan, executor=
             raise
         except TimeoutError:
             state['status'] = 'timeout'
-        except (ValueError, TypeError, KeyError):
+        except (ValueError, TypeError, KeyError) as exc:
             state['status'] = 'invalid_action'
+            state['validation_error_type'] = type(exc).__name__
         except Exception:
             state['status'] = 'tool_failed' if state['steps'] and state['steps'][-1]['status'] == 'running' else 'model_failed'
         _write_conversation(path, state)

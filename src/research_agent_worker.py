@@ -23,8 +23,12 @@ def execute(options):
         return {'papers': [{'paper_id': pid, 'title': papers[pid].title,
                             'abstract': (papers[pid].abstract or '')[:8000]} for pid in action.paper_ids]}
     if action.tool == 'search_fulltext':
-        result = search_fulltext(settings.runs_dir, run_id, action.query, paper_ids=action.paper_ids)
-        return {'hits': result.get('hits', [])[:8], 'status': 'completed'}
+        # A fresh bounded worker must not spend the tool deadline loading a
+        # large semantic model. Keep semantic reranking in the normal reader.
+        result = search_fulltext(settings.runs_dir, run_id, action.query,
+                                 paper_ids=action.paper_ids, semantic_rerank=False)
+        return {'hits': result.get('hits', [])[:8], 'status': 'completed',
+                'algorithm': result.get('algorithm'), 'missing_paper_ids': result.get('missing_paper_ids', [])}
     if action.tool == 'acquire_fulltext':
         from src.pipeline import upgrade_audit
         result = upgrade_audit(settings, run_id, acquire=True, paper_ids=action.paper_ids)

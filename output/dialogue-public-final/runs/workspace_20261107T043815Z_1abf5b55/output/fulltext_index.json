@@ -1,0 +1,12 @@
+{
+  "algorithm": "bm25_passage_ranking",
+  "passage_count": 0,
+  "hits": [],
+  "total_passage_count": 0,
+  "section_filter": null,
+  "indexed_paper_count": 0,
+  "embedding": {
+    "backend": "not_run",
+    "reason": "no parsed fulltext"
+  }
+}

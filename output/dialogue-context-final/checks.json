@@ -1,0 +1,26 @@
+[
+  {
+    "check": "turn_2_answer",
+    "passed": true
+  },
+  {
+    "check": "turn_3_answer",
+    "passed": true
+  },
+  {
+    "check": "turn_4_answer",
+    "passed": true
+  },
+  {
+    "check": "two_paper_scope",
+    "passed": true
+  },
+  {
+    "check": "these_schemes_keep_scope",
+    "passed": true
+  },
+  {
+    "check": "second_paper_reference",
+    "passed": true
+  }
+]

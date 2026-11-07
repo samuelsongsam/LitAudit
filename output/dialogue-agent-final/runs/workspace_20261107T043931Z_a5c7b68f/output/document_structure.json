@@ -1,0 +1,2505 @@
+{
+  "version": "page-structure-v1",
+  "created_at": "2026-11-07T04:39:31.318439+00:00",
+  "documents": [
+    {
+      "paper_id": "paper-012",
+      "backend": "pypdf_with_optional_pymupdf",
+      "coverage": {
+        "page_count": 19,
+        "text_pages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "native_text_pages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "ocr_text_pages": [],
+        "no_text_pages": [],
+        "ocr_required_pages": [],
+        "ocr_attempted_pages": 0,
+        "text_extraction_error_pages": [],
+        "text_page_coverage": 1.0,
+        "table_count": 23,
+        "figure_region_count": 26,
+        "formula_candidate_count": 16,
+        "status": "text_extracted",
+        "scope": "extraction_coverage_not_reading_or_semantic_verification"
+      },
+      "capabilities": {
+        "text_extraction": "pypdf",
+        "layout_detection": true,
+        "table_extraction": true,
+        "image_region_detection": true,
+        "pdf_page_render": true,
+        "ocr_available": false,
+        "ocr_engine": null,
+        "ocr_setup": "Install optional documents dependencies and either Tesseract or local language data in TESSDATA_PREFIX.",
+        "formula_interpretation": false,
+        "figure_interpretation": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "text_sha256": "648947ecdd7888b647fa105fe4f421beaf468718501c4e936d284dfc0cc30758",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": null,
+          "end_section": "introduction",
+          "headings": [
+            {
+              "section": "abstract",
+              "title": "Abstract",
+              "char_offset": 320
+            },
+            {
+              "section": "introduction",
+              "title": "1 Introduction",
+              "char_offset": 2097
+            }
+          ]
+        },
+        {
+          "page": 2,
+          "text_sha256": "1ffb952db2f540d879ea69a094b778863c7fcfa5e570ff0af43c94a0dd683b8c",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "introduction",
+          "headings": []
+        },
+        {
+          "page": 3,
+          "text_sha256": "cd9e1d5234f3be07c1b8a7b932b9cc9de9835ab5c739a5ceb5c40a1ef1f57a98",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "introduction",
+          "headings": []
+        },
+        {
+          "page": 4,
+          "text_sha256": "bffd138d6d5bee38aab77d128927ffa0df005eb51c848b9aefd08560e068610b",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                76.84,
+                76.58,
+                241.97,
+                134.82
+              ],
+              "rows": [
+                [
+                  "1.59x\n1.32x 1.17x 1.08x H100\n0.97x",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 9,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                343.45,
+                76.58,
+                505.93,
+                134.82
+              ],
+              "rows": [
+                [
+                  "1.40x\n1.22x H100\n1.02x 0.99x 0.99x",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 13,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "introduction",
+          "headings": []
+        },
+        {
+          "page": 5,
+          "text_sha256": "c190b14792d7dcc05efae1036f0df1d6e3afee8b4e0d06eb8e1a83de905863d6",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                57.0,
+                73.06,
+                554.34,
+                268.29
+              ],
+              "rows": [
+                [
+                  "Prefill Chip Design and\nGDDR7 GDDR7 GDDR7 GDDR7 GDDR7 GDDR7\nHypothetical Floorplan PackagePackagePackagePackagePackagePackage\nPrefill Chip GDDR7 Interface (32-bit×16 in Total) 106mm² Interconnect\nPrefill CCoorree ×128 128 P inre Tf oill t aC lores PG aD cD kaR g7 e 28mm²\nLaneLane 422mm²\nVe 1c 6t -o wVr e 1dUc 6etn-o wirt idU enit PG aD cD kaR g7 Interface GDDR7\ni e\nSyst 3o 2Sli ×cy 3 sA 23tor2rli ×ac 3y A 2r ×ra 4y ×4 GDDR7 33 22 PM reB fill L C2 or eC sache & Crossb 3a 2 r P 1 re1 fi1 ll m Com re² s GDDR7 PCIe Interface\n320KB32 L0K1B C La1c Chaeche (5 21 T2 B-b /sit ) Package 39mm² Interface\nGDDR7\nP ×C 3I 2e 32MB L2 Cache G6 D4 DG RB 7 Package x32\nGDDR7 Interface\nInterconnect Interface (900GB/s)\nGDDR7 GDDR7 GDDR7 GDDR7 GDDR7 GDDR7\nPackagePackagePackagePackagePackagePackage",
+                  null,
+                  null,
+                  "Decode\nHypoth\nDeco\nLaneL\nVe 8c -t woVr id e 1Uc 6e\nSyst 1o 6Sli ×cy sA 63t\n1\n128KB32\nPCIe\n×32\nIntercon",
+                  "Chip Design and\netical Floorplan HBM3 HBM3\nPackage Package\nDecode Chip\ndeC Coroere ×144 HBM3 Interface (1024-bit×5 in Total) 88mm² ane 144 Decode Cores in Total tn-o wirt idU enit 206mm² 14mm² Interconnect ²ect mn on m 4c 1r Inte\nor2rli ×ac 3y A 2r ×ra 4y ×4 HBM3 30MB L2 Cache & Crossbar 107mm² HBM3 39mm² Interface PCIe Interface HBM3\nL0K1 BC La1c hCeache (5 31 .32 T0 B-b /sit ) Package\nx32\nHBM3 Interface\n30MB L2 Cache H80 BG MB 3 HBM3 HBM3\nnect Interface (900GB/s) Package Package"
+                ],
+                [
+                  "Prefill Machine\nScale-Up Interconnect",
+                  "SPAD Cluster\n...\nScale-Out Interconne",
+                  null,
+                  null,
+                  "Decode Machine\nScale-Up Interconnect\nct"
+                ],
+                [
+                  null,
+                  null,
+                  "Scale-Out Interconne",
+                  null,
+                  null
+                ]
+              ],
+              "row_count": 3,
+              "column_count": 5,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                180.64,
+                77.03,
+                270.02,
+                178.95
+              ],
+              "rows": [
+                [
+                  "DR7\nckage",
+                  "GDDR\nPackag",
+                  "7 GDDR7\nePackage",
+                  "GDDR7\nPackage",
+                  "GDDR7 GDDR7\nPackagePackage"
+                ],
+                [
+                  "GDDR7 Interface (32-bit×16 in Total) 106mm²\n128 Prefill Cores\nin Total\n422mm²\nGDDR7\n32MB L2 Cache & Crossbar 111mm² In",
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "terface\n32 Prefill Cores 32 Prefill Cores\nGDDR7 Interface",
+                  null,
+                  null,
+                  null,
+                  null
+                ]
+              ],
+              "row_count": 3,
+              "column_count": 5,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "introduction",
+          "headings": []
+        },
+        {
+          "page": 6,
+          "text_sha256": "d9f83ef698f114e499c03be35ef8ca1259163ac70bf7bca50243f62c8d893704",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                346.75,
+                75.9,
+                525.42,
+                152.59
+              ],
+              "rows": [
+                [
+                  "",
+                  "",
+                  null,
+                  "",
+                  "Sy",
+                  "stol",
+                  "ic Array"
+                ],
+                [
+                  "",
+                  "",
+                  null,
+                  "",
+                  "",
+                  "1",
+                  "6x32"
+                ],
+                [
+                  "",
+                  "",
+                  null,
+                  "",
+                  "",
+                  "2\n3",
+                  "4x32\n2x32"
+                ],
+                [
+                  "",
+                  "",
+                  null,
+                  "H100",
+                  "",
+                  "",
+                  ""
+                ],
+                [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  null,
+                  "",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "Prefill C",
+                  "",
+                  "hip",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  null,
+                  "",
+                  "",
+                  null,
+                  ""
+                ]
+              ],
+              "row_count": 8,
+              "column_count": 7,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                346.75,
+                192.62,
+                525.42,
+                269.32
+              ],
+              "rows": [
+                [
+                  "",
+                  "",
+                  "",
+                  "V",
+                  "ecto",
+                  "r Width"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "8"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "16\n32"
+                ],
+                [
+                  "",
+                  "",
+                  "H100",
+                  "",
+                  "",
+                  ""
+                ],
+                [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "Prefill C",
+                  "hip",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ]
+              ],
+              "row_count": 8,
+              "column_count": 6,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                321.08,
+                454.37,
+                554.88,
+                508.93
+              ],
+              "rows": [
+                [
+                  "",
+                  "Source Processor Bandwidth/ Estimated\nProcessor Bandwidth Beachfront(PHY)❖ Cost◆"
+                ],
+                [
+                  "LPDDR5X\nGDDR7\nHBM3",
+                  "Apple M4 (3 nm) 120 GB/s 8 GB/s/mm ?\nRTX 5090 (4 nm) 1792 GB/s 22 GB/s/mm $3/GB\nH100 (4 nm) 3352 GB/s 68 GB/s/mm $9/GB"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [
+            {
+              "region_id": "image-1",
+              "bbox": [
+                325.1,
+                72.0,
+                550.85,
+                170.77
+              ],
+              "width": 3200,
+              "height": 1400,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-2",
+              "bbox": [
+                325.1,
+                72.0,
+                550.85,
+                170.77
+              ],
+              "width": 3200,
+              "height": 1400,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-3",
+              "bbox": [
+                528.0,
+                93.0,
+                538.0,
+                151.0
+              ],
+              "width": 10,
+              "height": 58,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-4",
+              "bbox": [
+                325.1,
+                188.72,
+                550.85,
+                287.49
+              ],
+              "width": 3200,
+              "height": 1400,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-5",
+              "bbox": [
+                325.1,
+                188.72,
+                550.85,
+                287.49
+              ],
+              "width": 3200,
+              "height": 1400,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-6",
+              "bbox": [
+                528.0,
+                209.0,
+                538.0,
+                268.0
+              ],
+              "width": 10,
+              "height": 59,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            }
+          ],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "introduction",
+          "headings": []
+        },
+        {
+          "page": 7,
+          "text_sha256": "37f189542f50ff9e5fd5cf6c7bef0d64ceba1d3c520122cba0393da8ea1ee40e",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                85.9,
+                75.9,
+                261.48,
+                153.34
+              ],
+              "rows": [
+                [
+                  "",
+                  "",
+                  "",
+                  "Sy",
+                  "stolic",
+                  "Array"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "16x",
+                  "8"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "16x\n16x",
+                  "16\n32"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "Decod",
+                  "e Chip",
+                  "",
+                  "H",
+                  null,
+                  "100"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ]
+              ],
+              "row_count": 7,
+              "column_count": 6,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                319.15,
+                97.54,
+                556.8,
+                364.79
+              ],
+              "rows": [
+                [
+                  "Specifciations",
+                  "Preflil Chip Decode Chip H100 [44]"
+                ],
+                [
+                  "Core Count\nLane per Core\nVector Width\nSystolic Array\nL1 Cache per Core\nL2 Cache",
+                  "128 144 132\n4 4 4\n16 8 Eq. to 32\n32 × 32 16 × 16 Eq. to 16 × 32\n320 KB 128 KB 256 KB\n32 MB 30 MB 50 MB"
+                ],
+                [
+                  "Memory Protocol\nMemory Bus Width\nPin Speed\nMemory Package Count\nCapacity per Package",
+                  "GDDR7 HBM3 HBM3\n512-bit 5120-bit 5120-bit\n32 Gb/s 5.2 Gb/s 5.2 Gb/s\n16 5 5\n4 GB 16 GB 16 GB"
+                ],
+                [
+                  "Clock (Tensor)\nClock (Non-Tensor)\nFP16/BF16 Tensor PFLOPs\nFP32 Non-Tensor TFLOPs\nTotal L1 & L2 Cache Size\nMemory Configuration\nMemory Bandwidth",
+                  "1.83 GHz 1.83 GHz 1.83 GHz\n1.98 GHz 1.98 GHz 1.98 GHz\n1.92 0.54 0.99\n32.4 18.2 66.9\n73 MB 48 MB 84 MB\n64 GB GDDR7 80 GB HBM3 80 GB HBM3\n2048 GB/s 3352 GB/s 3352 GB/s"
+                ],
+                [
+                  "Est. Die Area (@4nm)◆ 784 𝑚𝑚2 520 𝑚𝑚2 814 𝑚𝑚2\nEst. Die Cost◆ $301 $187 $315\nEst. Memory Cost◆ $192 $720 $720\nEst. Norm. Total HW Cost◆ 0.48 0.88 1\nEst. TDP◆ 596 W 507 W 700 W",
+                  null
+                ],
+                [
+                  "Norm. Prefill Perf.✿\nNorm. Decode Perf.✿",
+                  "1.08 0.69 1\n0.80 0.97 1"
+                ]
+              ],
+              "row_count": 6,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                85.9,
+                192.62,
+                261.48,
+                270.06
+              ],
+              "rows": [
+                [
+                  "",
+                  "",
+                  "",
+                  "V",
+                  "ector",
+                  "Width"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "8\n16",
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "32",
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "Decod",
+                  "e Chip",
+                  "",
+                  "H",
+                  null,
+                  "100"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ]
+              ],
+              "row_count": 7,
+              "column_count": 6,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [
+            {
+              "region_id": "image-1",
+              "bbox": [
+                61.14,
+                72.0,
+                286.9,
+                170.77
+              ],
+              "width": 3200,
+              "height": 1400,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-2",
+              "bbox": [
+                61.14,
+                72.0,
+                286.9,
+                170.77
+              ],
+              "width": 3200,
+              "height": 1400,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-3",
+              "bbox": [
+                264.0,
+                93.0,
+                274.0,
+                151.0
+              ],
+              "width": 10,
+              "height": 58,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-4",
+              "bbox": [
+                61.14,
+                188.72,
+                286.9,
+                287.49
+              ],
+              "width": 3200,
+              "height": 1400,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-5",
+              "bbox": [
+                61.14,
+                188.72,
+                286.9,
+                287.49
+              ],
+              "width": 3200,
+              "height": 1400,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-6",
+              "bbox": [
+                264.0,
+                209.0,
+                274.0,
+                268.0
+              ],
+              "width": 10,
+              "height": 59,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            }
+          ],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "introduction",
+          "headings": []
+        },
+        {
+          "page": 8,
+          "text_sha256": "4dc07bce5b3126e30008a12d320c97ea808b60a0c967ff9d9a8f35fa66810ee3",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                78.6,
+                73.71,
+                270.85,
+                173.0
+              ],
+              "rows": [
+                [
+                  "0.8",
+                  "0.8",
+                  "0.8\n0.9 0.9\n0.9 0.9 0.9\n0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 1.0\n0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 1.0 1.0",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "0.9",
+                  "0.9",
+                  "0.8",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.0",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.0",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "1.0",
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.0",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "1.0",
+                  "1.0",
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.0",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "0.9",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.1"
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.0",
+                  "0.9",
+                  "0.9",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.1"
+                ]
+              ],
+              "row_count": 13,
+              "column_count": 14,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                327.93,
+                73.71,
+                518.72,
+                173.0
+              ],
+              "rows": [
+                [
+                  "1.2",
+                  "1.2",
+                  "1.3\n1.3 1.3\n1.2 1.3 1.3\n1.2 1.3 1.3 1.3\n1.2 1.3 1.2 1.3 1.3\n1.2 1.2 1.3 1.3 1.3 1.3\n1.3 1.2 1.2 1.3 1.2 1.3 1.3\n1.3 1.2 1.2 1.2 1.3 1.3 1.3 1.3\n1.2 1.3 1.2 1.2 1.2 1.3 1.2 1.3 1.3\n1.2 1.3 1.3 1.2 1.2 1.2 1.3 1.3 1.3 1.3",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  null,
+                  null
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  "1.2"
+                ],
+                [
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.3",
+                  "1.3",
+                  "1.3",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.2",
+                  "1.2"
+                ]
+              ],
+              "row_count": 13,
+              "column_count": 14,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                78.6,
+                246.17,
+                270.85,
+                313.04
+              ],
+              "rows": [
+                [
+                  "1.5\n1.4\n1.4\n1.4",
+                  "1.5\n1.5\n1.5\n1.4",
+                  "1.5\n1.5\n1.5\n1.5",
+                  "1.5\n1.5\n1.5\n1.5",
+                  "1.5\n1.5\n1.5\n1.5",
+                  "1.5\n1.5\n1.5\n1.5",
+                  "1.5\n1.5\n1.5\n1.5",
+                  "1.5\n1.5\n1.5\n1.5",
+                  "1.5 1.5\n1.5 1.5\n1.5 1.5 1.5 1.5\n1.5 1.5 1.5 1.5",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.4",
+                  "1.4",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  null,
+                  null
+                ],
+                [
+                  "1.3",
+                  "1.4",
+                  "1.4",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  null,
+                  null
+                ],
+                [
+                  "1.3",
+                  "1.4",
+                  "1.4",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.4",
+                  "1.4"
+                ],
+                [
+                  "1.0",
+                  "1.3",
+                  "1.4",
+                  "1.4",
+                  "1.4",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.4",
+                  "1.4"
+                ],
+                [
+                  "1.0",
+                  "1.0",
+                  "1.3",
+                  "1.4",
+                  "1.4",
+                  "1.4",
+                  "1.4",
+                  "1.5",
+                  "1.4",
+                  "1.5",
+                  "1.5",
+                  "1.5",
+                  "1.4",
+                  "1.4"
+                ]
+              ],
+              "row_count": 6,
+              "column_count": 14,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-4",
+              "bbox": [
+                327.93,
+                246.17,
+                518.72,
+                313.04
+              ],
+              "rows": [
+                [
+                  "1.0\n1.0\n1.0\n1.0",
+                  "1.0\n1.0\n1.0\n1.0",
+                  "1.0\n1.0\n1.0\n1.0",
+                  "1.0\n1.0\n1.0\n1.0",
+                  "1.0\n1.0\n1.0\n1.0",
+                  "1.0\n1.0\n1.0\n1.0",
+                  "1.0\n1.0\n1.0\n1.0",
+                  "1.0\n1.0\n1.0\n1.0",
+                  "1.0 1.0\n1.0 1.0\n1.0 1.0 1.0 1.1\n1.0 1.0 1.0 1.1",
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.1",
+                  null,
+                  null
+                ],
+                [
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.1",
+                  null,
+                  null
+                ],
+                [
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.1",
+                  "1.1",
+                  "1.0"
+                ],
+                [
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0"
+                ],
+                [
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0",
+                  "1.0"
+                ]
+              ],
+              "row_count": 6,
+              "column_count": 14,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [
+            {
+              "region_id": "image-1",
+              "bbox": [
+                281.31,
+                74.56,
+                286.18,
+                173.29
+              ],
+              "width": 19,
+              "height": 385,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-2",
+              "bbox": [
+                530.68,
+                74.48,
+                535.55,
+                173.2
+              ],
+              "width": 57,
+              "height": 1155,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-3",
+              "bbox": [
+                284.24,
+                212.88,
+                289.18,
+                312.92
+              ],
+              "width": 19,
+              "height": 385,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-4",
+              "bbox": [
+                530.68,
+                214.38,
+                535.55,
+                313.11
+              ],
+              "width": 57,
+              "height": 1155,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            }
+          ],
+          "formula_candidates": [
+            {
+              "text": "eled H100s on very few total batched tokens (≤256 tokens) or",
+              "bbox": [
+                317.95,
+                581.29,
+                558.19,
+                591.34
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "very long input prompts (≥12288 tokens). Very short input",
+              "bbox": [
+                317.71,
+                593.25,
+                558.0,
+                603.29
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "introduction",
+          "headings": []
+        },
+        {
+          "page": 9,
+          "text_sha256": "ec73a1385314802c7d712071249700c90f3bcfad2724102013d0bd93b8fb9eca",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [
+            {
+              "text": "batch sizes (≥256) due to increased arithmetic intensities.",
+              "bbox": [
+                54.0,
+                169.63,
+                295.58,
+                179.68
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "deployed it with FP16 and a tensor parallelism of 8 (TP=8).",
+              "bbox": [
+                317.95,
+                604.1,
+                559.53,
+                614.07
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "and TP=4. ③DeepSeek-V2-236B [19] uses DeepSeekMoE [17]",
+              "bbox": [
+                317.95,
+                637.98,
+                558.31,
+                649.93
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "and we deployed it with FP8 and expert parallelism 8 (EP=8).",
+              "bbox": [
+                317.95,
+                663.88,
+                559.53,
+                673.84
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "experimental_setup",
+          "headings": [
+            {
+              "section": "experimental_setup",
+              "title": "6.3 Experimental Setup",
+              "char_offset": 4720
+            }
+          ]
+        },
+        {
+          "page": 10,
+          "text_sha256": "5901e63fb1e70ad0f50aac66799d063986b1053158d15aec6706efa704aae72b",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                58.64,
+                96.25,
+                552.21,
+                177.56
+              ],
+              "rows": [
+                [
+                  "",
+                  "Coding (70 req/s)\n❖ ◆ ◆\nHW Requirement Norm. HW Cost Norm. TDP HW R",
+                  "Conversation (70 req/s)\n❖ ◆ ◆\nequirement Norm. HW Cost Norm. TDP"
+                ],
+                [
+                  "Sarathi\nSplitwise-homo\nSplitwise-hetero♠\nSplitwise-pcap\nSPAD (P+D)",
+                  "36 H100 36 36 3\n25 H100 25 25 2\n21 H100 + 9 A100 25.5 25.5 13 H10\n21 H100 + 4 450W H100 25 23.6 6 H100 +\n18 Prefill + 7 Decode 14.7 20.4 8 Prefill",
+                  "4 H100 34 34\n3 H100 23 23\n0 + 32 A100 29 29\n21 450W H100 27 19.5\n+ 17 Decode 18.7 19.1"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [
+            {
+              "region_id": "image-1",
+              "bbox": [
+                423.51,
+                228.59,
+                427.46,
+                307.52
+              ],
+              "width": 66,
+              "height": 1319,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-2",
+              "bbox": [
+                547.59,
+                226.03,
+                551.65,
+                307.11
+              ],
+              "width": 66,
+              "height": 1319,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-3",
+              "bbox": [
+                423.57,
+                345.98,
+                427.46,
+                423.64
+              ],
+              "width": 65,
+              "height": 1297,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-4",
+              "bbox": [
+                547.66,
+                343.45,
+                551.66,
+                423.23
+              ],
+              "width": 65,
+              "height": 1297,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            }
+          ],
+          "formula_candidates": [
+            {
+              "text": "SLO=3",
+              "bbox": [
+                351.37,
+                260.53,
+                371.03,
+                283.9
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "SLO=6",
+              "bbox": [
+                480.35,
+                256.89,
+                498.46,
+                281.44
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "SLO=2",
+              "bbox": [
+                363.83,
+                375.44,
+                382.2,
+                399.22
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "SLO=5",
+              "bbox": [
+                485.68,
+                373.65,
+                504.42,
+                398.11
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "experimental_setup",
+          "start_section": "experimental_setup",
+          "end_section": "results",
+          "headings": [
+            {
+              "section": "results",
+              "title": "7 Results",
+              "char_offset": 2115
+            }
+          ]
+        },
+        {
+          "page": 11,
+          "text_sha256": "ef2c9b0137908173ab940dca0fdc08b8e59dc0e166f1d91b212a6c27f48155d9",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                56.96,
+                96.19,
+                291.08,
+                184.93
+              ],
+              "rows": [
+                [
+                  "Workloads\nSLOs",
+                  "Coding (70 req/s)\nLoose Normal Tight",
+                  "Conversation (70 req/s)\nLoose Normal Tight"
+                ],
+                [
+                  "Sarathi (H100)◆\nSplitwise (H100)◆\nSplitwise (H100+A100)◆\nSplitwise (H100+pcap)◆\nSPAD (P+D)◆",
+                  "33 36 45\n24 25 27\n20+9 21+9 27+0\n19+5 21+4 23+4\n18+6 18+7 21+7",
+                  "31 34 40\n22 23 27\n13+20 13+32 27+0\n3+23 6+21 11+23\n8+17 8+17 13+14"
+                ],
+                [
+                  "Hardware Saving❖\nTDP Saving❖",
+                  "42% 41% 40%\n11% 13% 10%",
+                  "15% | 28% 19% | 31% 32% | 46%\n13% | -8% 17% | 2% 21% | 18%"
+                ]
+              ],
+              "row_count": 3,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                320.86,
+                108.15,
+                551.42,
+                169.57
+              ],
+              "rows": [
+                [
+                  "Provisioned R\nCluster (P+D)❖",
+                  "eallocated Reallocated\nModel Throughput",
+                  "Min. HW❖◆ (HW, TDP)\nfor Splitwise Saving"
+                ],
+                [
+                  "18P+7D♠ Ll\n8P+17D✿ Ll\n18P+7D♠ De\n8P+17D✿ De",
+                  "ama3-70B 188 req/s\nama3-70B 171 req/s\nepSeek-V2 103 req/s\nepSeek-V2 183 req/s",
+                  "26 H100 (43%, 22%)\n27 H100 (31%, 29%)\n23 H100 (36%, 11%)\n24 H100 (22%, 20%)"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                445.66,
+                228.14,
+                551.42,
+                323.87
+              ],
+              "rows": [
+                [
+                  "8\nP99 TTFT\n7 P99 TBT P90 TTFT Latency\n6 P90 TBT P99 TTFT SLO\n5 P99 TBT SLO\nNormalized\n4 Maximal\nThroughput:60\n3P90 TTFT SLO\n2 P90 TBT SLO\n1\n50 55 60 65 7\nRequest Rate (req/s)",
+                  "",
+                  "P99 T",
+                  "TFT",
+                  ""
+                ],
+                [
+                  null,
+                  "",
+                  "P99 T\nP90 T",
+                  "BT\nTFT",
+                  "P99 TTFT SLO"
+                ],
+                [
+                  null,
+                  "",
+                  null,
+                  null,
+                  null
+                ],
+                [
+                  null,
+                  "",
+                  "P90 T",
+                  "BT\nO",
+                  ""
+                ],
+                [
+                  null,
+                  "P",
+                  "99 TBT SL",
+                  null,
+                  null
+                ],
+                [
+                  null,
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                [
+                  null,
+                  "P9",
+                  "0 TTFT SL",
+                  "Maxi\nThrough\nO",
+                  "mal\nput:60"
+                ],
+                [
+                  null,
+                  "P",
+                  "90 TBT SL",
+                  "O",
+                  ""
+                ]
+              ],
+              "row_count": 8,
+              "column_count": 5,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-4",
+              "bbox": [
+                56.96,
+                274.32,
+                291.08,
+                317.52
+              ],
+              "rows": [
+                [
+                  "Provisioned Reallocated Reallocated Min. HW❖◆ (HW, TDP)\nCluster (P+D)❖ Workload Throughput for Splitwise Saving\n18P+7D♠ Conversation 55 req/s 19 H100 (23%, -7%)",
+                  null,
+                  null
+                ],
+                [
+                  "8P+17D✿",
+                  "Coding 60 req/s",
+                  "21 H100 (11%, 9%)"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-5",
+              "bbox": [
+                445.66,
+                358.19,
+                551.42,
+                454.71
+              ],
+              "rows": [
+                [
+                  "8 P99 TTFT Maximal\n7 P99 TBTThroughput:171 P90 TTFT Latency\n6 P90 TBT P99 TTFT SLO\n5 P99 TBT SLO\nNormalized\n4\n3 P90 TTFT SLO\n2 P90 TBT SLO\n1\n120 140 160 180\nRequest Rate (req/s)",
+                  "",
+                  "P99 TTFT Maximal\nP99 TBTThroughput:",
+                  "171"
+                ],
+                [
+                  null,
+                  "",
+                  "P90 TTFT\nP99 TTFT S",
+                  "LO"
+                ],
+                [
+                  null,
+                  "",
+                  "P90 TBT\nTBT SLO",
+                  ""
+                ],
+                [
+                  null,
+                  "P99",
+                  null,
+                  null
+                ],
+                [
+                  null,
+                  "",
+                  "",
+                  ""
+                ],
+                [
+                  null,
+                  "P90",
+                  "TTFT SLO",
+                  ""
+                ],
+                [
+                  null,
+                  "P90",
+                  "TBT SLO",
+                  ""
+                ]
+              ],
+              "row_count": 7,
+              "column_count": 4,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "results",
+          "start_section": "results",
+          "end_section": "results",
+          "headings": []
+        },
+        {
+          "page": 12,
+          "text_sha256": "aecf152842f13c2bb31075f64463ca470d5c2d0846dc8b229c30f4c09dbf1810",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                375.86,
+                310.09,
+                497.41,
+                358.33
+              ],
+              "rows": [
+                [
+                  "st Assumptions",
+                  "$6/GB $9/GB"
+                ],
+                [
+                  "ted HBM Cost\nDecode Chip Cost\nted H100 Cost",
+                  "$480 $720\n$667 $907\n$795 $1035"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [
+            {
+              "region_id": "image-1",
+              "bbox": [
+                423.6,
+                396.28,
+                427.51,
+                474.42
+              ],
+              "width": 66,
+              "height": 1319,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-2",
+              "bbox": [
+                546.55,
+                393.75,
+                550.57,
+                474.02
+              ],
+              "width": 66,
+              "height": 1319,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-3",
+              "bbox": [
+                423.66,
+                512.68,
+                427.51,
+                589.55
+              ],
+              "width": 65,
+              "height": 1297,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-4",
+              "bbox": [
+                546.61,
+                510.18,
+                550.57,
+                589.15
+              ],
+              "width": 65,
+              "height": 1297,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            }
+          ],
+          "formula_candidates": [
+            {
+              "text": "SLO=3",
+              "bbox": [
+                352.73,
+                437.54,
+                374.11,
+                459.51
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "SLO=6",
+              "bbox": [
+                479.03,
+                430.05,
+                499.02,
+                453.82
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "SLO=2",
+              "bbox": [
+                359.85,
+                542.04,
+                379.78,
+                564.98
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "SLO=5",
+              "bbox": [
+                476.08,
+                540.29,
+                496.33,
+                563.97
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "results",
+          "start_section": "results",
+          "end_section": "conclusion",
+          "headings": [
+            {
+              "section": "conclusion",
+              "title": "8 Conclusion",
+              "char_offset": 1075
+            }
+          ]
+        },
+        {
+          "page": 13,
+          "text_sha256": "d5223e9f3278565e3f8925c5bb2deff6c8199d6b3dadb1e3785dec0d9a3c0859",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                341.86,
+                76.36,
+                427.14,
+                147.54
+              ],
+              "rows": [
+                [
+                  "",
+                  "",
+                  null,
+                  "Batch Siz",
+                  "e &"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "Sequence\nBS: 2, S",
+                  "Length\neq: 64"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "BS: 2, S",
+                  "eq: 1024"
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "BS: 2, S\nBS: 2, S",
+                  "eq: 4096\neq: 16384"
+                ],
+                [
+                  null,
+                  null,
+                  "",
+                  null,
+                  null
+                ],
+                [
+                  "",
+                  "",
+                  null,
+                  "",
+                  "H100"
+                ]
+              ],
+              "row_count": 6,
+              "column_count": 5,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                464.74,
+                76.36,
+                552.99,
+                147.54
+              ],
+              "rows": [
+                [
+                  "",
+                  "",
+                  "Bat",
+                  "ch Size &",
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "Seq\nB",
+                  "uence Length\nS: 32, Seq: 25",
+                  "6"
+                ],
+                [
+                  "",
+                  "",
+                  "B\nB",
+                  "S: 64, Seq: 25\nS: 128, Seq: 2",
+                  "6\n56"
+                ],
+                [
+                  "",
+                  "B",
+                  "B",
+                  "S: 256, Seq: 2",
+                  "56"
+                ],
+                [
+                  null,
+                  null,
+                  null,
+                  "H100",
+                  ""
+                ]
+              ],
+              "row_count": 5,
+              "column_count": 5,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [
+            {
+              "region_id": "image-1",
+              "bbox": [
+                159.56,
+                280.98,
+                163.51,
+                359.92
+              ],
+              "width": 66,
+              "height": 1319,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-2",
+              "bbox": [
+                280.84,
+                282.26,
+                284.73,
+                359.91
+              ],
+              "width": 65,
+              "height": 1297,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            }
+          ],
+          "formula_candidates": [
+            {
+              "text": "SLO=3",
+              "bbox": [
+                101.66,
+                315.92,
+                125.2,
+                335.11
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "SLO=2",
+              "bbox": [
+                218.06,
+                313.07,
+                242.07,
+                329.75
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "conclusion",
+          "start_section": "conclusion",
+          "end_section": "conclusion",
+          "headings": []
+        },
+        {
+          "page": 14,
+          "text_sha256": "5f49801292eb832a4954cb1f70e2d1f67cc8b39c1af047e5a3e8a9a483509004",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "conclusion",
+          "start_section": "conclusion",
+          "end_section": "references",
+          "headings": [
+            {
+              "section": "references",
+              "title": "References",
+              "char_offset": 1236
+            }
+          ]
+        },
+        {
+          "page": 15,
+          "text_sha256": "cab9e776fa1acf7acd1fd75127e8c9a5f7b0fc5334ff2b74b636fdf0a5e17a2b",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 16,
+          "text_sha256": "96b343ba8fcae4ff2c4c57113880efa4d0adcb77d675de1891efd122e88e5118",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 17,
+          "text_sha256": "f27119135d66ec1da7e1dda4b67de1cd3f9dc2fb398232cda0df8dc55b867258",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 18,
+          "text_sha256": "3bed65c015a52f755ca85de5a89059165350b8d7858a7d50ca2f7760627bbc43",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 19,
+          "text_sha256": "323eab11fdd4a6cd623a7828751b33520017666ae4594a85b63138f1f9a2a6e5",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        }
+      ]
+    }
+  ],
+  "scope": "页面文本提取、表格候选和图像区域定位；图表、公式与语义判决须分别核查。"
+}

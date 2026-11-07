@@ -57,6 +57,35 @@ def test_duplicate_action_stops(setup):
     assert result['status'] == 'no_progress' and len(result['steps']) == 1
 
 
+def test_unused_query_does_not_abort_scoped_acquisition(setup):
+    def execute(settings, run_id, action, deadline):
+        assert action.query == '' and action.paper_ids == ['p1']
+        return {'acquisition': {'status': 'completed'}}
+    result = run_agent(setup, 'study', 'question', 'unused-query', planner=chooser(
+        {'tool': 'acquire_fulltext', 'paper_ids': ['p1'], 'query': '获取实验全文'}, {'tool': 'finish'}), executor=execute)
+    assert result['status'] == 'insufficient_evidence'
+
+
+def test_planner_receives_conversation_references(setup):
+    context = [{'role': 'assistant', 'content': '之前比较', 'paper_ids': ['p1']}]
+    def planner(settings, value, deadline):
+        assert value['conversation_context'] == context
+        return {'tool': 'finish'}
+    assert run_agent(setup, 'study', '后一篇', 'context', planner=planner,
+                     conversation_context=context)['status'] == 'completed'
+
+
+def test_bounded_search_does_not_cold_load_semantic_model(setup, monkeypatch):
+    from src.research_agent_worker import execute
+    def search(*args, **kwargs):
+        assert kwargs['semantic_rerank'] is False
+        return {'hits': [], 'algorithm': 'bm25_passage_ranking'}
+    monkeypatch.setattr('src.research_workspace.search_fulltext', search)
+    result = execute({'root': str(setup.root), 'runs_dir': str(setup.runs_dir), 'run_id': 'study',
+                      'action': {'tool': 'search_fulltext', 'paper_ids': ['p1'], 'query': 'methods'}})
+    assert result['algorithm'] == 'bm25_passage_ranking'
+
+
 def test_step_budget(setup):
     result = run_agent(setup, 'study', 'question', 'id', planner=chooser(*[
         {'tool': 'search_fulltext', 'paper_ids': ['p1'], 'query': str(i)} for i in range(4)]),
@@ -124,7 +153,7 @@ def test_agent_chat_runs_existing_audit_and_deduplicates_response(setup, monkeyp
     from src.conversation import load_conversation
     result = {'run_id': 'study', 'execution_id': 'test', 'status': 'completed', 'model_calls': 1,
               'limits': {}, 'steps': [], 'hits': []}
-    monkeypatch.setattr('src.research_agent.run_agent', lambda *args: result)
+    monkeypatch.setattr('src.research_agent.run_agent', lambda *args, **kwargs: result)
     monkeypatch.setattr('src.ui.server.build_payload', lambda *args: {'run_id': 'study', 'papers': []})
     calls = []
     def answer(payload, message, intent, settings):

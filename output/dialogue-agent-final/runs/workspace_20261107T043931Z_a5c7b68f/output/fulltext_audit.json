@@ -1,0 +1,163 @@
+{
+  "created_at": "2026-11-07T04:39:31.318439+00:00",
+  "documents": [
+    {
+      "paper_id": "paper-008",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-009",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-010",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-011",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-012",
+      "status": "parsed",
+      "error_code": null,
+      "page_count": 19,
+      "acquisition": "arxiv_download",
+      "snapshot_id": "snapshot-fulltext-7cbabcfcabe8cce1",
+      "document_sha256": "d971eec78b2c543b7bf3c6696caa8a8d6da9432b6e59aaec9c54374946b413f3",
+      "response_path": "cache/audit/document-7cbabcfcabe8cce1.pdf",
+      "text_path": "cache/audit/document-7cbabcfcabe8cce1-pages.json",
+      "coverage": {
+        "page_count": 19,
+        "text_pages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "native_text_pages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "ocr_text_pages": [],
+        "no_text_pages": [],
+        "ocr_required_pages": [],
+        "ocr_attempted_pages": 0,
+        "text_extraction_error_pages": [],
+        "text_page_coverage": 1.0,
+        "table_count": 23,
+        "figure_region_count": 26,
+        "formula_candidate_count": 16,
+        "status": "text_extracted",
+        "scope": "extraction_coverage_not_reading_or_semantic_verification"
+      },
+      "processing_capabilities": {
+        "text_extraction": "pypdf",
+        "layout_detection": true,
+        "table_extraction": true,
+        "image_region_detection": true,
+        "pdf_page_render": true,
+        "ocr_available": false,
+        "ocr_engine": null,
+        "ocr_setup": "Install optional documents dependencies and either Tesseract or local language data in TESSDATA_PREFIX.",
+        "formula_interpretation": false,
+        "figure_interpretation": false
+      },
+      "processing_backend": "pypdf_with_optional_pymupdf",
+      "structure_path": "output/document_structure.json"
+    },
+    {
+      "paper_id": "paper-013",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-014",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-015",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-016",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-017",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-018",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-019",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    }
+  ],
+  "checks": [],
+  "search_index": {
+    "algorithm": "bm25_passage_ranking",
+    "passage_count": 114,
+    "hit_count": 12
+  },
+  "limitations": [
+    "精确文本匹配只检查摘录位置，不判断语义支持，也不代表人工通读。",
+    "全文下载支持 arXiv 及检索提供商声明的开放 PDF，每次最多 5 篇。",
+    "扫描页仅在本地OCR引擎可用时处理；未处理页与表格/图像/公式状态逐页记录。"
+  ]
+}

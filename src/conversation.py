@@ -207,6 +207,21 @@ def classify_intent(message: str, payload: dict | None = None, settings=None, cl
             and not re.search(r'重新检索|补充检索|搜索更多', text)):
         return Intent('follow_up', 1.0, '用户要求总结当前材料', False,
                       direct_answer=True, route_source='user_material_summary')
+    if (_payload_has_research_data(payload)
+            and re.search(r'当前(?:结果|论文|材料)|这些方案|这些论文|上述论文|刚才提到', text)
+            and re.search(r'比较|对比|解释|选择|吞吐|条件|说明', text)
+            and not re.search(r'重新检索|补充检索|搜索更多|查找更多|寻找新', text)):
+        return Intent('follow_up', 1.0, '用户要求分析当前材料', False,
+                      direct_answer=True, route_source='user_material_analysis')
+    if payload and not re.search(r'请(?:再|重新|补充)检索|帮我检索|搜索更多|查找更多', text):
+        from src.dialogue_context import referenced_papers
+        referenced = referenced_papers(text, payload.get('conversation_context', []),
+                                       {p['paper_id'] for p in payload.get('papers', [])})
+        if referenced:
+            return Intent('paper_explore' if len(referenced) == 1 else 'follow_up', 1.0,
+                          '沿用最近讨论的论文范围', False, direct_answer=True,
+                          target_paper_id=referenced[0] if len(referenced) == 1 else None,
+                          route_source='conversation_references')
     llm_route = _llm_route(text, payload, settings, clarification_context, clarification_topic)
     action = llm_route["action"]
     if action == "error":

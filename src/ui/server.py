@@ -473,9 +473,8 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             history = []
             if current_payload is not None:
                 history = load_conversation(settings.runs_dir, requested_run).get("messages", [])
-                current_payload["conversation_context"] = [
-                    {"role": p["role"], "content": p["content"][:1500]} for p in history[-6:]
-                    if isinstance(p, dict) and p.get("role") in {"user", "assistant"} and isinstance(p.get("content"), str)]
+                from src.dialogue_context import recent_context
+                current_payload["conversation_context"] = recent_context(history)
             from src.map_topics import is_map_question, map_chat_response, validate_map_context, resolve_cluster_reading_scope
             from src.reading_scope import is_research_agenda_question, resolve_reading_scope
             research_agenda = current_payload is not None and is_research_agenda_question(
@@ -657,13 +656,20 @@ class LitAuditHandler(BaseHTTPRequestHandler):
         from src.conversation import Intent, continue_conversation
         from src.research_workspace import fork_workspace
         request_id = body.get('agent_request_id') or body.get('request_id')
-        result = run_agent(settings, run_id, message, request_id)
+        from src.dialogue_context import recent_context
+        context = recent_context(load_conversation(settings.runs_dir, run_id)['messages'])
+        result = run_agent(settings, run_id, message, request_id, conversation_context=context)
         target = result['run_id']
         payload = build_payload(settings.runs_dir, target)
         payload['reading_mode'] = 'materials'
-        payload['conversation_context'] = load_conversation(settings.runs_dir, run_id)['messages'][-6:]
+        payload['conversation_context'] = context
         payload['fulltext_index'] = {'hits': result['hits']}
-        intent = Intent('follow_up', 1, '用户开启有界全文补证', False, direct_answer=True)
+        selected_ids = next((step['action']['paper_ids'] for step in reversed(result['steps'])
+            if step['status'] == 'completed' and step['action']['tool'] in {'search_fulltext', 'acquire_fulltext'}), [])
+        if selected_ids:
+            payload['papers'] = [p for p in payload.get('papers', []) if p['paper_id'] in selected_ids]
+        intent = Intent('follow_up', 1, '用户开启有界全文补证', False, direct_answer=True,
+                        target_paper_id=selected_ids[0] if len(selected_ids) == 1 else None)
         response = build_chat_response(payload, message, intent, settings)
         response['agent_execution'] = {k: result[k] for k in ('execution_id', 'status', 'model_calls', 'limits')}
         response['agent_execution']['steps'] = [

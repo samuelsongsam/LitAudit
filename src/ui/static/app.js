@@ -1181,7 +1181,7 @@ function bindClarification(stage) {
 
 function agentExecutionView(response) {
   const a=response.agent_execution;if(!a)return '';
-  const labels={completed:'补证完成',budget_exhausted:'已达到补证上限',no_progress:'停止重复动作',timeout:'补证超时',failed:'补证服务失败',tool_failed:'补证工具失败',model_failed:'补证模型失败',invalid_action:'工具参数无效，已停止',interrupted:'上次执行中断，未重复执行',cancelled:'补证已取消'};
+  const labels={completed:'补证完成',insufficient_evidence:'补证结束，尚无正文依据',budget_exhausted:'已达到补证上限',no_progress:'停止重复动作',timeout:'补证超时',failed:'补证服务失败',tool_failed:'补证工具失败',model_failed:'补证模型失败',invalid_action:'工具参数无效，已停止',interrupted:'上次执行中断，未重复执行',cancelled:'补证已取消'};
   return `<details><summary>${esc(labels[a.status]||'补证已停止')} · ${(a.steps||[]).length} 步</summary><p>以下回答仍需通过材料引用核验。</p>${(a.steps||[]).map(s=>`<p>${esc({read_papers:'读取摘要',search_fulltext:'检索正文',acquire_fulltext:'获取全文'}[s.tool]||s.tool)} · ${esc(s.status==='completed'?'已完成':'未确认完成')}</p>`).join('')}</details>`;
 }
 

@@ -1,0 +1,322 @@
+{
+  "algorithm": "bm25_passage_ranking",
+  "weights": {
+    "bm25": 1.0,
+    "specter2": 0.0
+  },
+  "passage_count": 114,
+  "total_passage_count": 114,
+  "section_filter": null,
+  "indexed_paper_count": 1,
+  "expanded_query": "Prefill-Decode 分离、多机多卡、资源调度和通信开销 resources hardware memory cost",
+  "candidate_policy": "bm25_first40_with_zero_overlap_paper_coverage",
+  "candidate_count": 40,
+  "section_policy": "reference_downweight",
+  "context_policy": "adjacent_text_with_separate_page_locations",
+  "embedding": {
+    "backend": "not_run",
+    "reason": "lexical acquisition preview"
+  },
+  "hits": [
+    {
+      "passage_id": "paper-012:p2:c1",
+      "paper_id": "paper-012",
+      "page": 2,
+      "section": "introduction",
+      "text": "phases share the same model weights [4, 69]. However, this\napproach incurs large tail latencies due to prefill-decode in-\nterference [74], leading to a less responsive user experience.\nDisaggregation-based scheduling separates the execution\nof the prefill and decode phases onto different hardware\nby using interconnects to transfer the KV cache [ 51, 74].\nAlthough this approach incurs transfer overheads, it im-\nproves overall performance by enabling phase-specific re-\nsource management and using hardware that better matches\nthe computational characteristics of each phase.\nDespite these software-level optimizations, the hard-\nware efficiency of serving LLM inference is still funda-\nmentally limited by the mismatch between the work-\nload requirements (i.e., TFLOPS and memory accesses)\nand hardware resources (i.e., compute capacity and\nmemory bandwidth).Current datacenter GPU/TPU de-\nsign philosophy tends to fit as much compute capacity and\ncache as possible onto a reticle-sized die and pair it with\nHigh Bandwidth Memory (HBM) using the advanced CoWoS\n(Chip-on-Wafer-on-Substrate) packaging technology [28].\nThe resulting enormous TFLOPs and memory bandwidths",
+      "text_sha256": "a7528edf9b30855c034141b8035e25bd526787793fb99840da14bc39f28c5025",
+      "bm25_score": 9.812488,
+      "semantic_score": null,
+      "score": 1.0,
+      "char_start": 0,
+      "char_end": 1171,
+      "context": [
+        {
+          "page": 1,
+          "position": "previous_page",
+          "text": " output tokens are generated sequentially,\nwhere each new token depends on the KV cache state of all\nprevious tokens. This dual-phase nature poses a challenge\nfor existing hardware since each phase effectively utilizes\nonly a subset of the hardware resources.\nTo improve efficiency, prior work has proposed two broad\nscheduling techniques.Co-location-based schedulings batch\nthe prefill and decode phases of different requests together to\nimprove hardware utilization, leveraging the fact that both\n1"
+        },
+        {
+          "page": 2,
+          "position": "after",
+          "text": "make them the most popular hardware platform for serving\nLLMs. However, thismore-is-betterdesign philosophy drives\nup costs for disaggregation-based LLM inference: the high\narithmetic intensity of the prefill phase leaves the expensive\nHBM underutilized, and the low arithmetic intensity of the\ndecode phase leaves the compute capacity underutilized."
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p1:c2",
+      "paper_id": "paper-012",
+      "page": 1,
+      "section": "abstract",
+      "text": "Abstract\nLarge Language Models (LLMs) have gained popularity in\nrecent years, driving up the demand for inference. LLM infer-\nence is composed of two phases with distinct characteristics:\na compute-bound prefill phase followed by a memory-bound\ndecode phase. To efficiently serve LLMs, prior work proposes\nprefill-decode disaggregation to run each phase on separate\nhardware. However, existing hardware poorly matches the\ndifferent requirements of each phase. Current datacenter\nGPUs and TPUs follow amore-is-betterdesign philosophy\nthat maximizes compute and memory resources, causing\nmemory bandwidth underutilization in the prefill phase and\ncompute underutilization in the decode phase. Such under-\nutilization directly translates into increased serving costs.\nThis paper proposes SPAD (Specialized Prefill and Decode\nhardware), adopting aless-is-moremethodology to design\nspecialized chips tailored to the distinct characteristics of\nprefill and decode phases. The proposed Prefill Chips have\nlarger systolic arrays and use cost-effective GDDR memory,\nwhereas the proposed Decode Chips retain high memory\nbandwidth but reduce compute capacity. Compared to mod-",
+      "text_sha256": "616880c290917ae47e43f35ef908c9cf69cb5b4df7ff51f75911ffa53e4e590c",
+      "bm25_score": 9.749189,
+      "semantic_score": null,
+      "score": 0.993549,
+      "char_start": 320,
+      "char_end": 1485,
+      "context": [
+        {
+          "page": 1,
+          "position": "before",
+          "text": "SPAD: Specialized Prefill and Decode Hardware for\nDisaggregated LLM Inference\nHengrui Zhang\nhengrui.zhang@princeton.edu\nPrinceton University\nPratyush Patel\npatelp1@cs.washington.edu\nUniversity of Washington\nAugust Ning\naning@princeton.edu\nPrinceton University\nDavid Wentzlaff\nwentzlaf@princeton.edu\nPrinceton University\n"
+        },
+        {
+          "page": 1,
+          "position": "after",
+          "text": "eled H100s, simulations show that the proposed Prefill Chips\ndeliver 8% higher prefill performance on average at 52% lower\nhardware cost, while the proposed Decode Chips achieve\n97% of the decode performance with 28% lower TDP.\nEnd-to-end simulations on production traces show that\nSPAD reduces hardware cost by 19%-41% and TDP by 2%-\n17% compared to"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p4:c1",
+      "paper_id": "paper-012",
+      "page": 4,
+      "section": "introduction",
+      "text": "1000 1500 2000 2500 3352 4000\nMemory Bandwidth (GB/s)\n0.0\n0.1\n0.2\n0.3\n0.4Prefill Latency (s)\n1.59x\n1.32x\n1.17x 1.08x 0.97x\nH100\nLatency Breakdown\nOthers\nAllReduce\nActivation\nLayerNorm\nSoftmax\nMatmul\nFigure 2.Simulated Prefill Latency Under Varying Memory\nBandwidths. Hardware specifications are set according to\na modeled H100 except for memory bandwidth. Simulated\nusing LLMCompass [71] for an FP16 BLOOM-176B configu-\nration with batch size 2, sequence length 1024, and tensor\nparallelism 8.\n3 Motivations for Phase-Specialized\nHardware\nToday’s GPUs (also referred to as GPGPUs, General-Purpose\nGraphics Processing Units) are designed with amore-is-better\nphilosophy to cater to the need of various workloads. This\napproach provides flexibility, but using the latest and great-\nest technologies also drives up costs. Given the dual-phase\nnature of LLM serving, prefill-decode disaggregation is com-\nmonly used to meet stringent latency SLOs and ensure a\ngood user experience. In this section, we quantitatively show\nhow GPUs are inefficient when running disaggregated pre-\nfill and decode phases. We choose BLOOM-176B [54] as a\nrepresentative dense LLM because it fits on a typical 8-H100",
+      "text_sha256": "d2e0e70d0f03a69c362b1f3450431cceec12767ab40a033dfa11ae99be8d3fd1",
+      "bm25_score": 5.898473,
+      "semantic_score": null,
+      "score": 0.601119,
+      "char_start": 0,
+      "char_end": 1190,
+      "context": [
+        {
+          "page": 3,
+          "position": "previous_page",
+          "text": "s [ 74]. Splitwise\nfurther shows that phase-specific hardware, such as H100s\nfor prefills and A100s for decodes, can reduce overall TCO\nand power consumption [51]. ThunderServe further shows\neffective disaggregation using diverse cloud GPUs [29].\nOur work explores a new point in the design space by\nspecializing hardware for each phase in a disaggregation-\nbased scheduling. We show that this approach substantially\nreduces costs while providing the same performance as ex-\nisting cluster designs.\n3"
+        },
+        {
+          "page": 4,
+          "position": "after",
+          "text": "machine, and we simulate it with FP16 precision as it can\nprovide high production-class accuracy.\nPrefills Underutilize Memory Bandwidth.Figure 2 shows\nhow prefill phases underutilize the memory bandwidth on\nmodeled H100 GPUs. We use LLMCompass [71] to simulate\nhow the prefill phase latency changes as a function of the\navailable memory bandwidth. P"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p1:c3",
+      "paper_id": "paper-012",
+      "page": 1,
+      "section": "abstract",
+      "text": "ystolic arrays and use cost-effective GDDR memory,\nwhereas the proposed Decode Chips retain high memory\nbandwidth but reduce compute capacity. Compared to mod-\neled H100s, simulations show that the proposed Prefill Chips\ndeliver 8% higher prefill performance on average at 52% lower\nhardware cost, while the proposed Decode Chips achieve\n97% of the decode performance with 28% lower TDP.\nEnd-to-end simulations on production traces show that\nSPAD reduces hardware cost by 19%-41% and TDP by 2%-\n17% compared to modeled baseline clusters while offering\nthe same performance. Even when models and workloads\nchange, SPAD can reallocate either type of chip to run ei-\nther phase and still achieve 11%-43% lower hardware costs,\ndemonstrating the longevity of the SPAD design.",
+      "text_sha256": "72a64284e58a87be517d9740eeed3ac7f42b077aa144ce0b1fc2fa2d633301ee",
+      "bm25_score": 5.382038,
+      "semantic_score": null,
+      "score": 0.548489,
+      "char_start": 1326,
+      "char_end": 2096,
+      "context": [
+        {
+          "page": 1,
+          "position": "before",
+          "text": "erutilization in the decode phase. Such under-\nutilization directly translates into increased serving costs.\nThis paper proposes SPAD (Specialized Prefill and Decode\nhardware), adopting aless-is-moremethodology to design\nspecialized chips tailored to the distinct characteristics of\nprefill and decode phases. The proposed Prefill Chips have\nlarger s"
+        },
+        {
+          "page": 1,
+          "position": "after",
+          "text": "1 Introduction\nLarge Language Models (LLMs) have become immensely pop-\nular due to their advanced capabilities and are being widely\nadopted in various applications spanning chatbots and code\ngeneration tools. However, serving LLMs incurs significant\nhardware costs. In early 2023, only three months after the\nintroduction of GPT-3.5, it was estimated"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p10:c4",
+      "paper_id": "paper-012",
+      "page": 10,
+      "section": "results",
+      "text": "b)Normalized P99 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=2 \nOptimal Design\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0\n2.2\n2.4\n2.6\n2.8\n(c)Normalized P90 TBT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=5 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7 (d)Normalized P99 TBT\nFigure 9.Provisioning Results with Coding Trace for SPAD.\nThe optimal design has 18 prefill and 7 decode machines.\nprovisioning results for BLOOM-176B using the coding and\nconversation workloads with a target request rate of 70 req/s.\nCoding.Compared to the best baseline, SPAD saves the\nhardware cost by41%and TDP by13%. Sarathi needs at\nleast 36 modeled 8-H100 machines to meet all SLOs, while\nSplitwise needs at least 25 modeled 8-H100 machines. The\nminimal hardware requirement is derived by sweeping ma-\nchine count as shown in Figures 12 and 13a in Section A.\nDue to prefill-decode interference, Sarathi can be unsuit-\nable for low-latency workloads compared to disaggregated\nserving. Splitwise-hetero needs at least 21 modeled 8-H100\nand 9 modeled 8-A100 machines, which does not improve\ncost-effectiveness because although the TFLOPS-to-memory-",
+      "text_sha256": "d8176f7dc2f0842e43ab0dbd05d22b2e60d61665de614366285090199351fa5d",
+      "bm25_score": 5.25234,
+      "semantic_score": null,
+      "score": 0.535271,
+      "char_start": 3139,
+      "char_end": 4307,
+      "context": [
+        {
+          "page": 10,
+          "position": "before",
+          "text": "nk interconnect with those of the original 700W\nH100, which we assume adds 100 W TDP.\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=3 \nOptimal Design\n1.0\n1.5\n2.0\n2.5\n3.0\n3.5\n4.0\n(a)Normalized P90 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=6 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7\n8 ("
+        },
+        {
+          "page": 10,
+          "position": "after",
+          "text": "bandwidth ratio of A100 is closer to the theoretical arithmetic\nintensity of decode, the absolute bandwidth and TFLOPS are\nsignificantly lower, making it harder to meet strict latency\nSLOs. Figure 9 shows that SPAD needs the same amount of\n10"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p3:c4",
+      "paper_id": "paper-012",
+      "page": 3,
+      "section": "introduction",
+      "text": "ous,Disagg: disaggregation-\nbased scheduling,Cost: Cost per goodput.?: Groq likely runs with small\nbatches due to low memory capacity and has lower throughput.\nto improve performance under SLOs. Due to its effective-\nness, this idea has been adopted in production systems like\nNVIDIA Dynamo [45], Mooncake [53], and DeepSeek [20]\nalongside other optimizations. Some disaggregated systems\nalso adopt co-location-based techniques, such as chunked\nprefills to better match hardware capacity [45, 73] and mixed\nbatching to handle workload changes and provide better\nhardware utilization [51].\nOther Techniques.Recent works improve serving efficiency\nusing a variety of software-based techniques including ef-\nficient scheduling [ 52, 55, 58], memory management [ 24,\n34, 70], kernel optimizations [18, 65, 68], quantization [22,\n27, 72], power management [50], etc. These techniques are\northogonal to our work, so we do not discuss them here.\n2.4 Cluster Designs and Trade-offs\nLLM serving clusters can be characterized across three di-\nmensions: hardware specialization, hardware homogeneity,\nand scheduling. Cluster operators usually choose the design",
+      "text_sha256": "f6a4f91e9670d454451c78558d7685f1900e60e04f60a866409f14ffb55e8f9b",
+      "bm25_score": 5.08989,
+      "semantic_score": null,
+      "score": 0.518716,
+      "char_start": 3034,
+      "char_end": 4183,
+      "context": [
+        {
+          "page": 3,
+          "position": "before",
+          "text": "throughput by batching more requests\nTable 1.LLM Serving Cluster Design Space\nSpec. Hetero. Disagg. Latency Throughput Cost\nOrca [69]✕ ✕ ✕Variable Low High\nSarathi [4]✕ ✕ ✕Variable Very High High\nGroq [26]✔ ✕? Very Low ? ?\nDistServe [74]✕ ✕ ✔Low High Med\nSplitwise [51]✕ ✔ ✔Low High Med\nSPAD✔ ✔ ✔Low High Low\nSpec: specialized chip,Hetero: heterogene"
+        },
+        {
+          "page": 3,
+          "position": "after",
+          "text": "based on hardware availability and workload requirements.\nPrior work has explored different points within this de-\nsign space, as shown in Table 1. Sarathi uses general-purpose\nGPUs, homogeneous chips, and co-location-based schedul-\ning to enable high utilization with lower management com-\nplexity [4]. Clouds built using Google TPUs and Groq lever-"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p4:c3",
+      "paper_id": "paper-012",
+      "page": 4,
+      "section": "introduction",
+      "text": "at of H100), the latency only increases by 8%. This\ntrend indicates that prefill phases do not require the large\nmemory bandwidth provisioned on the H100 chip.\nDecodes Underutilize Compute Capacity.Decode ma-\nchines underutilize GPU compute cores when deployed using\nprefill-decode disaggregation due to their low arithmetic in-\ntensity. Figure 3 shows this by plotting the decode latency\nbreakdown of BLOOM-176B while sweeping the core count\n(i.e., the Streaming Multiprocessor count) on a simulated\n44 66 108 132 144 160\nCore Count\n0.00\n0.02\n0.04\n0.06Decode Latency (s)\n1.40x\n1.22x\n1.02x 0.99x 0.99x\nH100 Latency Breakdown\nOthers\nAllReduce\nActivation\nLayerNorm\nSoftmax\nMatmul\nFigure 3.Simulated Decode Latency Under Varying Core\nCounts (SM count in NVIDIA GPUs). Hardware specifica-\ntions are set according to a modeled H100 except the core\ncount. Simulated by LLMCompass [71] with BLOOM-176B,\nbatch size 64, sequence length 1024, and tensor parallelism\n8.\nH100 with LLMCompass. We use FP16, a batch size of 64, a\nsequence length of 1024, and a tensor parallelism of 8. We\nvary the number of cores from 44 to 160 while setting the\nother hardware specifications according to a modeled H100.",
+      "text_sha256": "972e31d1a377f13091e2f2864fe55c8d3b23aa570875473c40af58068cfd6f84",
+      "bm25_score": 5.024151,
+      "semantic_score": null,
+      "score": 0.512016,
+      "char_start": 2030,
+      "char_end": 3221,
+      "context": [
+        {
+          "page": 4,
+          "position": "before",
+          "text": "s memory\nbandwidth from 1TB/s to 4TB/s while keeping the rest of the\nhardware specifications the same.\nOur results show that computation-intensive matrix multi-\nplications dominate prefill time. Crucially, the prefill latency\ndoes not scale in proportion to the memory bandwidth. Even\nwhen the memory bandwidth is reduced to 2500 GB/s (about\n0.75× th"
+        },
+        {
+          "page": 4,
+          "position": "after",
+          "text": "We find that decode performance scales sub-linearly with an\nincreased core count. Specifically, despite using nearly 20%\nfewer cores (108) than an H100 (132), the decode latency only\nincreases by about 2%. This indicates that decode phases do\nnot require the large compute capacity provisioned on the\nH100 chip for efficient execution.\nThe prefill/de"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p6:c2",
+      "paper_id": "paper-012",
+      "page": 6,
+      "section": "introduction",
+      "text": "If an architectural component does not\nsignificantly impact performance, we consider cutting it to\nsave cost. However, we cannot be too aggressive with cutting\ncomponents since a phase-specialized chip needs to be able\nto run the other phase after adaptive reallocation. By care-\nfully choosing the memory technology and using cost-aware\narchitectural designs, our proposed Prefill/Decode Chips\ncould achieve similar performance with lower hardware cost\nand TDP than H100s since their hardware characteristics\nalign better with the arithmetic intensity of prefill/decode\nphases. We call this theless-is-moremethodology, which re-\nduces the cost/TDP per chip while allowing more chips to\nbe deployed in clusters under the same cost/TDP budgets to\nachieve higher overall performance.\n5.2 Prefill Chip Design\n5.2.1 Memory.Figure 2 shows that even if the memory\nbandwidth of a modeled H100 is reduced by 40% to 2 TB/s , its\nsimulated prefill latency will only be 17% higher. However,\nfurther reducing the bandwidth to 1.5 TB/s increases the\nlatency by 32%. Latency breakdowns show that the latency\nincrease is mainly caused by memory-bound non-tensor op-",
+      "text_sha256": "00ebef602fbbe80af971ea0127f12d138597a66a9426b3bbc7c63e3d1d9bef47",
+      "bm25_score": 4.92766,
+      "semantic_score": null,
+      "score": 0.502183,
+      "char_start": 999,
+      "char_end": 2149,
+      "context": [
+        {
+          "page": 6,
+          "position": "before",
+          "text": "izen.Our goal is to achieve the\nthroughput and latency requirements of LLM serving at the\nlowest possible cost. A large die or high-end memory can in-\ncrease the manufacturing cost and TDP, and a larger TDP can\nlead to higher power delivery and cooling equipment costs.\nThus, we assess the cost-performance trade-offs with design\nspace explorations. "
+        },
+        {
+          "page": 6,
+          "position": "after",
+          "text": "erations, such as Layer Normalization or Softmax, whose\nperformance scales almost linearly with memory bandwidth.\nOn the other hand, Matmul latency only increases by 16%,\neven when decreasing memory bandwidth from 4 TB/s to\n2 TB/s. Therefore, we conclude that reduced memory band-\nwidth can be manageable as long as it is not decreased too\nmuch, and "
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p3:c3",
+      "paper_id": "paper-012",
+      "page": 3,
+      "section": "introduction",
+      "text": "idth. This approach improves hardware uti-\nlization and can support very high throughput, but it incurs\nresource contention between prefill and decode computa-\ntions [74], causing large tail TTFT and TBT latencies that\ncan violate SLOs.\nDisaggregation.Splitwise [ 51] and DistServe [74] disaggre-\ngate inference phases across different hardware clusters and\nuse fast interconnects like Infiniband or NVLink to efficiently\ntransfer KV caches between them. This approach eliminates\ncross-phase interference and enables phase-specific resource\nmanagement and hardware choices. Prefills can optimize\nTTFTs by matching hardware compute capabilities, while\ndecodes can optimize throughput by batching more requests\nTable 1.LLM Serving Cluster Design Space\nSpec. Hetero. Disagg. Latency Throughput Cost\nOrca [69]✕ ✕ ✕Variable Low High\nSarathi [4]✕ ✕ ✕Variable Very High High\nGroq [26]✔ ✕? Very Low ? ?\nDistServe [74]✕ ✕ ✔Low High Med\nSplitwise [51]✕ ✔ ✔Low High Med\nSPAD✔ ✔ ✔Low High Low\nSpec: specialized chip,Hetero: heterogeneous,Disagg: disaggregation-\nbased scheduling,Cost: Cost per goodput.?: Groq likely runs with small\nbatches due to low memory capacity and has lower throughput.",
+      "text_sha256": "e447c3c4f0921bb4d0c7d377e4d420938c00e5136c3de5129b759d1b50c070be",
+      "bm25_score": 4.922843,
+      "semantic_score": null,
+      "score": 0.501692,
+      "char_start": 2012,
+      "char_end": 3193,
+      "context": [
+        {
+          "page": 3,
+          "position": "before",
+          "text": "serving systems like Orca [ 69] run\nrequests end-to-end on the same hardware [9, 69], batching\nthem at request or iteration granularity. Recent systems like\nSarathi [4], POD-Attention [33], and Nanoflow [75] chunk\nprefill phases to match hardware compute capacity and batch\nthem with decode phases of different requests to better utilize\nmemory bandw"
+        },
+        {
+          "page": 3,
+          "position": "after",
+          "text": "to improve performance under SLOs. Due to its effective-\nness, this idea has been adopted in production systems like\nNVIDIA Dynamo [45], Mooncake [53], and DeepSeek [20]\nalongside other optimizations. Some disaggregated systems\nalso adopt co-location-based techniques, such as chunked\nprefills to better match hardware capacity [45, 73] and mixed\nbat"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p2:c3",
+      "paper_id": "paper-012",
+      "page": 2,
+      "section": "introduction",
+      "text": "moredesign philosophy that right-\nsizes hardware for each phase, while still retaining the ability\nto run the other phase. For the compute-heavy prefill phase,\nwe propose a specialized Prefill Chip with larger systolic\narrays and a cost-effective GDDR-based memory system.\nFor the low-arithmetic-intensity decode phase, we propose\nan area- and TDP-efficient Decode Chip with smaller sys-\ntolic arrays and caches. Simulations with LLMCompass [71]\nshow that compared to modeled H100s, our proposed Prefill\nChips deliver 8% higher prefill performance on average at\n52% lower hardware cost, while our proposed Decode Chips\nachieve 97% of the decode performance with 28% lower TDP.\nWe evaluate SPAD by provisioning cost-optimized het-\nerogeneous clusters. End-to-end simulations on production\ntraces for chatbot and code generation applications show\nthat SPAD clusters reduce hardware cost by 19%-41% and\nTDP by 2%-17% compared to modeled baseline clusters while\nmaintaining the same performance. Even as the models and\nworkloads change, SPAD can reallocate either type of chip to\nrun either phase and still achieve an 11%-43% lower hardware\ncost, demonstrating the longevity of our design.",
+      "text_sha256": "7e5bf75b32d22067d24fb6d21a9408d9ae4572fe4f47d4f2502c33fd25df28db",
+      "bm25_score": 4.821688,
+      "semantic_score": null,
+      "score": 0.491383,
+      "char_start": 2050,
+      "char_end": 3235,
+      "context": [
+        {
+          "page": 2,
+          "position": "before",
+          "text": "ncreases by 22% if we reduce the compute capacity by half.\nWe propose SPAD (Specialized Prefill and Decode\nhardware), tailoring specialized hardware to the dis-\ntinct characteristics of prefill and decode phases to\nimprove disaggregation-based LLM serving efficiency.\nIn contrast to themore-is-betterdesign philosophy of GPUs,\nSPAD embraces aless-is-"
+        },
+        {
+          "page": 2,
+          "position": "after",
+          "text": "In summary, our contributions are as follows:\n● Identify the inherent hardware inefficiency of modern\nGPUs for disaggregated LLM serving. (Section 3)\n● Propose SPAD, a heterogeneous system that adopts aless-\nis-morephilosophy to design specialized Prefill and De-\ncode Chips to efficiently serve the corresponding phases\nof LLM inference. (Sections 4"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p3:c1",
+      "paper_id": "paper-012",
+      "page": 3,
+      "section": "introduction",
+      "text": "phase generates the rest of the response. Both TTFT and\nTBT are important to ensure an interactive user experience.\n2.2 Hardware for LLMs\nToday, LLMs are mainly served with GPUs and TPUs. To\nmeet high resource demands, such hardware tends to maxi-\nmize memory and compute capacities as much as possible.\nMemory.LLM inference has high memory bandwidth and\ncapacity requirements due to the large model sizes and KV\ncache sizes involved. High-end GPUs and TPUs incorpo-\nrate high-bandwidth memory (HBM) [ 8, 15, 44] to meet\nthese needs, and Groq uses SRAMs for even better perfor-\nmance [26], despite needing a large number of chips to meet\ncapacity requirements. LPDDR and CXL memory have also\nbeen explored to reduce cost and power usage [48, 71].\nCompute.Tensor operations like matrix multiplications\ndominate LLM execution, which has led hardware to adopt\nspecialized components to accelerate their computation. For\nexample, NVIDIA H100s incorporate 528 Tensor Cores to de-\nliver nearly 1000 TFLOPs of FP16 dense matrix multiplication\nperformance [44] and Google TPUs use large systolic arrays\nspecifically designed for matrix computations [ 30–32, 40].",
+      "text_sha256": "ad69fef7499215ff5d1543d16718a15640ed48b82403aa8de5c2fde4f3681289",
+      "bm25_score": 4.685512,
+      "semantic_score": null,
+      "score": 0.477505,
+      "char_start": 0,
+      "char_end": 1154,
+      "context": [
+        {
+          "page": 2,
+          "position": "previous_page",
+          "text": "ously generated token along\nwith the KV cache of all prior tokens. This phase is memory-\nbound because generating each new token requires loading\nthe entire model weights along with the growing KV cache.\nPerformance SLOs.LLM serving usually has tight latency\nrequirements expressed as Service-Level Objectives (SLO).\nFrom a user perspective, the prefilltime to first token(TTFT)\nmeasures the latency to receive an initial response, while the\ntime between tokens(TBT) measures how quickly the decode\n2"
+        },
+        {
+          "page": 3,
+          "position": "after",
+          "text": "Non-tensor operations, such as activation or normalization\nfunctions, are usually mapped to a more general-purpose\nSIMD (Single Instruction Multiple Data) or vector units with\nlower peak performance. These tensor units and vector units\ncan take a significant amount of die area, driving up the\nhardware manufacturing cost and TDP.\n2.3 Efficient Servi"
+        }
+      ]
+    },
+    {
+      "passage_id": "paper-012:p7:c3",
+      "paper_id": "paper-012",
+      "page": 7,
+      "section": "introduction",
+      "text": "0\nSpecifications Prefill Chip Decode Chip H100[44]\nCore Count 128 144 132\nLane per Core 4 4 4\nVector Width 16 8 Eq. to 32\nSystolic Array 32×32 16×16Eq. to16×32\nL1 Cache per Core 320 KB 128 KB 256 KB\nL2 Cache 32 MB 30 MB 50 MB\nMemory Protocol GDDR7 HBM3 HBM3\nMemory Bus Width 512-bit 5120-bit 5120-bit\nPin Speed 32 Gb/s 5.2 Gb/s 5.2 Gb/s\nMemory Package Count 16 5 5\nCapacity per Package 4 GB 16 GB 16 GB\nClock (Tensor) 1.83 GHz 1.83 GHz 1.83 GHz\nClock (Non-Tensor) 1.98 GHz 1.98 GHz 1.98 GHz\nFP16/BF16 Tensor PFLOPs 1.92 0.54 0.99\nFP32 Non-Tensor TFLOPs 32.4 18.2 66.9\nTotal L1 & L2 Cache Size 73 MB 48 MB 84 MB\nMemory Configuration 64 GB GDDR7 80 GB HBM3 80 GB HBM3\nMemory Bandwidth 2048 GB/s 3352 GB/s 3352 GB/s\nEst. Die Area (@4nm)◆ 784𝑚𝑚 2 520𝑚𝑚 2 814𝑚𝑚 2\nEst. Die Cost◆ $301 $187 $315\nEst. Memory Cost◆ $192 $720 $720\nEst. Norm. Total HW Cost◆ 0.48 0.88 1\nEst. TDP◆ 596 W 507 W 700 W\nNorm. Prefill Perf.✿ 1.08 0.69 1\nNorm. Decode Perf.✿ 0.80 0.97 1\n◆ The die area for our Prefill/Decode Chip is estimated. H100 die area is\nreported by NVIDIA [44]. Cost and TDP modeling is explained in Section 6.1.\n✿ Performance numbers are from Fig. 7, simulated with LLMCompass [71].\n5.3 Decode Chip Design",
+      "text_sha256": "1de4b9b35af6e0fccb856b40c6c90bdbec371d2dd641caae647ed9c161888d83",
+      "bm25_score": 4.246602,
+      "semantic_score": null,
+      "score": 0.432775,
+      "char_start": 2030,
+      "char_end": 3226,
+      "context": [
+        {
+          "page": 7,
+          "position": "before",
+          "text": "e size of the vector units has minimal\nperformance impact. The L1 cache size is increased to ac-\ncommodate the larger systolic arrays. We also decrease the\nL2 cache size as we find that approximately 30 MB of L2 is\nenough for LLM inference, and there is a diminishing return\nin further increasing L2 sizes.\nTable 3.SPAD Chips Compared with NVIDIA H10"
+        },
+        {
+          "page": 7,
+          "position": "after",
+          "text": "5.3.1 Memory.According to Figure 1, the decode phase is\nheavily memory bandwidth bound. While Prefill Machines\nonly temporarily retain KV caches before transferring them,\nDecode Machines retain and use the KV cache for the rest\nof the request processing. Specifically, multiple requests are\noften batched together in decode phases to improve model\nwe"
+        }
+      ]
+    }
+  ]
+}
