@@ -1,0 +1,2 @@
+LitAudit UI  http://127.0.0.1:8787/?run=phase2-real  pid=10656
+勘验工作台：界面「检索文献」会调用 arXiv / OpenAlex / Semantic Scholar。按 Ctrl+C 结束。

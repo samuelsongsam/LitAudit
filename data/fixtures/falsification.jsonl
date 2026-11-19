@@ -1,0 +1,1 @@
+{"hit_id":"fixture-hit-001","target_claim":"fixture-claim-001","paper_id":"fixture-paper-001","threat":"overlap","threat_level":"low","snippet":"Fixture abstract only.","locator":{"section":"abstract"},"reason":"fixture 用于演示证伪字段，不是真实杀手论文。","status":"pending","reverse_query":"fixture negative result"}

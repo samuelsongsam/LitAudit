@@ -1,0 +1,35 @@
+{
+  "execution_id": "6c20dedef4a7c1d96a4da27462879d78ba925f1fd7c40b360e9bfabe7eea5af4",
+  "source_run_id": "public-dialogue",
+  "run_id": "public-dialogue",
+  "status": "invalid_action",
+  "steps": [
+    {
+      "action": {
+        "tool": "read_papers",
+        "paper_ids": [
+          "paper-019"
+        ],
+        "query": ""
+      },
+      "status": "completed",
+      "result": {
+        "papers": [
+          {
+            "paper_id": "paper-019",
+            "title": "Prefill-Decode Aggregation or Disaggregation? Unifying Both for Goodput-Optimized LLM Serving",
+            "abstract": "An ongoing debate considers whether prefill-decode (PD) aggregation or disaggregation is superior for serving large language models (LLMs). This has driven optimizations for both approaches, each showing distinct advantages. This paper compares PD aggregation and disaggregation, showing that each excels under different service-level objectives (SLOs): aggregation is optimal for tight time-to-first-token (TTFT) and relaxed time-per-output-token (TPOT), while disaggregation excels for strict TPOT and relaxed TTFT. However, under balanced TTFT and TPOT SLOs, neither approach delivers optimal goodput. This paper proposes TaiChi, an LLM serving system that unifies PD disaggregation and aggregation for optimal goodput under any combination of TTFT and TPOT SLOs. TaiChi uses a unified disaggregation-aggregation architecture with differentiated-capability GPU instances: prefill-heavy (fast prefill, high-interference decode) and decode-heavy (low-interference decode, slow prefill). Three configurable sliders control the ratio between these instances and their chunk sizes. TaiChi adapts to various SLO regimes by adjusting sliders. When TTFT constraints are tight, TaiChi resembles a PD aggregation configuration; when TPOT dominates, it adapts toward PD disaggregation. Crucially, under balanced SLOs, TaiChi enables a hybrid mode for superior goodput. The key innovation behind this hybrid mode is latency shifting: selectively reallocating GPU resources from requests that meet SLOs to those at risk of violation, maximizing the number of SLO-satisfied requests. This fine-grained latency shifting is orchestrated by two scheduling mechanisms: flowing decode scheduling to control TPOTs and length-aware prefill scheduling to manage TTFTs, which jointly optimize request assignment. Our experiments show TaiChi improves goodput by up to 77% over state-of-the-art systems under balanced TTFT and TPOT SLOs."
+          }
+        ]
+      }
+    }
+  ],
+  "hits": [],
+  "model_calls": 2,
+  "limits": {
+    "steps": 4,
+    "acquisitions": 1,
+    "papers_per_action": 2,
+    "seconds": 90
+  }
+}

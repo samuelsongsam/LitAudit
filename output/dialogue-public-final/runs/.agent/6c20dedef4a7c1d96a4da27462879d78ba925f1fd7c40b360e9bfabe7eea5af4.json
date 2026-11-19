@@ -1,0 +1,76 @@
+{
+  "execution_id": "6c20dedef4a7c1d96a4da27462879d78ba925f1fd7c40b360e9bfabe7eea5af4",
+  "source_run_id": "public-dialogue",
+  "run_id": "workspace_20261107T043815Z_1abf5b55",
+  "status": "completed",
+  "steps": [
+    {
+      "action": {
+        "tool": "read_papers",
+        "paper_ids": [
+          "paper-013"
+        ],
+        "query": ""
+      },
+      "status": "completed",
+      "result": {
+        "papers": [
+          {
+            "paper_id": "paper-013",
+            "title": "PDAcc: A Prefill-Decode Disaggregated MCM-Based Accelerator for Multi-Task Large Language Model Applications",
+            "abstract": "Prefill-decode (PD) disaggregation has emerged as a promising serving paradigm for large language models (LLMs), as it decouples prompt processing (prefill) from autoregressive token generation (decode) to reduce inter-task interference and improve quality of service (QoS). However, disaggregation also amplifies stage imbalance: the prefill cluster (P-C) can become compute-limited, the decode cluster (D-C) is often bandwidth-limited, and the required cross-device KV cache transfer introduces additional communication overhead. This work presentsPDAcc, a four-chiplet multi-chip-module (MCM) accelerator optimized for PD-disaggregated LLM inference. PDAcc employs reconfigurable chiplets that can be dynamically assigned to prefill or decode according to workload ratios. It further introduces three techniques: copy-less float hybrid-LUT multiply (CFHM) to repurpose idle on-chip SRAM for prefill acceleration, hybrid compressed weight gather (HCWG) to utilize prefill-side bandwidth and improve inter-chip weight delivery for decode, and cross-cluster attention dataflow (CCAD) to reduce dependency traffic by shifting part of attention computation across clusters. Implemented in 22-nm technology as a four-chiplet MCM, PDAcc sustains 541–4727 effective tokens/s on GPT-2, OPT, and Llama 3.2, achieving$5.76\\times $higher prefill throughput and$12.42\\times $higher decode throughput than a single chiplet, and further delivering an additional 1.50–$3.24\\times $improvement over a four-chiplet PD-aggregated baseline with the same MCM scaling."
+          }
+        ]
+      }
+    },
+    {
+      "action": {
+        "tool": "acquire_fulltext",
+        "paper_ids": [
+          "paper-013"
+        ],
+        "query": ""
+      },
+      "status": "completed",
+      "result": {
+        "run_id": "workspace_20261107T043815Z_1abf5b55",
+        "acquisition": {
+          "requested_paper_ids": [
+            "paper-013"
+          ],
+          "download_requested": true,
+          "status": "failed",
+          "ready_paper_ids": [],
+          "failed_paper_ids": [],
+          "pending_paper_ids": [
+            "paper-013"
+          ],
+          "documents": [
+            {
+              "paper_id": "paper-013",
+              "status": "missing",
+              "error_code": "fulltext_not_available",
+              "acquisition": null,
+              "pdf_saved": false
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "hits": [],
+  "model_calls": 3,
+  "limits": {
+    "steps": 4,
+    "acquisitions": 1,
+    "papers_per_action": 2,
+    "seconds": 90
+  },
+  "last_action": {
+    "tool": "acquire_fulltext",
+    "paper_ids": [
+      "paper-013"
+    ],
+    "query": ""
+  }
+}

@@ -1,0 +1,1 @@
+{"evidence_id":"fixture-evidence-001","claim_id":"fixture-claim-001","paper_id":"fixture-paper-001","snippet":"Fixture abstract only.","locator":{"page":null,"section":"abstract","paragraph":null,"char_range":null,"url_anchor":null},"verdict":"context_only","confidence":"unverified","extraction_status":"abstract_only"}

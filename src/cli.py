@@ -1,0 +1,258 @@
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import os
+import sys
+from pathlib import Path
+
+from src.ask import ask
+from src.config import ROOT, load_settings
+from src.eval_metrics import evaluate
+from src.io_utils import load_dataset
+from src.pipeline import run_pipeline
+from src.replay import list_runs, load_run
+from src.schema import dataset_stats
+
+
+def _print(payload: object) -> None:
+    print(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+
+
+def _offline_from_args(args: argparse.Namespace) -> bool | None:
+    if getattr(args, "offline", False) and getattr(args, "online", False):
+        raise SystemExit("不能同时使用 --offline 和 --online")
+    if getattr(args, "offline", False):
+        return True
+    if getattr(args, "online", False):
+        return False
+    return None
+
+
+def runtime_capabilities(settings) -> dict:
+    """Inspect local readiness without model loading, network calls or secrets."""
+    dependencies = ("torch", "transformers", "adapters", "networkx", "numpy")
+    def available(name):
+        try:
+            return importlib.util.find_spec(name) is not None
+        except (ImportError, ValueError):
+            return False
+    missing_dependencies = [name for name in dependencies if not available(name)]
+    hf_home = Path(os.getenv("HF_HOME", str(Path.home() / ".cache" / "huggingface")))
+    hub = Path(os.getenv("HF_HUB_CACHE", str(hf_home / "hub")))
+    requirements = {
+        "allenai/specter2_base": (("config.json",), ("pytorch_model.bin", "model.safetensors"), ("vocab.txt", "tokenizer.json")),
+        "allenai/specter2": (("adapter_config.json",), ("pytorch_adapter.bin", "adapter_model.safetensors")),
+        "allenai/specter2_adhoc_query": (("adapter_config.json",), ("pytorch_adapter.bin", "adapter_model.safetensors")),
+    }
+    missing_models = []
+    for repo, groups in requirements.items():
+        snapshots = hub / ("models--" + repo.replace("/", "--")) / "snapshots"
+        complete = snapshots.exists() and any(
+            all(any((snapshot / name).is_file() for name in alternatives) for alternatives in groups)
+            for snapshot in snapshots.iterdir() if snapshot.is_dir()
+        )
+        if not complete:
+            missing_models.append(repo)
+    writable_parent = settings.runs_dir.resolve()
+    while not writable_parent.exists() and writable_parent != writable_parent.parent:
+        writable_parent = writable_parent.parent
+    writable = os.access(writable_parent, os.W_OK)
+    llm_configured = bool(settings.llm_api_key)
+    model_ready = not missing_dependencies and not missing_models
+    return {
+        "llm": {"configured": llm_configured, "model": settings.llm_model},
+        "semantic_model": {"ready": model_ready, "missing_dependencies": missing_dependencies,
+                           "missing_models": missing_models,
+                           "setup_command": 'pip install -e ".[map]" && python -m src.cli download-model'},
+        "storage": {"writable": writable},
+        "ready_for_live_research": bool(llm_configured and model_ready and writable),
+    }
+
+
+def cmd_doctor(_: argparse.Namespace) -> int:
+    settings = load_settings()
+    required = [
+        settings.data_dir / "search_queries.json",
+        settings.data_dir / "papers.jsonl",
+        settings.data_dir / "screening_log.jsonl",
+        settings.data_dir / "paper_cards.jsonl",
+        settings.data_dir / "claims.jsonl",
+        settings.data_dir / "evidence.jsonl",
+        settings.data_dir / "claim_decisions.jsonl",
+        settings.data_dir / "retrieval_runs.jsonl",
+        settings.root / "docs" / "data_contract.md",
+        settings.root / "docs" / "research_scope.md",
+    ]
+    missing = [str(path) for path in required if not path.exists()]
+    dataset = load_dataset(settings.data_dir) if not missing else None
+    _print(
+        {
+            "ok": not missing and dataset is not None and dataset_stats(dataset)["error_count"] == 0,
+            "python": sys.version.split()[0],
+            "root": str(settings.root),
+            "missing_files": missing,
+            "stats": dataset_stats(dataset) if dataset is not None else None,
+            "capabilities": runtime_capabilities(settings),
+        }
+    )
+    ok = not missing and dataset is not None and dataset_stats(dataset)["error_count"] == 0
+    return 0 if ok else 1
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    settings = load_settings(data_dir=args.data_dir)
+    data_dir = settings.fixtures_dir if args.fixture else settings.data_dir
+    dataset = load_dataset(data_dir)
+    stats = dataset_stats(dataset)
+    _print(
+        {
+            "data_dir": str(data_dir),
+            "stats": stats,
+            "issues": [issue.model_dump() for issue in dataset.issues],
+        }
+    )
+    return 1 if stats["error_count"] else 0
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    settings = load_settings(offline=_offline_from_args(args))
+    source = "fixture" if args.fixture else "data"
+    result = run_pipeline(
+        settings,
+        source=source,
+        run_id=args.run_id,
+        allow_errors=args.allow_errors,
+        question=args.question,
+    )
+    _print(result)
+    return 0
+
+
+def cmd_retry_map(args: argparse.Namespace) -> int:
+    from src.pipeline import retry_map
+    _print(retry_map(load_settings(), args.run_id))
+    return 0
+
+
+def cmd_replay(args: argparse.Namespace) -> int:
+    settings = load_settings()
+    if args.list:
+        _print({"runs": list_runs(settings.runs_dir)})
+        return 0
+    if not args.run_id:
+        raise SystemExit("请提供 run_id，或使用 --list")
+    payload = load_run(settings.runs_dir, args.run_id)
+    payload["dataset"] = dataset_stats(payload["dataset"])
+    _print(payload)
+    return 0
+
+
+def cmd_evaluate(_: argparse.Namespace) -> int:
+    _print(evaluate(ROOT))
+    return 0
+
+
+def cmd_download_model(_: argparse.Namespace) -> int:
+    from src.map_builder import download_specter2
+
+    _print({"ok": True, "models": download_specter2()})
+    return 0
+
+
+def cmd_ask(args: argparse.Namespace) -> int:
+    settings = load_settings(offline=_offline_from_args(args))
+    if settings.offline:
+        dataset = load_dataset(settings.data_dir)
+        _print(ask(dataset, args.question, limit=args.limit))
+        return 0
+    result = run_pipeline(settings, source="data", question=args.question)
+    from src.ui.payload import ask_payload
+    payload = ask_payload(settings.runs_dir, result["run_id"], args.question, limit=args.limit)
+    payload["run_id"] = result["run_id"]
+    payload["live"] = result.get("live")
+    payload["mode"] = "live_retrieve_then_local_overlap"
+    _print(payload)
+    return 0
+
+
+def cmd_ui(args: argparse.Namespace) -> int:
+    from src.ui.server import serve_ui
+
+    return serve_ui(run_id=args.run_id, port=args.port, open_browser=not args.no_browser)
+
+
+def _add_online_flags(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--offline", action="store_true", help="只读本地金标/快照，不调用检索 API")
+    parser.add_argument("--online", action="store_true", help="调用 arXiv / OpenAlex")
+
+
+def cmd_audit(args: argparse.Namespace) -> int:
+    from src.pipeline import upgrade_audit
+    _print(upgrade_audit(load_settings(), args.run_id, acquire=args.acquire))
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="litaudit", description="LitAudit 在线检索、离线回放与勘验工作台")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    doctor = sub.add_parser("doctor", help="检查必要文件与数据契约")
+    doctor.set_defaults(func=cmd_doctor)
+
+    validate = sub.add_parser("validate", help="校验 JSON/JSONL")
+    validate.add_argument("--data-dir")
+    validate.add_argument("--fixture", action="store_true")
+    validate.set_defaults(func=cmd_validate)
+
+    audit = sub.add_parser("audit", help="创建增强审计快照，不修改原 run")
+    audit.add_argument("run_id")
+    audit.add_argument("--acquire", action="store_true", help="尝试下载最多 5 篇 arXiv 或提供商声明的开放全文")
+    audit.set_defaults(func=cmd_audit)
+
+    run = sub.add_parser("run", help="运行流水线；默认在线检索，--offline 只快照金标")
+    _add_online_flags(run)
+    run.add_argument("--fixture", action="store_true", help="使用 data/fixtures，不混入真实统计")
+    run.add_argument("--run-id")
+    run.add_argument("--question", help="科研问题或 idea，在线检索时写入检索式")
+    run.add_argument("--allow-errors", action="store_true")
+    run.set_defaults(func=cmd_run)
+
+    retry = sub.add_parser("retry-map", help="修复模型后重试已有研究的地图，保留论文与证据")
+    retry.add_argument("run_id")
+    retry.set_defaults(func=cmd_retry_map)
+
+    replay = sub.add_parser("replay", help="回放已落盘的 run")
+    replay.add_argument("run_id", nargs="?")
+    replay.add_argument("--list", action="store_true")
+    replay.set_defaults(func=cmd_replay)
+
+    eval_cmd = sub.add_parser("evaluate", help="计算仓库覆盖率与无检索可追溯性对照")
+    eval_cmd.set_defaults(func=cmd_evaluate)
+
+    model_cmd = sub.add_parser("download-model", help="从 Hugging Face 下载 SPECTER2 基础模型、论文与查询 adapter")
+    model_cmd.set_defaults(func=cmd_download_model)
+
+    ask_cmd = sub.add_parser("ask", help="检索问题：默认仅本地；--online 先在线扩候选再匹配")
+    ask_cmd.add_argument("question")
+    ask_cmd.add_argument("--limit", type=int, default=5)
+    _add_online_flags(ask_cmd)
+    ask_cmd.set_defaults(func=cmd_ask)
+
+    ui = sub.add_parser("ui", help="打开勘验工作台")
+    ui.add_argument("--run-id")
+    ui.add_argument("--port", type=int, default=8787)
+    ui.add_argument("--no-browser", action="store_true")
+    ui.set_defaults(func=cmd_ui)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

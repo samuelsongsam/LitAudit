@@ -1,0 +1,532 @@
+{
+  "execution_id": "6c20dedef4a7c1d96a4da27462879d78ba925f1fd7c40b360e9bfabe7eea5af4",
+  "source_run_id": "public-dialogue",
+  "run_id": "workspace_20261107T043931Z_a5c7b68f",
+  "status": "completed",
+  "steps": [
+    {
+      "action": {
+        "tool": "read_papers",
+        "paper_ids": [
+          "paper-009",
+          "paper-012"
+        ],
+        "query": ""
+      },
+      "status": "completed",
+      "result": {
+        "papers": [
+          {
+            "paper_id": "paper-009",
+            "title": "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference",
+            "abstract": "Large Language Models (LLMs) demonstrate exceptional capabilities across various tasks, but their deployment is constrained by high computational and memory costs. Model pruning provides an effective means to alleviate these demands. However, existing methods often ignore the characteristics of prefill-decode (PD) disaggregation in practice. In this paper, we propose a pruning method that is highly integrated with PD disaggregation, enabling more precise pruning of blocks. Our approach constructs pruning and distillation sets to perform iterative block removal, obtaining better pruning solutions. Moreover, we analyze the pruning sensitivity of the prefill and decode stages and identify removable blocks specific to each stage, making it well suited for PD disaggregation deployment. Extensive experiments demonstrate our approach consistently achieves strong performance in both PD disaggregation and PD unified (non-PD disaggregation) settings, and can also be extended to other non-block pruning methods. Under the same settings, our method achieves improved performance and faster inference."
+          },
+          {
+            "paper_id": "paper-012",
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "abstract": "Large Language Models (LLMs) have gained popularity in recent years, driving up the demand for inference. LLM inference is composed of two phases with distinct characteristics: a compute-bound prefill phase followed by a memory-bound decode phase. To efficiently serve LLMs, prior work proposes prefill-decode disaggregation to run each phase on separate hardware. However, existing hardware poorly matches the different requirements of each phase. Current datacenter GPUs and TPUs follow a more-is-better design philosophy that maximizes compute and memory resources, causing memory bandwidth underutilization in the prefill phase and compute underutilization in the decode phase. Such underutilization directly translates into increased serving costs. This paper proposes SPAD (Specialized Prefill and Decode hardware), adopting a less-is-more methodology to design specialized chips tailored to the distinct characteristics of prefill and decode phases. The proposed Prefill Chips have larger systolic arrays and use cost-effective GDDR memory, whereas the proposed Decode Chips retain high memory bandwidth but reduce compute capacity. Compared to modeled H100s, simulations show that the proposed Prefill Chips deliver 8% higher prefill performance on average at 52% lower hardware cost, while the proposed Decode Chips achieve 97% of the decode performance with 28% lower TDP. End-to-end simulations on production traces show that SPAD reduces hardware cost by 19%-41% and TDP by 2%-17% compared to modeled baseline clusters while offering the same performance. Even when models and workloads change, SPAD can reallocate either type of chip to run either phase and still achieve 11%-43% lower hardware costs, demonstrating the longevity of the SPAD design."
+          }
+        ]
+      }
+    },
+    {
+      "action": {
+        "tool": "acquire_fulltext",
+        "paper_ids": [
+          "paper-012"
+        ],
+        "query": ""
+      },
+      "status": "completed",
+      "result": {
+        "run_id": "workspace_20261107T043931Z_a5c7b68f",
+        "acquisition": {
+          "requested_paper_ids": [
+            "paper-012"
+          ],
+          "download_requested": true,
+          "status": "completed",
+          "ready_paper_ids": [
+            "paper-012"
+          ],
+          "failed_paper_ids": [],
+          "pending_paper_ids": [],
+          "documents": [
+            {
+              "paper_id": "paper-012",
+              "status": "parsed",
+              "error_code": null,
+              "acquisition": "arxiv_download",
+              "pdf_saved": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "action": {
+        "tool": "search_fulltext",
+        "paper_ids": [
+          "paper-012"
+        ],
+        "query": "experimental setup configuration performance results simulation baseline hardware cost TDP"
+      },
+      "status": "completed",
+      "result": {
+        "hits": [
+          {
+            "passage_id": "paper-012:p9:c4",
+            "paper_id": "paper-012",
+            "page": 9,
+            "section": "introduction",
+            "text": "s to run on\nwhich machine\nCo-location\nDisaggregation\nIteration\nLatency\nPer\nIteration\nTTFT & TBT\nFigure 8.End-to-End Simulation Setup\n6.2 End-to-end Simulations\nWe perform end-to-end evaluations that include both hard-\nware architectural simulation and cluster-level scheduling\nsimulation with workload traces to estimate how our designs\ntranslate into performance and cost improvements at scale.\nAn overview of our simulation setup is shown in Figure 8.\nGiven a cluster configuration and a workload trace, the\nscheduler will dispatch each request to a machine within\nthe cluster. We explore two such scheduling approaches:\nSplitwiseSim [51] as an implementation for disaggregated\nscheduling (Splitwise), and Vidur [3] as an implementation\nfor co-location-based scheduling (Sarathi [4]). The fidelity of\nthese scheduler implementations has been explored in their\ncorresponding publications [3, 51].\nAt each iteration, cluster simulators make scheduling deci-\nsions to assign requests to machines, and these iteration-level\nrequest batches are fed into LLMCompass [71] to estimate\nhow long it will take each machine to finish one iteration\nfor the request batch scheduled upon it.",
+            "text_sha256": "2a1bc9d64c58cc346c7adbb2c73f916e264b75f359fdf7ea8412084d975c7483",
+            "bm25_score": 17.023163,
+            "semantic_score": null,
+            "score": 1.0,
+            "char_start": 3010,
+            "char_end": 4188,
+            "context": [
+              {
+                "page": 9,
+                "position": "before",
+                "text": "p has the same\npower density as an H100 die. GDDR7 power consumption\nis estimated by the reported 4.5 pJ/bit from Micron [37].\nCluster Scheduling\nSimulation\nHW Simulation\nLLMCompassVidur (Sarathi)\nSplitwiseSim\nWorkload Trace\nArrival time, input/output\nlength of each request\nScheduler Choice\nCluster Config\nHW\nConfig\nScheduling Decision\nWhich request"
+              },
+              {
+                "page": 9,
+                "position": "after",
+                "text": "We extended LLMCompass to support H100 modeling and\nnew models with a similar error rate as in the original pa-\nper [71]. We also extended SpitwiseSim and Vidur to use\nLLMCompass as their performance model. With LLMCom-\npass serving as the unified architectural performance model\nacross different schedulers and hardware, fair comparisons\nare achieve"
+              }
+            ],
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=9"
+          },
+          {
+            "passage_id": "paper-012:p9:c3",
+            "paper_id": "paper-012",
+            "page": 9,
+            "section": "introduction",
+            "text": "n the lower end\nof cost estimates for HBM3.\nTable 3 details die area estimates for the proposed Pre-\nfill/Decode Chips. Based on these, we calculate die costs,\nmemory costs (assuming a 1:3 GDDR7:HBM3 cost ratio), and\ntotal hardware costs for the three devices.\nTDP Modeling for our Prefill/Decode Chip.The H100\nhas a TDP of 700 W [44], and we assume a 10% TDP over-\nhead to account for VRM conversion loss and other peripher-\nals [5, 35]. We assume each HBM package has a power con-\nsumption of 30 W [57]. Based on these, we assume the H100\ndie itself excluding HBMs has a TDP of700 × 90%− 30× 5=\n480𝑊 , and we assume our Prefill/Decode Chip has the same\npower density as an H100 die. GDDR7 power consumption\nis estimated by the reported 4.5 pJ/bit from Micron [37].\nCluster Scheduling\nSimulation\nHW Simulation\nLLMCompassVidur (Sarathi)\nSplitwiseSim\nWorkload Trace\nArrival time, input/output\nlength of each request\nScheduler Choice\nCluster Config\nHW\nConfig\nScheduling Decision\nWhich requests to run on\nwhich machine\nCo-location\nDisaggregation\nIteration\nLatency\nPer\nIteration\nTTFT & TBT\nFigure 8.End-to-End Simulation Setup\n6.2 End-to-end Simulations",
+            "text_sha256": "10e84c0fb6431d668151e81d293753c396fdb271f592f9cbf6c86cdbb4183a1b",
+            "bm25_score": 14.264425,
+            "semantic_score": null,
+            "score": 0.837942,
+            "char_start": 2020,
+            "char_end": 3169,
+            "context": [
+              {
+                "page": 9,
+                "position": "before",
+                "text": " pricing is\nless transparent, and estimates vary between $10 to $35 per\nGB [10, 21]. For our cost model, we assume that HBM costs\nare between2×-4× the cost of GDDR based on publicly dis-\nclosed industry estimates [23]. In Section A Table 9, we fur-\nther explore different HBM3 cost assumptions. Note that\neven the highest 1:4 ratio of $12 per GB is o"
+              },
+              {
+                "page": 9,
+                "position": "after",
+                "text": "We perform end-to-end evaluations that include both hard-\nware architectural simulation and cluster-level scheduling\nsimulation with workload traces to estimate how our designs\ntranslate into performance and cost improvements at scale.\nAn overview of our simulation setup is shown in Figure 8.\nGiven a cluster configuration and a workload trace, the\n"
+              }
+            ],
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=9"
+          },
+          {
+            "passage_id": "paper-012:p11:c1",
+            "paper_id": "paper-012",
+            "page": 11,
+            "section": "results",
+            "text": "Table 6.Provisioning Results under Various SLOs.\nWorkloads Coding (70 req/s) Conversation (70 req/s)\nSLOs Loose Normal Tight Loose Normal Tight\nSarathi (H100)◆ 33 36 45 31 34 40\nSplitwise (H100)◆ 24 25 27 22 23 27\nSplitwise (H100+A100)◆ 20+9 21+9 27+0 13+20 13+32 27+0\nSplitwise (H100+pcap)◆ 19+5 21+4 23+4 3+23 6+21 11+23\nSPAD (P+D)◆ 18+6 18+7 21+7 8+17 8+17 13+14\nHardware Saving❖ 42% 41% 40% 15% | 28% 19% | 31% 32% | 46%\nTDP Saving❖ 11% 13% 10% 13% | -8% 17% | 2% 21% | 18%\n◆ The unit is modeled 8-chip machines.\n❖ Hardware/TDP saving of SPAD compared to pareto-optimal baselines\n(underlined). There can be more than one Pareto-optimal baseline: Splitwise\n(H100) has lower hardware cost but higher TDP than Splitwise (H100+pcap).\nTable 7.SPAD Reallocation After Changing Workload\n(Model Remains Unchanged: BLOOM-176B)\nProvisioned Reallocated Reallocated Min. HW ❖◆ (HW, TDP)\nCluster (P+D)❖ Workload Throughput for Splitwise Saving\n18P+7D♠ Conversation 55 req/s 19 H100 (23%, -7%)\n8P+17D✿ Coding 60 req/s 21 H100 (11%, 9%)\n❖ The unit here is modeled 8-chip machines.\n◆ The minimum hardware required to achieve the reallocated throughput.",
+            "text_sha256": "33b2162def73a9157103266924ba43c24711759e72bf62ab11c84dfd3c9ef85b",
+            "bm25_score": 10.46844,
+            "semantic_score": null,
+            "score": 0.614953,
+            "char_start": 0,
+            "char_end": 1140,
+            "context": [
+              {
+                "page": 10,
+                "position": "previous_page",
+                "text": "rence, Sarathi can be unsuit-\nable for low-latency workloads compared to disaggregated\nserving. Splitwise-hetero needs at least 21 modeled 8-H100\nand 9 modeled 8-A100 machines, which does not improve\ncost-effectiveness because although the TFLOPS-to-memory-\nbandwidth ratio of A100 is closer to the theoretical arithmetic\nintensity of decode, the absolute bandwidth and TFLOPS are\nsignificantly lower, making it harder to meet strict latency\nSLOs. Figure 9 shows that SPAD needs the same amount of\n10"
+              },
+              {
+                "page": 11,
+                "position": "after",
+                "text": "Sarathi performs consistently worse than Splitwise and is not shown.\n♠ Initially provisioned for Coding (70 req/s).\n✿ Initially provisioned for Conversation (70 req/s).\nmachines as Splitwise-homo, demonstrating the effective-\nness of ourless-is-moredesign methodology.\nConversation.Compared to the two Pareto-optimal base-\nlines, SPAD saves hardware "
+              }
+            ],
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=11"
+          },
+          {
+            "passage_id": "paper-012:p1:c3",
+            "paper_id": "paper-012",
+            "page": 1,
+            "section": "abstract",
+            "text": "ystolic arrays and use cost-effective GDDR memory,\nwhereas the proposed Decode Chips retain high memory\nbandwidth but reduce compute capacity. Compared to mod-\neled H100s, simulations show that the proposed Prefill Chips\ndeliver 8% higher prefill performance on average at 52% lower\nhardware cost, while the proposed Decode Chips achieve\n97% of the decode performance with 28% lower TDP.\nEnd-to-end simulations on production traces show that\nSPAD reduces hardware cost by 19%-41% and TDP by 2%-\n17% compared to modeled baseline clusters while offering\nthe same performance. Even when models and workloads\nchange, SPAD can reallocate either type of chip to run ei-\nther phase and still achieve 11%-43% lower hardware costs,\ndemonstrating the longevity of the SPAD design.",
+            "text_sha256": "72a64284e58a87be517d9740eeed3ac7f42b077aa144ce0b1fc2fa2d633301ee",
+            "bm25_score": 10.078562,
+            "semantic_score": null,
+            "score": 0.59205,
+            "char_start": 1326,
+            "char_end": 2096,
+            "context": [
+              {
+                "page": 1,
+                "position": "before",
+                "text": "erutilization in the decode phase. Such under-\nutilization directly translates into increased serving costs.\nThis paper proposes SPAD (Specialized Prefill and Decode\nhardware), adopting aless-is-moremethodology to design\nspecialized chips tailored to the distinct characteristics of\nprefill and decode phases. The proposed Prefill Chips have\nlarger s"
+              },
+              {
+                "page": 1,
+                "position": "after",
+                "text": "1 Introduction\nLarge Language Models (LLMs) have become immensely pop-\nular due to their advanced capabilities and are being widely\nadopted in various applications spanning chatbots and code\ngeneration tools. However, serving LLMs incurs significant\nhardware costs. In early 2023, only three months after the\nintroduction of GPT-3.5, it was estimated"
+              }
+            ],
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=1"
+          },
+          {
+            "passage_id": "paper-012:p10:c3",
+            "paper_id": "paper-012",
+            "page": 10,
+            "section": "results",
+            "text": "7 Results\n7.1 Cluster Provisioning\nWe start by evaluating the efficacy of SPAD clusters when\nprovisioned for a specific workload. Table 4 summarizes the\n1In order to have a baseline that optimizes for TDP, we assume a hypo-\nthetical power-capped 450 W TDP H100 for decode with 76% of the peak\nFP16 tensor TFLOPs while retaining the same memory and interconnect\nspecifications as the original 700 W H100. Since we do not have access to\nH100 power configurations and its dynamic voltage and frequency scaling\n(DVFS) implementation, our LLMCompass simulation is based on the hard-\nware specification of the 350 W NVIDIA H100 PCIe [44]. We substitute its\nlow-end memory and NVLink interconnect with those of the original 700W\nH100, which we assume adds 100 W TDP.\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=3 \nOptimal Design\n1.0\n1.5\n2.0\n2.5\n3.0\n3.5\n4.0\n(a)Normalized P90 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=6 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7\n8 (b)Normalized P99 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=2 \nOptimal Design\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0\n2.2\n2.4\n2.6\n2.8",
+            "text_sha256": "57dd723574f6be84ea1c4c21fcc91799d3942bcfdefc923dec058ba854b35c8a",
+            "bm25_score": 9.548579,
+            "semantic_score": null,
+            "score": 0.560917,
+            "char_start": 2115,
+            "char_end": 3298,
+            "context": [
+              {
+                "page": 10,
+                "position": "before",
+                "text": " its variants: Splitwise-homo with H100s, Splitwise-\npcap that uses H100s for prefill and hypothetical power-\ncapped H100s (450W TDP)1 for decode, and Splitwise-hetero\nwith H100s for prefill and A100s for decode. Sarathi is a co-\nlocation-based system, and we configure it with modeled\nH100s. All baselines are evaluated as described in Section 6.2.\n"
+              },
+              {
+                "page": 10,
+                "position": "after",
+                "text": "(c)Normalized P90 TBT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=5 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7 (d)Normalized P99 TBT\nFigure 9.Provisioning Results with Coding Trace for SPAD.\nThe optimal design has 18 prefill and 7 decode machines.\nprovisioning results for BLOOM-176B using the coding and\nconversation workloads"
+              }
+            ],
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=10"
+          },
+          {
+            "passage_id": "paper-012:p9:c6",
+            "paper_id": "paper-012",
+            "page": 9,
+            "section": "experimental_setup",
+            "text": "6.3 Experimental Setup\nModels.We evaluated three open-source models with dif-\nferent sizes, model architectures, and deployment strategies:\n① BLOOM-176B [54] uses Multi-Head Attention [62] and we\ndeployed it with FP16 and a tensor parallelism of 8 (TP=8).\n② Llama3-70B [25] uses Grouped-Query Attention [6] with\nsmaller KV cache footprints, and we deployed it with FP16\nand TP=4.③ DeepSeek-V2-236B [19] uses DeepSeekMoE [17]\nwith Multi-head Latent Attention to compress the KV cache,\nand we deployed it with FP8 and expert parallelism 8 (EP=8).\nWorkloads.We use open-source request traces from Mi-\ncrosoft [12], representing two common LLM applications:\ncoding(code completion) andconversation(chatbot). The\n9",
+            "text_sha256": "bfb974d7592b0c7ee017b713c0b74bfc61e380762767f6230446c264a5cf6aa0",
+            "bm25_score": 9.450031,
+            "semantic_score": null,
+            "score": 0.555128,
+            "char_start": 4720,
+            "char_end": 5429,
+            "context": [
+              {
+                "page": 9,
+                "position": "before",
+                "text": " their performance model. With LLMCom-\npass serving as the unified architectural performance model\nacross different schedulers and hardware, fair comparisons\nare achieved.All results in this paper are simulated, not\nmeasured on real hardware.In other words, we model\nthe execution rather than performing the computation with\nactual parameter values.\n"
+              },
+              {
+                "page": 10,
+                "position": "next_page",
+                "text": "Table 4.Provisioning Results Summary\nCoding (70 req/s) Conversation (70 req/s)\nHW Requirement❖ Norm. HW Cost ◆ Norm. TDP◆ HW Requirement❖ Norm. HW Cost ◆ Norm. TDP◆\nSarathi 36 H100 36 36 34 H100 34 34\nSplitwise-homo 25 H100 25 25 23 H100 23 23\nSplitwise-hetero♠ 21 H100 + 9 A100 25.5 25.5 13 H100 + 32 A100 29 29\nSplitwise-pcap 21 H100 + 4 450W H100 25 23.6 6 H100 + 21 450W H100 27 19.5\nSPAD(P+D) 18 Prefill + 7 Decode14.7 20.4 8 Prefill + 17 Decode18.7 19.1\n❖ Minimum number of modeled 8-chip machi"
+              }
+            ],
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=9"
+          },
+          {
+            "passage_id": "paper-012:p10:c4",
+            "paper_id": "paper-012",
+            "page": 10,
+            "section": "results",
+            "text": "b)Normalized P99 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=2 \nOptimal Design\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0\n2.2\n2.4\n2.6\n2.8\n(c)Normalized P90 TBT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=5 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7 (d)Normalized P99 TBT\nFigure 9.Provisioning Results with Coding Trace for SPAD.\nThe optimal design has 18 prefill and 7 decode machines.\nprovisioning results for BLOOM-176B using the coding and\nconversation workloads with a target request rate of 70 req/s.\nCoding.Compared to the best baseline, SPAD saves the\nhardware cost by41%and TDP by13%. Sarathi needs at\nleast 36 modeled 8-H100 machines to meet all SLOs, while\nSplitwise needs at least 25 modeled 8-H100 machines. The\nminimal hardware requirement is derived by sweeping ma-\nchine count as shown in Figures 12 and 13a in Section A.\nDue to prefill-decode interference, Sarathi can be unsuit-\nable for low-latency workloads compared to disaggregated\nserving. Splitwise-hetero needs at least 21 modeled 8-H100\nand 9 modeled 8-A100 machines, which does not improve\ncost-effectiveness because although the TFLOPS-to-memory-",
+            "text_sha256": "d8176f7dc2f0842e43ab0dbd05d22b2e60d61665de614366285090199351fa5d",
+            "bm25_score": 9.441588,
+            "semantic_score": null,
+            "score": 0.554632,
+            "char_start": 3139,
+            "char_end": 4307,
+            "context": [
+              {
+                "page": 10,
+                "position": "before",
+                "text": "nk interconnect with those of the original 700W\nH100, which we assume adds 100 W TDP.\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=3 \nOptimal Design\n1.0\n1.5\n2.0\n2.5\n3.0\n3.5\n4.0\n(a)Normalized P90 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=6 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7\n8 ("
+              },
+              {
+                "page": 10,
+                "position": "after",
+                "text": "bandwidth ratio of A100 is closer to the theoretical arithmetic\nintensity of decode, the absolute bandwidth and TFLOPS are\nsignificantly lower, making it harder to meet strict latency\nSLOs. Figure 9 shows that SPAD needs the same amount of\n10"
+              }
+            ],
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=10"
+          },
+          {
+            "passage_id": "paper-012:p2:c3",
+            "paper_id": "paper-012",
+            "page": 2,
+            "section": "introduction",
+            "text": "moredesign philosophy that right-\nsizes hardware for each phase, while still retaining the ability\nto run the other phase. For the compute-heavy prefill phase,\nwe propose a specialized Prefill Chip with larger systolic\narrays and a cost-effective GDDR-based memory system.\nFor the low-arithmetic-intensity decode phase, we propose\nan area- and TDP-efficient Decode Chip with smaller sys-\ntolic arrays and caches. Simulations with LLMCompass [71]\nshow that compared to modeled H100s, our proposed Prefill\nChips deliver 8% higher prefill performance on average at\n52% lower hardware cost, while our proposed Decode Chips\nachieve 97% of the decode performance with 28% lower TDP.\nWe evaluate SPAD by provisioning cost-optimized het-\nerogeneous clusters. End-to-end simulations on production\ntraces for chatbot and code generation applications show\nthat SPAD clusters reduce hardware cost by 19%-41% and\nTDP by 2%-17% compared to modeled baseline clusters while\nmaintaining the same performance. Even as the models and\nworkloads change, SPAD can reallocate either type of chip to\nrun either phase and still achieve an 11%-43% lower hardware\ncost, demonstrating the longevity of our design.",
+            "text_sha256": "7e5bf75b32d22067d24fb6d21a9408d9ae4572fe4f47d4f2502c33fd25df28db",
+            "bm25_score": 9.272715,
+            "semantic_score": null,
+            "score": 0.544712,
+            "char_start": 2050,
+            "char_end": 3235,
+            "context": [
+              {
+                "page": 2,
+                "position": "before",
+                "text": "ncreases by 22% if we reduce the compute capacity by half.\nWe propose SPAD (Specialized Prefill and Decode\nhardware), tailoring specialized hardware to the dis-\ntinct characteristics of prefill and decode phases to\nimprove disaggregation-based LLM serving efficiency.\nIn contrast to themore-is-betterdesign philosophy of GPUs,\nSPAD embraces aless-is-"
+              },
+              {
+                "page": 2,
+                "position": "after",
+                "text": "In summary, our contributions are as follows:\n● Identify the inherent hardware inefficiency of modern\nGPUs for disaggregated LLM serving. (Section 3)\n● Propose SPAD, a heterogeneous system that adopts aless-\nis-morephilosophy to design specialized Prefill and De-\ncode Chips to efficiently serve the corresponding phases\nof LLM inference. (Sections 4"
+              }
+            ],
+            "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+            "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=2"
+          }
+        ],
+        "status": "completed",
+        "algorithm": "bm25_passage_ranking",
+        "missing_paper_ids": []
+      }
+    }
+  ],
+  "hits": [
+    {
+      "passage_id": "paper-012:p9:c4",
+      "paper_id": "paper-012",
+      "page": 9,
+      "section": "introduction",
+      "text": "s to run on\nwhich machine\nCo-location\nDisaggregation\nIteration\nLatency\nPer\nIteration\nTTFT & TBT\nFigure 8.End-to-End Simulation Setup\n6.2 End-to-end Simulations\nWe perform end-to-end evaluations that include both hard-\nware architectural simulation and cluster-level scheduling\nsimulation with workload traces to estimate how our designs\ntranslate into performance and cost improvements at scale.\nAn overview of our simulation setup is shown in Figure 8.\nGiven a cluster configuration and a workload trace, the\nscheduler will dispatch each request to a machine within\nthe cluster. We explore two such scheduling approaches:\nSplitwiseSim [51] as an implementation for disaggregated\nscheduling (Splitwise), and Vidur [3] as an implementation\nfor co-location-based scheduling (Sarathi [4]). The fidelity of\nthese scheduler implementations has been explored in their\ncorresponding publications [3, 51].\nAt each iteration, cluster simulators make scheduling deci-\nsions to assign requests to machines, and these iteration-level\nrequest batches are fed into LLMCompass [71] to estimate\nhow long it will take each machine to finish one iteration\nfor the request batch scheduled upon it.",
+      "text_sha256": "2a1bc9d64c58cc346c7adbb2c73f916e264b75f359fdf7ea8412084d975c7483",
+      "bm25_score": 17.023163,
+      "semantic_score": null,
+      "score": 1.0,
+      "char_start": 3010,
+      "char_end": 4188,
+      "context": [
+        {
+          "page": 9,
+          "position": "before",
+          "text": "p has the same\npower density as an H100 die. GDDR7 power consumption\nis estimated by the reported 4.5 pJ/bit from Micron [37].\nCluster Scheduling\nSimulation\nHW Simulation\nLLMCompassVidur (Sarathi)\nSplitwiseSim\nWorkload Trace\nArrival time, input/output\nlength of each request\nScheduler Choice\nCluster Config\nHW\nConfig\nScheduling Decision\nWhich request"
+        },
+        {
+          "page": 9,
+          "position": "after",
+          "text": "We extended LLMCompass to support H100 modeling and\nnew models with a similar error rate as in the original pa-\nper [71]. We also extended SpitwiseSim and Vidur to use\nLLMCompass as their performance model. With LLMCom-\npass serving as the unified architectural performance model\nacross different schedulers and hardware, fair comparisons\nare achieve"
+        }
+      ],
+      "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+      "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=9"
+    },
+    {
+      "passage_id": "paper-012:p9:c3",
+      "paper_id": "paper-012",
+      "page": 9,
+      "section": "introduction",
+      "text": "n the lower end\nof cost estimates for HBM3.\nTable 3 details die area estimates for the proposed Pre-\nfill/Decode Chips. Based on these, we calculate die costs,\nmemory costs (assuming a 1:3 GDDR7:HBM3 cost ratio), and\ntotal hardware costs for the three devices.\nTDP Modeling for our Prefill/Decode Chip.The H100\nhas a TDP of 700 W [44], and we assume a 10% TDP over-\nhead to account for VRM conversion loss and other peripher-\nals [5, 35]. We assume each HBM package has a power con-\nsumption of 30 W [57]. Based on these, we assume the H100\ndie itself excluding HBMs has a TDP of700 × 90%− 30× 5=\n480𝑊 , and we assume our Prefill/Decode Chip has the same\npower density as an H100 die. GDDR7 power consumption\nis estimated by the reported 4.5 pJ/bit from Micron [37].\nCluster Scheduling\nSimulation\nHW Simulation\nLLMCompassVidur (Sarathi)\nSplitwiseSim\nWorkload Trace\nArrival time, input/output\nlength of each request\nScheduler Choice\nCluster Config\nHW\nConfig\nScheduling Decision\nWhich requests to run on\nwhich machine\nCo-location\nDisaggregation\nIteration\nLatency\nPer\nIteration\nTTFT & TBT\nFigure 8.End-to-End Simulation Setup\n6.2 End-to-end Simulations",
+      "text_sha256": "10e84c0fb6431d668151e81d293753c396fdb271f592f9cbf6c86cdbb4183a1b",
+      "bm25_score": 14.264425,
+      "semantic_score": null,
+      "score": 0.837942,
+      "char_start": 2020,
+      "char_end": 3169,
+      "context": [
+        {
+          "page": 9,
+          "position": "before",
+          "text": " pricing is\nless transparent, and estimates vary between $10 to $35 per\nGB [10, 21]. For our cost model, we assume that HBM costs\nare between2×-4× the cost of GDDR based on publicly dis-\nclosed industry estimates [23]. In Section A Table 9, we fur-\nther explore different HBM3 cost assumptions. Note that\neven the highest 1:4 ratio of $12 per GB is o"
+        },
+        {
+          "page": 9,
+          "position": "after",
+          "text": "We perform end-to-end evaluations that include both hard-\nware architectural simulation and cluster-level scheduling\nsimulation with workload traces to estimate how our designs\ntranslate into performance and cost improvements at scale.\nAn overview of our simulation setup is shown in Figure 8.\nGiven a cluster configuration and a workload trace, the\n"
+        }
+      ],
+      "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+      "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=9"
+    },
+    {
+      "passage_id": "paper-012:p11:c1",
+      "paper_id": "paper-012",
+      "page": 11,
+      "section": "results",
+      "text": "Table 6.Provisioning Results under Various SLOs.\nWorkloads Coding (70 req/s) Conversation (70 req/s)\nSLOs Loose Normal Tight Loose Normal Tight\nSarathi (H100)◆ 33 36 45 31 34 40\nSplitwise (H100)◆ 24 25 27 22 23 27\nSplitwise (H100+A100)◆ 20+9 21+9 27+0 13+20 13+32 27+0\nSplitwise (H100+pcap)◆ 19+5 21+4 23+4 3+23 6+21 11+23\nSPAD (P+D)◆ 18+6 18+7 21+7 8+17 8+17 13+14\nHardware Saving❖ 42% 41% 40% 15% | 28% 19% | 31% 32% | 46%\nTDP Saving❖ 11% 13% 10% 13% | -8% 17% | 2% 21% | 18%\n◆ The unit is modeled 8-chip machines.\n❖ Hardware/TDP saving of SPAD compared to pareto-optimal baselines\n(underlined). There can be more than one Pareto-optimal baseline: Splitwise\n(H100) has lower hardware cost but higher TDP than Splitwise (H100+pcap).\nTable 7.SPAD Reallocation After Changing Workload\n(Model Remains Unchanged: BLOOM-176B)\nProvisioned Reallocated Reallocated Min. HW ❖◆ (HW, TDP)\nCluster (P+D)❖ Workload Throughput for Splitwise Saving\n18P+7D♠ Conversation 55 req/s 19 H100 (23%, -7%)\n8P+17D✿ Coding 60 req/s 21 H100 (11%, 9%)\n❖ The unit here is modeled 8-chip machines.\n◆ The minimum hardware required to achieve the reallocated throughput.",
+      "text_sha256": "33b2162def73a9157103266924ba43c24711759e72bf62ab11c84dfd3c9ef85b",
+      "bm25_score": 10.46844,
+      "semantic_score": null,
+      "score": 0.614953,
+      "char_start": 0,
+      "char_end": 1140,
+      "context": [
+        {
+          "page": 10,
+          "position": "previous_page",
+          "text": "rence, Sarathi can be unsuit-\nable for low-latency workloads compared to disaggregated\nserving. Splitwise-hetero needs at least 21 modeled 8-H100\nand 9 modeled 8-A100 machines, which does not improve\ncost-effectiveness because although the TFLOPS-to-memory-\nbandwidth ratio of A100 is closer to the theoretical arithmetic\nintensity of decode, the absolute bandwidth and TFLOPS are\nsignificantly lower, making it harder to meet strict latency\nSLOs. Figure 9 shows that SPAD needs the same amount of\n10"
+        },
+        {
+          "page": 11,
+          "position": "after",
+          "text": "Sarathi performs consistently worse than Splitwise and is not shown.\n♠ Initially provisioned for Coding (70 req/s).\n✿ Initially provisioned for Conversation (70 req/s).\nmachines as Splitwise-homo, demonstrating the effective-\nness of ourless-is-moredesign methodology.\nConversation.Compared to the two Pareto-optimal base-\nlines, SPAD saves hardware "
+        }
+      ],
+      "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+      "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=11"
+    },
+    {
+      "passage_id": "paper-012:p1:c3",
+      "paper_id": "paper-012",
+      "page": 1,
+      "section": "abstract",
+      "text": "ystolic arrays and use cost-effective GDDR memory,\nwhereas the proposed Decode Chips retain high memory\nbandwidth but reduce compute capacity. Compared to mod-\neled H100s, simulations show that the proposed Prefill Chips\ndeliver 8% higher prefill performance on average at 52% lower\nhardware cost, while the proposed Decode Chips achieve\n97% of the decode performance with 28% lower TDP.\nEnd-to-end simulations on production traces show that\nSPAD reduces hardware cost by 19%-41% and TDP by 2%-\n17% compared to modeled baseline clusters while offering\nthe same performance. Even when models and workloads\nchange, SPAD can reallocate either type of chip to run ei-\nther phase and still achieve 11%-43% lower hardware costs,\ndemonstrating the longevity of the SPAD design.",
+      "text_sha256": "72a64284e58a87be517d9740eeed3ac7f42b077aa144ce0b1fc2fa2d633301ee",
+      "bm25_score": 10.078562,
+      "semantic_score": null,
+      "score": 0.59205,
+      "char_start": 1326,
+      "char_end": 2096,
+      "context": [
+        {
+          "page": 1,
+          "position": "before",
+          "text": "erutilization in the decode phase. Such under-\nutilization directly translates into increased serving costs.\nThis paper proposes SPAD (Specialized Prefill and Decode\nhardware), adopting aless-is-moremethodology to design\nspecialized chips tailored to the distinct characteristics of\nprefill and decode phases. The proposed Prefill Chips have\nlarger s"
+        },
+        {
+          "page": 1,
+          "position": "after",
+          "text": "1 Introduction\nLarge Language Models (LLMs) have become immensely pop-\nular due to their advanced capabilities and are being widely\nadopted in various applications spanning chatbots and code\ngeneration tools. However, serving LLMs incurs significant\nhardware costs. In early 2023, only three months after the\nintroduction of GPT-3.5, it was estimated"
+        }
+      ],
+      "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+      "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=1"
+    },
+    {
+      "passage_id": "paper-012:p10:c3",
+      "paper_id": "paper-012",
+      "page": 10,
+      "section": "results",
+      "text": "7 Results\n7.1 Cluster Provisioning\nWe start by evaluating the efficacy of SPAD clusters when\nprovisioned for a specific workload. Table 4 summarizes the\n1In order to have a baseline that optimizes for TDP, we assume a hypo-\nthetical power-capped 450 W TDP H100 for decode with 76% of the peak\nFP16 tensor TFLOPs while retaining the same memory and interconnect\nspecifications as the original 700 W H100. Since we do not have access to\nH100 power configurations and its dynamic voltage and frequency scaling\n(DVFS) implementation, our LLMCompass simulation is based on the hard-\nware specification of the 350 W NVIDIA H100 PCIe [44]. We substitute its\nlow-end memory and NVLink interconnect with those of the original 700W\nH100, which we assume adds 100 W TDP.\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=3 \nOptimal Design\n1.0\n1.5\n2.0\n2.5\n3.0\n3.5\n4.0\n(a)Normalized P90 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=6 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7\n8 (b)Normalized P99 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=2 \nOptimal Design\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0\n2.2\n2.4\n2.6\n2.8",
+      "text_sha256": "57dd723574f6be84ea1c4c21fcc91799d3942bcfdefc923dec058ba854b35c8a",
+      "bm25_score": 9.548579,
+      "semantic_score": null,
+      "score": 0.560917,
+      "char_start": 2115,
+      "char_end": 3298,
+      "context": [
+        {
+          "page": 10,
+          "position": "before",
+          "text": " its variants: Splitwise-homo with H100s, Splitwise-\npcap that uses H100s for prefill and hypothetical power-\ncapped H100s (450W TDP)1 for decode, and Splitwise-hetero\nwith H100s for prefill and A100s for decode. Sarathi is a co-\nlocation-based system, and we configure it with modeled\nH100s. All baselines are evaluated as described in Section 6.2.\n"
+        },
+        {
+          "page": 10,
+          "position": "after",
+          "text": "(c)Normalized P90 TBT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=5 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7 (d)Normalized P99 TBT\nFigure 9.Provisioning Results with Coding Trace for SPAD.\nThe optimal design has 18 prefill and 7 decode machines.\nprovisioning results for BLOOM-176B using the coding and\nconversation workloads"
+        }
+      ],
+      "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+      "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=10"
+    },
+    {
+      "passage_id": "paper-012:p9:c6",
+      "paper_id": "paper-012",
+      "page": 9,
+      "section": "experimental_setup",
+      "text": "6.3 Experimental Setup\nModels.We evaluated three open-source models with dif-\nferent sizes, model architectures, and deployment strategies:\n① BLOOM-176B [54] uses Multi-Head Attention [62] and we\ndeployed it with FP16 and a tensor parallelism of 8 (TP=8).\n② Llama3-70B [25] uses Grouped-Query Attention [6] with\nsmaller KV cache footprints, and we deployed it with FP16\nand TP=4.③ DeepSeek-V2-236B [19] uses DeepSeekMoE [17]\nwith Multi-head Latent Attention to compress the KV cache,\nand we deployed it with FP8 and expert parallelism 8 (EP=8).\nWorkloads.We use open-source request traces from Mi-\ncrosoft [12], representing two common LLM applications:\ncoding(code completion) andconversation(chatbot). The\n9",
+      "text_sha256": "bfb974d7592b0c7ee017b713c0b74bfc61e380762767f6230446c264a5cf6aa0",
+      "bm25_score": 9.450031,
+      "semantic_score": null,
+      "score": 0.555128,
+      "char_start": 4720,
+      "char_end": 5429,
+      "context": [
+        {
+          "page": 9,
+          "position": "before",
+          "text": " their performance model. With LLMCom-\npass serving as the unified architectural performance model\nacross different schedulers and hardware, fair comparisons\nare achieved.All results in this paper are simulated, not\nmeasured on real hardware.In other words, we model\nthe execution rather than performing the computation with\nactual parameter values.\n"
+        },
+        {
+          "page": 10,
+          "position": "next_page",
+          "text": "Table 4.Provisioning Results Summary\nCoding (70 req/s) Conversation (70 req/s)\nHW Requirement❖ Norm. HW Cost ◆ Norm. TDP◆ HW Requirement❖ Norm. HW Cost ◆ Norm. TDP◆\nSarathi 36 H100 36 36 34 H100 34 34\nSplitwise-homo 25 H100 25 25 23 H100 23 23\nSplitwise-hetero♠ 21 H100 + 9 A100 25.5 25.5 13 H100 + 32 A100 29 29\nSplitwise-pcap 21 H100 + 4 450W H100 25 23.6 6 H100 + 21 450W H100 27 19.5\nSPAD(P+D) 18 Prefill + 7 Decode14.7 20.4 8 Prefill + 17 Decode18.7 19.1\n❖ Minimum number of modeled 8-chip machi"
+        }
+      ],
+      "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+      "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=9"
+    },
+    {
+      "passage_id": "paper-012:p10:c4",
+      "paper_id": "paper-012",
+      "page": 10,
+      "section": "results",
+      "text": "b)Normalized P99 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=2 \nOptimal Design\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0\n2.2\n2.4\n2.6\n2.8\n(c)Normalized P90 TBT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=5 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7 (d)Normalized P99 TBT\nFigure 9.Provisioning Results with Coding Trace for SPAD.\nThe optimal design has 18 prefill and 7 decode machines.\nprovisioning results for BLOOM-176B using the coding and\nconversation workloads with a target request rate of 70 req/s.\nCoding.Compared to the best baseline, SPAD saves the\nhardware cost by41%and TDP by13%. Sarathi needs at\nleast 36 modeled 8-H100 machines to meet all SLOs, while\nSplitwise needs at least 25 modeled 8-H100 machines. The\nminimal hardware requirement is derived by sweeping ma-\nchine count as shown in Figures 12 and 13a in Section A.\nDue to prefill-decode interference, Sarathi can be unsuit-\nable for low-latency workloads compared to disaggregated\nserving. Splitwise-hetero needs at least 21 modeled 8-H100\nand 9 modeled 8-A100 machines, which does not improve\ncost-effectiveness because although the TFLOPS-to-memory-",
+      "text_sha256": "d8176f7dc2f0842e43ab0dbd05d22b2e60d61665de614366285090199351fa5d",
+      "bm25_score": 9.441588,
+      "semantic_score": null,
+      "score": 0.554632,
+      "char_start": 3139,
+      "char_end": 4307,
+      "context": [
+        {
+          "page": 10,
+          "position": "before",
+          "text": "nk interconnect with those of the original 700W\nH100, which we assume adds 100 W TDP.\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=3 \nOptimal Design\n1.0\n1.5\n2.0\n2.5\n3.0\n3.5\n4.0\n(a)Normalized P90 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=6 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7\n8 ("
+        },
+        {
+          "page": 10,
+          "position": "after",
+          "text": "bandwidth ratio of A100 is closer to the theoretical arithmetic\nintensity of decode, the absolute bandwidth and TFLOPS are\nsignificantly lower, making it harder to meet strict latency\nSLOs. Figure 9 shows that SPAD needs the same amount of\n10"
+        }
+      ],
+      "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+      "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=10"
+    },
+    {
+      "passage_id": "paper-012:p2:c3",
+      "paper_id": "paper-012",
+      "page": 2,
+      "section": "introduction",
+      "text": "moredesign philosophy that right-\nsizes hardware for each phase, while still retaining the ability\nto run the other phase. For the compute-heavy prefill phase,\nwe propose a specialized Prefill Chip with larger systolic\narrays and a cost-effective GDDR-based memory system.\nFor the low-arithmetic-intensity decode phase, we propose\nan area- and TDP-efficient Decode Chip with smaller sys-\ntolic arrays and caches. Simulations with LLMCompass [71]\nshow that compared to modeled H100s, our proposed Prefill\nChips deliver 8% higher prefill performance on average at\n52% lower hardware cost, while our proposed Decode Chips\nachieve 97% of the decode performance with 28% lower TDP.\nWe evaluate SPAD by provisioning cost-optimized het-\nerogeneous clusters. End-to-end simulations on production\ntraces for chatbot and code generation applications show\nthat SPAD clusters reduce hardware cost by 19%-41% and\nTDP by 2%-17% compared to modeled baseline clusters while\nmaintaining the same performance. Even as the models and\nworkloads change, SPAD can reallocate either type of chip to\nrun either phase and still achieve an 11%-43% lower hardware\ncost, demonstrating the longevity of our design.",
+      "text_sha256": "7e5bf75b32d22067d24fb6d21a9408d9ae4572fe4f47d4f2502c33fd25df28db",
+      "bm25_score": 9.272715,
+      "semantic_score": null,
+      "score": 0.544712,
+      "char_start": 2050,
+      "char_end": 3235,
+      "context": [
+        {
+          "page": 2,
+          "position": "before",
+          "text": "ncreases by 22% if we reduce the compute capacity by half.\nWe propose SPAD (Specialized Prefill and Decode\nhardware), tailoring specialized hardware to the dis-\ntinct characteristics of prefill and decode phases to\nimprove disaggregation-based LLM serving efficiency.\nIn contrast to themore-is-betterdesign philosophy of GPUs,\nSPAD embraces aless-is-"
+        },
+        {
+          "page": 2,
+          "position": "after",
+          "text": "In summary, our contributions are as follows:\n● Identify the inherent hardware inefficiency of modern\nGPUs for disaggregated LLM serving. (Section 3)\n● Propose SPAD, a heterogeneous system that adopts aless-\nis-morephilosophy to design specialized Prefill and De-\ncode Chips to efficiently serve the corresponding phases\nof LLM inference. (Sections 4"
+        }
+      ],
+      "title": "SPAD: Specialized Prefill and Decode Hardware for Disaggregated LLM Inference",
+      "pdf_url": "/api/fulltext/workspace_20261107T043931Z_a5c7b68f/paper-012#page=2"
+    }
+  ],
+  "model_calls": 4,
+  "limits": {
+    "steps": 4,
+    "acquisitions": 1,
+    "papers_per_action": 2,
+    "seconds": 90
+  },
+  "last_action": {
+    "tool": "search_fulltext",
+    "paper_ids": [
+      "paper-012"
+    ],
+    "query": "experimental setup configuration performance results simulation baseline hardware cost TDP"
+  }
+}

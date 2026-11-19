@@ -1,0 +1,126 @@
+{
+  "version": "developer_source_location_v2",
+  "created_at": "2026-11-04T12:14:49.924896+00:00",
+  "description": "开发者根据五篇公开PDF整理的9题定位样本，不是独立人工盲评或开放文献Recall金标。",
+  "references": [
+    {
+      "id": "lora-freeze",
+      "task": "lora",
+      "language": "zh",
+      "arxiv_id": "2106.09685",
+      "question": "LoRA如何冻结预训练权重并注入可训练的低秩矩阵？",
+      "quote": "injects trainable rank decomposition matrices",
+      "pages": [
+        1
+      ],
+      "pdf_sha256": "e9a0d3128767db616085dc0f4e6e455e672e89af823e8ed1282793682787395a",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    },
+    {
+      "id": "qlora-techniques",
+      "task": "lora",
+      "language": "zh",
+      "arxiv_id": "2305.14314",
+      "question": "QLoRA有哪些量化和显存优化方法？",
+      "quote": "4-bit NormalFloat (NF4)",
+      "pages": [
+        1,
+        4,
+        6
+      ],
+      "pdf_sha256": "33a4e757c19d6ea8d3cca8958fce8fe405e290272e135c99ee66065c775d5bd1",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    },
+    {
+      "id": "qlora-memory",
+      "task": "lora",
+      "language": "en",
+      "arxiv_id": "2305.14314",
+      "question": "What GPU memory is reported for finetuning a 65B model with QLoRA?",
+      "quote": "single 48GB GPU",
+      "pages": [
+        1
+      ],
+      "pdf_sha256": "33a4e757c19d6ea8d3cca8958fce8fe405e290272e135c99ee66065c775d5bd1",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    },
+    {
+      "id": "unet-paths",
+      "task": "segmentation",
+      "language": "en",
+      "arxiv_id": "1505.04597",
+      "question": "How does U-Net combine a contracting path and an expanding path?",
+      "quote": "contracting path to capture context and a symmetric expanding path",
+      "pages": [
+        1
+      ],
+      "pdf_sha256": "a3172b2124f38e260dc2c7ed968d87c31bc94dbc19a42a7ab3dcbd7534319c44",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    },
+    {
+      "id": "unet-augmentation",
+      "task": "segmentation",
+      "language": "zh",
+      "arxiv_id": "1505.04597",
+      "question": "U-Net训练数据较少时使用了什么弹性形变数据增强方法？",
+      "quote": "elastic deformations",
+      "pages": [
+        3
+      ],
+      "pdf_sha256": "a3172b2124f38e260dc2c7ed968d87c31bc94dbc19a42a7ab3dcbd7534319c44",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    },
+    {
+      "id": "attention-data",
+      "task": "segmentation",
+      "language": "en",
+      "arxiv_id": "1804.03999",
+      "question": "Which NIH CT dataset is used to evaluate Attention U-Net pancreas segmentation?",
+      "quote": "NIH-TCIA",
+      "pages": [
+        6
+      ],
+      "pdf_sha256": "679693f04a2345460800a995b5fd43398decc16cf535c4416d593958fd16dde8",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    },
+    {
+      "id": "pca-centering",
+      "task": "pca",
+      "language": "zh",
+      "arxiv_id": "1404.1100",
+      "question": "PCA如何对每种测量进行均值中心化预处理？",
+      "quote": "Subtract off the mean for each measurement type.",
+      "pages": [
+        9
+      ],
+      "pdf_sha256": "361028908518ce36720f431929f93c29055f7b31de1d8010a4b1c124bc2ab582",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    },
+    {
+      "id": "pca-objective",
+      "task": "pca",
+      "language": "en",
+      "arxiv_id": "1404.1100",
+      "question": "What does PCA minimize and maximize in the covariance objective?",
+      "quote": "minimize redundancy",
+      "pages": [
+        5
+      ],
+      "pdf_sha256": "361028908518ce36720f431929f93c29055f7b31de1d8010a4b1c124bc2ab582",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    },
+    {
+      "id": "pca-svd",
+      "task": "pca",
+      "language": "zh",
+      "arxiv_id": "1404.1100",
+      "question": "PCA与奇异值分解SVD之间有什么关系？",
+      "quote": "PCA is closely related to singular value decomposition",
+      "pages": [
+        7
+      ],
+      "pdf_sha256": "361028908518ce36720f431929f93c29055f7b31de1d8010a4b1c124bc2ab582",
+      "reference_method": "developer-selected quote, verified against actual PDF text before scoring"
+    }
+  ]
+}

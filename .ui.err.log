@@ -1,0 +1,17 @@
+127.0.0.1 - - [30/Aug/2026 22:32:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:32:08] "GET /api/conversations HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:32:08] "GET /api/runs HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:32:08] "GET /api/run/phase2-real HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:32:08] "GET /api/chat/phase2-real HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:32:10] "GET /api/run/live_20260830T140517Z_642e4b HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:32:10] "GET /api/chat/live_20260830T140517Z_642e4b HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:32:39] "POST /api/chat HTTP/1.1" 200 -
+2026-08-30 22:32:48,938 INFO start run_id=live_20260830T143248Z_4c5605 source=data offline=False data_dir=E:\LitAudit\data question=汉藏语系语言分类与谱系关系 综述 专业深入 谱系树 分类争议 同源词 比较语言学
+2026-08-30 22:33:04,005 INFO live ingest added=['paper-008', 'paper-009', 'paper-010', 'paper-011', 'paper-012', 'paper-013', 'paper-014', 'paper-015', 'paper-016', 'paper-017', 'paper-018', 'paper-019'] skipped_dup=0 failures=[{'retrieval_id': 'retrieval-017', 'source': 'semantic_scholar', 'status': 'rate_limited', 'http_status': 429, 'result_count': None}]
+2026-08-30 22:33:04,015 INFO loaded papers=19 pending=0 exclude=5 include=14 errors=0
+2026-08-30 22:33:04,042 INFO finished run_id=live_20260830T143248Z_4c5605 output=E:\LitAudit\runs\live_20260830T143248Z_4c5605\output
+127.0.0.1 - - [30/Aug/2026 22:33:13] "POST /api/chat HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:33:13] "GET /api/runs HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:33:13] "GET /api/conversations HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:33:13] "GET /api/run/live_20260830T143248Z_4c5605 HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 22:33:13] "GET /api/chat/live_20260830T143248Z_4c5605 HTTP/1.1" 200 -

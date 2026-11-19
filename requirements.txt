@@ -1,0 +1,2 @@
+# Full development profile. Lightweight install: pip install -e ".[dev,documents]"
+-e .[dev,documents,map]

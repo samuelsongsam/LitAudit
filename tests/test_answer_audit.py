@@ -1,0 +1,123 @@
+from src.answer_audit import audit_answer_statements
+import pytest
+
+
+def _payload(status="supported", verdict="supports", extraction_status="verified"):
+    return {
+        "claims": [{"claim_id": "claim-001", "status": status, "text": "方法在该评测上提升了可追溯性。"}],
+        "evidence": [
+            {
+                "evidence_id": "evidence-001",
+                "claim_id": "claim-001",
+                "paper_id": "paper-001",
+                "verdict": verdict,
+                "extraction_status": extraction_status,
+                "locator": {"page": 3},
+            }
+        ],
+    }
+
+
+def test_verified_statement_requires_valid_claim_evidence_binding():
+    result = audit_answer_statements(
+        _payload(),
+        [
+            {
+                "text": "该方法在论文报告的评测上提升了可追溯性。",
+                "claim_id": "claim-001",
+                "evidence_ids": ["evidence-001"],
+                "certainty": "verified",
+            }
+        ],
+    )
+    assert result["ok"] is True
+    assert "提升了可追溯性" in result["answer"]
+    assert result["citations"][0]["claim_id"] == "claim-001"
+
+
+def test_pending_claim_cannot_be_rendered_as_verified_fact():
+    result = audit_answer_statements(
+        _payload(status="pending"),
+        [
+            {
+                "text": "该方法已经被证明有效。",
+                "claim_id": "claim-001",
+                "evidence_ids": ["evidence-001"],
+                "certainty": "verified",
+            }
+        ],
+    )
+    assert result["ok"] is False
+    assert any("definite_claim_not_supported" in error for error in result["errors"])
+    assert result["answer"] == ""
+
+
+def test_uncertain_statement_may_explain_pending_claim_without_evidence():
+    payload = _payload(status="pending")
+    payload["evidence"] = []
+    result = audit_answer_statements(
+        payload,
+        [
+            {
+                "text": "当前证据不足，仍需获取全文核验。",
+                "claim_id": "claim-001",
+                "evidence_ids": [],
+                "certainty": "uncertain",
+            }
+        ],
+    )
+    assert result["ok"] is True
+
+
+def test_evidence_from_another_claim_is_rejected():
+    payload = _payload()
+    payload["evidence"][0]["claim_id"] = "claim-002"
+    result = audit_answer_statements(
+        payload,
+        [
+            {
+                "text": "错误绑定。",
+                "claim_id": "claim-001",
+                "evidence_ids": ["evidence-001"],
+                "certainty": "verified",
+            }
+        ],
+    )
+    assert result["ok"] is False
+    assert any("evidence_claim_mismatch" in error for error in result["errors"])
+
+
+def test_abstract_only_evidence_cannot_be_called_verified():
+    result = audit_answer_statements(
+        _payload(extraction_status="abstract_only"),
+        [
+            {
+                "text": "全文已经核验证明该方法有效。",
+                "claim_id": "claim-001",
+                "evidence_ids": ["evidence-001"],
+                "certainty": "verified",
+            }
+        ],
+    )
+    assert result["ok"] is False
+    assert any("definite_without_grounding" in error for error in result["errors"])
+
+
+@pytest.mark.parametrize("certainty,status", [("uncertain", "pending"), ("qualified", "partial"), ("verified", "supported")])
+def test_generated_assertion_cannot_bypass_binding(certainty, status):
+    payload = _payload(status=status)
+    ids = ["evidence-001"]
+    if certainty == "uncertain":
+        payload["evidence"] = []
+        ids = []
+    result = audit_answer_statements(payload, [{"text": "已确证提高 99%，适用于所有任务。", "claim_id": "claim-001", "evidence_ids": ids, "certainty": certainty}])
+    assert result["ok"]
+    assert "99%" not in result["answer"]
+    assert "适用于所有任务" not in result["answer"]
+    assert payload["claims"][0]["text"] in result["answer"]
+    assert result["citations"][0]["certainty"] == certainty
+    assert result["citations"][0]["evidence_ids"] == ids
+    assert all(phrase not in result["answer"] for phrase in
+               ["不作确定结论", "不代表", "不应扩展", "还需要补充"])
+    if certainty == "uncertain":
+        assert "待核验论断" in result["answer"]
