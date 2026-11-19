@@ -1,0 +1,2089 @@
+[
+  {
+    "page": 1,
+    "text": "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference\nHao Zhang*, Mengsi Lyu*, Zhuo Chen, Xingrun Xing, Yulong Ao†, Yonghua Lin†\nBeijing Academy of Artificial Intelligence (BAAI)\nAbstract\nLarge Language Models (LLMs) demonstrate\nexceptional capabilities across various tasks,\nbut their deployment is constrained by high\ncomputational and memory costs. Model prun-\ning provides an effective means to alleviate\nthese demands. However, existing methods of-\nten ignore the characteristics of prefill-decode\n(PD) disaggregation in practice. In this paper,\nwe propose a pruning method that is highly\nintegrated with PD disaggregation, enabling\nmore precise pruning of blocks. Our approach\nconstructs pruning and distillation sets to per-\nform iterative block removal, obtaining better\npruning solutions. Moreover, we analyze the\npruning sensitivity of the prefill and decode\nstages and identify removable blocks specific\nto each stage, making it well suited for PD\ndisaggregation deployment. Extensive experi-\nments demonstrate our approach consistently\nachieves strong performance in both PD dis-\naggregation and PD unified (non-PD disaggre-\ngation) settings, and can also be extended to\nother non-block pruning methods. Under the\nsame settings, our method achieves improved\nperformance and faster inference.\n1 Introduction\nLarge Language Models (LLMs) have emerged\nas revolutionary tools, achieving state-of-the-art\n(SOTA) results across diverse tasks and applica-\ntions (Ding et al., 2022; Qin et al., 2023; Zhu et al.,\n2023; Li et al., 2023a). However, the rapid growth\nin model scale has posed significant challenges\nfor their practical deployment (Zhang et al., 2023;\nChoi et al., 2025; Long et al., 2025). To address it,\nvarious techniques have been proposed, including\npruning (Ma et al., 2023; Ashkboos et al., 2024; Li\net al., 2023c; Sun et al., 2025), quantization (Liu\net al., 2021; Zhou et al., 2023b; Cai et al., 2023;\n*These authors contribute equally to this work.\n†Corresponding author.\nZhou et al., 2024) and knowledge distillation (Hin-\nton et al., 2015; Gou et al., 2021; Yang et al., 2021;\nZhang et al., 2024). Among them, pruning stands\nout as an effective strategy for reducing model size\nby eliminating redundant or less critical compo-\nnents, thereby lowering computational and storage\ncosts.\nWhile pruning offers clear benefits, its appli-\ncation to LLMs remains challenging. During in-\nference, the prefill and decode stages are usually\ndisaggregated (PD disaggregation) (Zhong et al.,\n2024; Patel et al., 2024; Qin et al., 2024; Dong et al.,\n2025), allowing each stage to be optimized accord-\ning to its specific resource requirements. With-\nout such disaggregation, heterogeneous workloads\nmust conform to a single resource profile, which\nresults in suboptimal utilization and ultimately de-\ngrades performance. However, existing pruning\nmethods often ignore the characteristics of PD dis-\naggregation deployment in real deployments. In\nsuch systems, the prefill and decode stages exhibit\nmarkedly different sensitivities to pruning, making\nuniform strategies ineffective.\nIn this paper, we propose a pruning method that\nis highly integrated with PD disaggregation, en-\nabling more precise pruning of blocks. (1) Specif-\nically, we introduce a approach for constructing\npruning and distillation sets tailored to block prun-\ning. (2) Building on these sets, we perform an\niterative block removal procedure for LLMs. (3)\nWe further analyze the pruning sensitivity of the\nprefill and decode stages separately, and identify\nremovable blocks specific to each stage. This stage-\naware pruning strategy aligns with the distinct ex-\necution characteristics of prefill and decode, re-\nsulting in particularly efficient PD disaggregation\ndeployment. Compared to prior block pruning ap-\nproaches, our method achieves better solutions. Ex-\ntensive experiments demonstrate that our approach\nconsistently achieves strong performance in both\nPD disaggregation and PD unified (non-PD dis-\n1\narXiv:2509.04467v4  [cs.CL]  14 Dec 2025",
+    "text_sha256": "3d39a733ca918f72b84d4c2ee69863c5d89b1805c50ece49d11d4c271df81e56",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": null,
+    "end_section": "introduction",
+    "headings": [
+      {
+        "section": "abstract",
+        "title": "Abstract",
+        "char_offset": 197
+      },
+      {
+        "section": "introduction",
+        "title": "1 Introduction",
+        "char_offset": 1322
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "text": "Embedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\nBlock 6\nBlock 7\nBlock 8\nLM Head\nEmbedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\n      Block [6,7]\nBlock 8\nLM Head\nKV Cache (1)\nKV Cache (3)\nKV Cache (6)\nKV Cache (8)\n KV Cache (8)\nKV Cache (6)\nKV Cache (3)\nKV Cache (1)\nDecode Node Prefill Node\nCalibration Set\nPruning Set Pfinal\nDistillation Set D\nRemoval Solution\n Iterative Update\nDecode Removal\nPrefill Removal\nEmbedding\nBlock 1\nBlock 2\nBlock 3\nBlock 4\nBlock 5\n      Block [6,7]\nBlock 8\nLM Head\nDecode Node\nKV Cache (Decode)\nKV Cache (Prefill)\nFigure 1: Overview of our pruning method combined with PD disaggregation. Under PD disaggregation, inputs are\nfirst processed on the prefill node and then dispatched to multiple decode nodes. The prefill node transfers the KV\ncache to the decode nodes, while each decode node also generates its own KV cache. In our method, we construct\npruning and distillation sets and iteratively optimize the block removal based on these sets. The prefill and decode\nnodes apply different removal schemes. In this case, the prefill node prunes Blocks 2 and 4, whereas the decode\nnodes prune Blocks 2, 4 and 5, and further distill Blocks 6 and 7 into a single Block.\naggregation) settings. Our method can also be ex-\ntended to other non-block pruning scenarios. Under\nthe same settings, our method achieves improved\nperformance and faster inference. In summary, our\ncontributions can be summarized as follows:\n• We introduce a construction of pruning and\ndistillation sets for block pruning, and lever-\nage them to perform an iterative block re-\nmoval strategy for LLMs. This can achieve\nsuperior performance over prior methods.\n• We analyze the pruning sensitivity of the pre-\nfill and decode stages and identify removable\nblocks specific to each stage, making it well\nsuited for PD disaggregation deployment.\n• Our approach consistently achieves strong per-\nformance in both PD disaggregation and PD\nunified (non-PD disaggregation) settings, and\ncan also be extended to other non-block prun-\ning methods.\n2 Related Work\n2.1 PD Disaggregation\nLLM inference can be divided into the prefill and\ndecode stages. The prefill stage processes the entire\ninput sequence to compute contextual representa-\ntions and generate KV Cache. The decode stage\nthen autoregressively generates tokens conditioned\non previously generated outputs. PD disaggrega-\ntion is a technique that explicitly decouples these\ntwo stages during inference, enabling deployment\nstrategies tailored to the unique resource require-\nments of each stage. DistServe (Zhong et al., 2024)\nis one of the seminal works in PD disaggregation.\nIt assigns the prefill and decode stages to differ-\nent GPUs, allowing for optimizations tailored to\nthe unique characteristics of each stage. Splitwise\n(Patel et al., 2024) disaggregates the prompt com-\nputation and token generation stages and runs them\non different machines. The TetriInfer (Hu et al.,\n2024b) also leverages PD disaggregation to reduce\ninterference between different downstream tasks.\nMemServe (Hu et al., 2024a) further explores mem-\nory optimization techniques within the PD disag-\ngregation architecture. TaiChi (Wang et al., 2025)\n2",
+    "text_sha256": "f2577d4e0880a86fd6d84547dc79edb4017b352cc78344671fff4765e8231310",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          266.65,
+          124.82,
+          326.78,
+          225.28
+        ],
+        "rows": [
+          [
+            "",
+            null
+          ],
+          [
+            "LM",
+            null
+          ],
+          [
+            "Blo",
+            null
+          ],
+          [
+            "Blo",
+            null
+          ],
+          [
+            "Blo",
+            null
+          ],
+          [
+            "Blo",
+            "ck 5"
+          ]
+        ],
+        "row_count": 6,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          110.62,
+          205.45,
+          167.26,
+          218.1
+        ],
+        "rows": [
+          [
+            "Blo",
+            "ck 5"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          436.2,
+          205.45,
+          492.84,
+          218.1
+        ],
+        "rows": [
+          [
+            "Blo",
+            "ck 5"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [
+      {
+        "region_id": "image-1",
+        "bbox": [
+          108.95,
+          221.51,
+          127.46,
+          240.02
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-2",
+        "bbox": [
+          108.95,
+          259.87,
+          127.46,
+          278.38
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-3",
+        "bbox": [
+          182.0,
+          249.0,
+          254.0,
+          253.0
+        ],
+        "width": 72,
+        "height": 4,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-4",
+        "bbox": [
+          165.89,
+          281.89,
+          182.35,
+          298.36
+        ],
+        "width": 106,
+        "height": 106,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-5",
+        "bbox": [
+          181.0,
+          287.0,
+          254.0,
+          291.0
+        ],
+        "width": 73,
+        "height": 4,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-6",
+        "bbox": [
+          182.0,
+          152.0,
+          254.0,
+          157.0
+        ],
+        "width": 72,
+        "height": 5,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-7",
+        "bbox": [
+          165.39,
+          243.25,
+          181.85,
+          259.71
+        ],
+        "width": 106,
+        "height": 106,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-8",
+        "bbox": [
+          165.13,
+          175.48,
+          181.59,
+          191.94
+        ],
+        "width": 106,
+        "height": 106,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-9",
+        "bbox": [
+          165.39,
+          147.06,
+          181.85,
+          163.52
+        ],
+        "width": 106,
+        "height": 106,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-10",
+        "bbox": [
+          343.0,
+          152.0,
+          416.0,
+          157.0
+        ],
+        "width": 73,
+        "height": 5,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-11",
+        "bbox": [
+          343.0,
+          249.0,
+          416.0,
+          253.0
+        ],
+        "width": 73,
+        "height": 4,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-12",
+        "bbox": [
+          342.0,
+          287.0,
+          415.0,
+          291.0
+        ],
+        "width": 73,
+        "height": 4,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-13",
+        "bbox": [
+          109.18,
+          77.98,
+          131.34,
+          100.14
+        ],
+        "width": 143,
+        "height": 143,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-14",
+        "bbox": [
+          153.24,
+          77.39,
+          178.64,
+          102.79
+        ],
+        "width": 1024,
+        "height": 1024,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-15",
+        "bbox": [
+          272.1,
+          75.0,
+          284.65,
+          87.54
+        ],
+        "width": 81,
+        "height": 81,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-16",
+        "bbox": [
+          329.93,
+          73.21,
+          348.44,
+          91.72
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-17",
+        "bbox": [
+          330.66,
+          90.28,
+          349.72,
+          109.33
+        ],
+        "width": 123,
+        "height": 123,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-18",
+        "bbox": [
+          268.23,
+          221.5,
+          287.29,
+          240.55
+        ],
+        "width": 123,
+        "height": 123,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-19",
+        "bbox": [
+          268.39,
+          259.98,
+          287.45,
+          279.03
+        ],
+        "width": 123,
+        "height": 123,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-20",
+        "bbox": [
+          417.76,
+          148.08,
+          434.52,
+          164.73
+        ],
+        "width": 108,
+        "height": 107,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-21",
+        "bbox": [
+          417.71,
+          176.14,
+          434.48,
+          192.79
+        ],
+        "width": 108,
+        "height": 107,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-22",
+        "bbox": [
+          417.71,
+          243.58,
+          434.48,
+          260.23
+        ],
+        "width": 108,
+        "height": 107,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-23",
+        "bbox": [
+          417.59,
+          282.23,
+          434.36,
+          298.88
+        ],
+        "width": 108,
+        "height": 107,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-24",
+        "bbox": [
+          108.95,
+          201.98,
+          127.46,
+          220.48
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-25",
+        "bbox": [
+          434.53,
+          221.51,
+          453.04,
+          240.02
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-26",
+        "bbox": [
+          434.53,
+          259.87,
+          453.04,
+          278.38
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-27",
+        "bbox": [
+          434.53,
+          201.98,
+          453.04,
+          220.48
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-28",
+        "bbox": [
+          182.0,
+          183.0,
+          254.0,
+          194.0
+        ],
+        "width": 72,
+        "height": 11,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-29",
+        "bbox": [
+          341.0,
+          183.0,
+          414.0,
+          194.0
+        ],
+        "width": 73,
+        "height": 11,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-30",
+        "bbox": [
+          434.53,
+          173.44,
+          453.04,
+          191.95
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-31",
+        "bbox": [
+          108.95,
+          173.44,
+          127.46,
+          191.95
+        ],
+        "width": 119,
+        "height": 119,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      }
+    ],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "related_work",
+    "headings": [
+      {
+        "section": "related_work",
+        "title": "2 Related Work",
+        "char_offset": 2042
+      }
+    ]
+  },
+  {
+    "page": 3,
+    "text": "integrates PD disaggregation and aggregation by\nleveraging differentiated GPU roles and adaptive\nscheduling to optimize goodput across diverse SLO\nregimes. Adrenaline (Liang et al., 2025) offloads\npart of decode phase attention computation to pre-\nfill instances, improving LLM serving.\n2.2 Block Pruning\nTo develop a straightforward pruning algorithm\nthat is easy to deploy for LLMs, several studies\nhave proposed removing less important blocks, a\nstrategy that can lead to significant inference accel-\neration and improved computational efficiency. For\nexample, methods (Men et al., 2024) using cosine\nsimilarity to evaluate block importance combined\nwith greedy pruning have been introduced. How-\never, greedy approaches often fail to identify the\nglobally optimal pruning configuration and tend\nto exhibit instability in practice. Techniques like\nLaCo (Yang et al., 2024b) merge subsequent lay-\ners into preceding ones but typically sacrifice ac-\ncuracy compared to direct layer removal. LLM-\nStreamline (Chen et al., 2024) reduces model size\nby distilling multiple consecutive blocks into a sin-\ngle block. However, overly aggressive distillation\ncan significantly degrade model performance, and\nthe approach still relies on a greedy block selection\nstrategy. Other methods, such as SLEB (Song et al.,\n2024) and Shortened LLaMA (Kim et al., 2024),\nadopt iterative pruning strategies guided by care-\nfully designed importance metrics. However, these\nmethods require recalculating importance scores\nusing a calibration set after each block removal, re-\nsulting in substantial computational overhead. Con-\nsequently, developing a block pruning algorithm\nthat is highly accurate remains a difficult and unre-\nsolved challenge.\n3 Methodology\nIn this section, we describe our iterative block prun-\ning method that is deeply integrated with PD disag-\ngregation. Our goal is to select thek blocks whose\nremoval minimally impacts performance. Figure 1\nillustrates an overview of our method.\n3.1 Strategic Design of Sets for Pruning and\nDistillation\nWe use a combined pruning and distillation strategy\nfor refined block removal. Specifically, we first\nassess the redundancy of each block by calculating\nthe cosine similarity (Men et al., 2024) between its\ninput and output (note that the similarity metric is\nnot a core contribution of ours). We provide further\ndetails on this in Appendix I. The redundancy of\nblocki is mathematically defined as follows:\nri = cos(hi−1,h i)(1)\nHere,ri denotes the redundancy ofblocki and the\ncos measures the similarity between the inputhi−1\nand the output hi ofblocki. Based on this redun-\ndancy metric, we directly identify the Top\n\u0006 k\n2\n\u0007\nblocks with the highest cosine similarity for re-\nmoval. Given their high redundancy, these blocks\nare deemed suitable for direct pruning, thereby\nforming an initial pruning set of\n\u0006 k\n2\n\u0007\nblocks. The\ninitial pruning set Pinitial can be represented as\nfollows:\nPinitial ={block i|r i∈Top\n\u0006 k\n2\n\u0007\n({r1,r 2,...,r L})} (2)\nFor the blocks that are not included in the initial\u0006 k\n2\n\u0007\nblocks designated for pruning, we consider\nincorporating them into the construction of the dis-\ntillation set. To ensure the effectiveness of the\ndistillation, we limit distillation to pairs of consec-\nutive blocks. Specifically, for a pair of consecutive\nblocks, denoted asblocki andblocki+1, we define\na metric di to determine whether they should be\nincluded in the distillation set. The metric di is\ndefined as follows:\ndi = 1\n2 (cos(hi−1,h i+1) + max(cos(hi−1,h i),cos(h i,h i+1)))\n(3)\nThis metric is designed from two complementary\nperspectives. Here, the cos(hi−1,h i+1) measures\nredundancy when treating two blocks as a sin-\ngle unit; higher values imply weaker transforma-\ntion and easier merging. During distillation, we\nmerge consecutive blocks by finetuning the block\nwith lower redundancy and transferring represen-\ntational capacity from the block with higher re-\ndundancy. The more redundant block is identi-\nfied by max(cos(hi−1,h i),cos(h i,h i+1)); a larger\nvalue indicates higher redundancy and easier capac-\nity transfer. We incorporate a pair of consecutive\nblocks into the distillation set and distill them into\na single block only when the metric di exceeds a\nthreshold, denoted asdT . The distillation setD can\nbe represented as follows:\nD={(block i,block i+1)|d i≥d T and\n{blocki,block i+1}∩P initial =∅} (4)\nIf a block meets the threshold with both its pre-\nceding and succeeding blocks, we select the one\n3",
+    "text_sha256": "083abb0d66da7df240fce56a18670d51a32f5d24549ba83c982ed3ced53a7a7f",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [
+      {
+        "text": "ri = cos(hi−1, hi)",
+        "bbox": [
+          374.8,
+          123.46,
+          455.75,
+          136.0
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "Pinitial = {blocki | ri ∈Top",
+        "bbox": [
+          312.33,
+          292.84,
+          419.13,
+          303.49
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "di = 1",
+        "bbox": [
+          306.14,
+          457.55,
+          335.17,
+          472.1
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "D = {(blocki, blocki+1) | di ≥dT and",
+        "bbox": [
+          323.26,
+          712.11,
+          495.67,
+          724.85
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "{blocki, blocki+1} ∩Pinitial = ∅}",
+        "bbox": [
+          345.02,
+          728.65,
+          495.67,
+          741.48
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "related_work",
+    "start_section": "related_work",
+    "end_section": "methods",
+    "headings": [
+      {
+        "section": "methods",
+        "title": "3 Methodology",
+        "char_offset": 1728
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "text": "with the higher metric to include in the distilla-\ntion set. Through this approach, we construct the\ndistillation set, where each element represents the\ndistillation of a pair of consecutive blocks into one\nblock. Once the distillation set is constructed, all\nblocks not included in it are assigned to the pruning\nset. The final pruning setPf inal can be represented\nas follows:\nPf inal ={block i|{(block i−1,block i),\n(blocki,block i+1)}∩D=∅} (5)\nIn this setup, each block in the model is assigned\nto either the pruning set or the distillation set. In-\ngeniously, the number of blocks removed by each\nelement in the distillation set matches that in the\npruning set, with both strategies removing exactly\none block. This consistency establishes a founda-\ntion for iterative optimization strategies.\n3.2 Iterative Optimization toward Optimal\nBlock Removal\nTo determine the optimal combination of block re-\nmovals, we iteratively refine the removal set to min-\nimize the impact on model performance. Specif-\nically, we first initialize the block removal set by\nselecting theTop\n\u0006 k\n2\n\u0007\nblocks with the highest co-\nsine similarity from the pruning set. The remaining\nk−\n\u0006 k\n2\n\u0007\nblocksBpartial are chosen from the distil-\nlation set based on the aforementioned metricsdi\nin descending order. If the number of blocks in the\ndistillation set is insufficient, we supplement them\nfrom the pruning set in descending order of cosine\nsimilarity, excluding theTop\n\u0006 k\n2\n\u0007\nblocks that need\nto be pruned. The initial block removal setBinitial\ncan be represented as follows:\nBpartial =\n\n\n\nTop(k−\n\u0018k\n2\n\u0019\n)(D)\n\u0000\nif|D|≥k−\n\u0006 k\n2\n\u0007\u0001\nD∪Top\n\u0000\nk−\n\u0006 k\n2\n\u0007\n−|D|\n\u0001\n(Pf inal\\P initial)\n\u0000\nif|D|< k−\n\u0006 k\n2\n\u0007\u0001\n(6)\nBinitial =P initial ∪B partial (7)\nWe define several key parameters for the optimiza-\ntion process. The initial temperature T0 controls\nthe randomness in the block iteration, the decay\ncoefficientα is employed to gradually reduce the\ntemperature and the termination temperatureTmin\ndetermines when to stop the entire block iteration\n(we provide the analysis of these parameters in ex-\nperiments). In each iteration, we select an element\nfrom the unremoved set based on probability to re-\nplace a random element in the current removed set,\nthereby generating a new neighborhood solution.\nTo determine the probability of each element being\nselected, we assign a weightωi to each elementi\nin the unremoved set. For every elementi,blocki\nin the pruning set or element blocki andblocki+1\nin the distillation set, the weight ωi and the prob-\nabilitypi are related to formula 1, being selected\ncan be defined as follows:\nωi =\n(\nri pruning set\n1\n2(ri +r i+1)distillation set (8)\npi = ωi\nPN\nj=1ωj\n(9)\nHere,N denotes the total number of elements in\nthe unremoved set. For the new candidate block\nremoval solutions′, we calculate its accuracy on\nthe calibration set as the objective function value\nfs′, and compare it with the current solution’s (s)\nobjective function valuefs. If the accuracy of the\ncandidate solution is higher (fs′ >f s ), we directly\naccept it. However, if the candidate solution’s ac-\ncuracy is lower (fs′ <f s ), we decide whether to\naccept it based on a probability. The acceptance\nprobability Ps′ is calculated using the following\nformula:\nPs′ =e− ∆f\nT ∆f=f s−f s′ (10)\nwhere ∆f is the difference in objective function\nvalues between the current solution and the new\ncandidate solution, and T is the current tempera-\nture. This probability based acceptance mechanism\nallows us to escape local optima and explore the\nsolution space more comprehensively. After evalu-\nating the new solution, we update the temperature\nusing the decay factor T=αT . We repeat this\nprocess until the temperature reaches the minimum\nthresholdTmin. Our experiments show that even\nwith fewer iterations, performance still remains\nstrong. Throughout the entire iterative process, we\ncontinuously record the block removal combina-\ntion with the highest performance, considering it as\nthe optimal solution. The optimal solutionBoptimal\ncan be represented as follows:\nBoptimal = arg max\nB∈solutions\nfB (11)\nwherefB is the objective function value of solu-\ntionB. This strategy yields better solutions that\n4",
+    "text_sha256": "41b0250f5e6b5546f70fb9fa58dcb95b3d28e4560cd26f3eb01be055409101f1",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [
+      {
+        "text": "Pfinal = {blocki| {(blocki−1, blocki),",
+        "bbox": [
+          95.88,
+          188.43,
+          264.12,
+          201.26
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "(blocki, blocki+1)} ∩D = ∅}",
+        "bbox": [
+          133.77,
+          204.97,
+          264.12,
+          217.01
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "if |D| ≥k −",
+        "bbox": [
+          133.28,
+          605.09,
+          176.86,
+          612.15
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "Binitial = Pinitial ∪Bpartial",
+        "bbox": [
+          115.33,
+          676.96,
+          244.08,
+          689.78
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "j=1 ωj",
+        "bbox": [
+          418.64,
+          293.16,
+          445.88,
+          307.29
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∆f = fs −fs′",
+        "bbox": [
+          414.62,
+          480.81,
+          479.3,
+          493.35
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "using the decay factor T = αT. We repeat this",
+        "bbox": [
+          306.14,
+          596.66,
+          524.41,
+          607.85
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "Boptimal = arg",
+        "bbox": [
+          351.43,
+          725.78,
+          417.73,
+          738.61
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "methods",
+    "start_section": "methods",
+    "end_section": "methods",
+    "headings": []
+  },
+  {
+    "page": 5,
+    "text": "approximate the global optimum, as confirmed by\nexperiments. It requires only a few iterations to\nachieve improved results, and the partial random-\nness introduced does not noticeably degrade per-\nformance. Moreover, it incurs substantially lower\npruning overhead compared to other global search\nmethods, as verified empirically.\n3.3 Heterogeneous Strategies Across Prefill\nand Decode Nodes\nThe prefill stage is more sensitive to pruning than\nthe decode, pruning during this stage tends to lead\nto a more significant drop in performance. Here,\nwe provide an abstract analysis, ignoring other\ncomplex effects. Denote by X∈R N×d the in-\nput sequence in the prefill stage and byxt∈R 1×d\nthe initial input in the decode stage. We denote\nthe perturbations of the attention parametersWQ,\nWK andWV by ∆WQ, ∆WK and ∆WV , respec-\ntively. The query vectorq and its perturbation ∆q\nforxt are given byq=x tWQ and ∆q=x t∆WQ.\nThe concatenated key and value matrices are de-\nfined as (K,V) , where K= [K pre, xtWK] and\nV= [V pre, xtWV ], with corresponding pertur-\nbations ∆K= [∆K pre, xt∆WK] and ∆V=\n[∆Vpre, xt∆WV ]. Here, Kpre =XW K and\n∆K=X∆W K; the same applies to the others.\nThen, the attention output before (o) and after per-\nturbation (˜o), as well as the resulting error(E), can\nbe expressed as follows:\no=softmax\n\u0010\nqK ⊤\n√\nd\n\u0011\nV(12)\n˜o=softmax\n\u0010\n(q+∆q)(K+∆K) ⊤\n√\nd\n\u0011\n(V+ ∆V) (13)\n˜A=softmax\n\u0010\n(q+∆q)(K+∆K) ⊤\n√\nd\n\u0011\n(14)\n∆A= ˜A−softmax\n\u0010\nqK ⊤\n√\nd\n\u0011\n(15)\nE= ˜o−o= ∆AV+ ˜A∆V(16)\nConsidering the above analysis, we obtain the fol-\nlowing formulas(The detailed derivation of these\nformulas can be found in Appendix A and B):\n∥E∥F≤ Lsof tmax√\nd\n\u0010\n∥∆q∥2∥K∥F +∥q∥ 2\n∥∆K∥F\n\u0011\n·∥V∥ F +∥∆V∥ F\n(17)\nE=G(x t,Y pre,∆)(18)\nHere,Lsof tmax denotes the Lipschitz constant of\nthe softmax,∥E∥F denotes the Frobenius norm\nof the error E, and G is an abstract error func-\ntion. Ypre denotes the set of all results (including\nboth intermediate and final outputs) produced in\nthe previous step that can be reused in the cur-\nrent step, and ∆ represents the set of perturbations.\nFrom this, we observe that pruning errors accu-\nmulate as the sequence is generated. During the\nprefill stage, a perturbation simultaneously contam-\ninates the representations of all N tokens. These\ncorrupted representations are repeatedly accessed\nin subsequent decode steps, causing the error to\naccumulate and amplify over time. In contrast,\na single decode step only affects the current in-\nput and its subsequent states, limiting the scope of\nimpact. Therefore, after determining the optimal\ncombination of removed blocks, we further adjust\nthe removed blocks for each stage. Specifically,\nfor each element in the current combination of re-\nmoved blocks, we test it on the calibration set. If\nremoving only in the decode stage can significantly\nimprove performance, then that element is removed\nonly in the decode stage while being retained in\nthe prefill stage. If there is no significant perfor-\nmance improvement, then the removing operation\nfor that element will be applied in both the prefill\nand decode stages. More details can be found in\nAppendix K and C. This approach allows us to de-\ntermine the removed blocks for the prefill and the\ndecode separately.\n4 Experiments\n4.1 Experimental Setup\nModels and BenchmarksTo demonstrate the ef-\nfectiveness of our method, we conduct extensive\nevaluations on representative LLMs with diverse\narchitectures and scales, including LLaMA3.1-8B\n(Grattafiori et al., 2024), LLaMA2-13B (Touvron\net al., 2023), Qwen2.5-7B (Yang et al., 2024a) and\nQwen2.5-14B (Yang et al., 2024a). We also use\nQwen2.5-32B (Yang et al., 2024a) and OPT-6.7B\n(Zhang et al., 2022) in the supplementary experi-\nments. We employ a wide range of benchmarks.\nThese benchmarks include MMLU (Hendrycks\net al., 2020), CMMLU (Li et al., 2023b), PIQA\n(Bisk et al., 2020), Winogrande (ai2, 2019), Hel-\nlaSwag (Zellers et al., 2019), BoolQ (Clark et al.,\n2019), MathQA (Amini et al., 2019), ARC-Easy\nand ARC-Challenge (Clark et al., 2018), RTE\n(Wang et al., 2018), WNLI (Wang et al., 2018),\nCB (Wang et al., 2019) and SST-2 (Wang et al.,\n2018). This comprehensive protocol ensures thor-\n5",
+    "text_sha256": "da643153930c10916b70925cfafeecbc6820733c080e0083a70e64c5f09199c0",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [
+      {
+        "text": "for xt are given by q = xtWQ and ∆q = xt∆WQ.",
+        "bbox": [
+          70.87,
+          343.47,
+          291.04,
+          356.31
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "fined as (K, V ), where K = [Kpre, xtWK] and",
+        "bbox": [
+          70.87,
+          370.57,
+          289.13,
+          382.52
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "bations ∆K = [∆Kpre, xt∆WK] and ∆V",
+        "bbox": [
+          70.87,
+          397.66,
+          271.38,
+          409.62
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "Here, Kpre = XWK and",
+        "bbox": [
+          162.43,
+          411.21,
+          289.13,
+          424.09
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∆K = X∆WK; the same applies to the others.",
+        "bbox": [
+          69.96,
+          424.76,
+          291.04,
+          436.72
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "o = softmax",
+        "bbox": [
+          125.93,
+          492.08,
+          188.22,
+          502.99
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "˜o = softmax",
+        "bbox": [
+          76.43,
+          523.29,
+          135.6,
+          533.65
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "˜A = softmax",
+        "bbox": [
+          95.13,
+          546.76,
+          160.31,
+          560.43
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∆A = ˜A −softmax",
+        "bbox": [
+          114.48,
+          573.78,
+          210.27,
+          587.45
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "E = ˜o −o = ∆A V + ˜A ∆V",
+        "bbox": [
+          114.61,
+          598.29,
+          242.96,
+          611.96
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥E∥F ≤Lsoftmax",
+        "bbox": [
+          78.15,
+          669.53,
+          160.7,
+          689.57
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "E = G(xt, Ypre, ∆)",
+        "bbox": [
+          136.03,
+          730.83,
+          223.98,
+          742.73
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "methods",
+    "start_section": "methods",
+    "end_section": "experimental_setup",
+    "headings": [
+      {
+        "section": "experimental_setup",
+        "title": "4 Experiments",
+        "char_offset": 3218
+      },
+      {
+        "section": "experimental_setup",
+        "title": "4.1 Experimental Setup",
+        "char_offset": 3232
+      }
+    ]
+  },
+  {
+    "page": 6,
+    "text": "LLM Method MMLU CMMLU ARC-E ARC-C PIQA Winog HSwag BoolQ MathQA WNLI SST-2 RTE CB A VG\nLLaMA3.1-8B\nDense 63.35 50.85 81.52 51.28 80.30 74.03 60.05 82.26 39.56 59.15 76.83 71.12 60.71 65.46\nLLM-Pruner 52.01 41.12 67.36 42.06 74.54 69.32 51.50 73.78 32.35 50.78 69.37 49.40 55.28 56.07\nFLAP 52.11 41.13 67.42 42.15 74.63 69.36 51.5673.8232.39 50.82 69.41 49.44 55.34 56.11\nShortened 33.54 34.28 72.31 42.15 72.63 69.61 47.96 45.23 34.27 56.34 52.52 67.15 69.64 53.66\nShortGPT 51.92 41.11 67.34 42.06 74.48 69.38 51.56 73.76 32.50 50.70 69.31 49.50 55.36 56.08\nSLEB 28.35 25.51 71.04 36.18 75.46 62.98 49.70 57.89 27.30 46.48 55.85 57.04 35.71 48.42\nOurs 60.82 46.66 73.15 43.86 76.99 73.56 53.8069.8534.28 60.56 83.03 70.76 73.21 62.99\nLLaMA2-13B\nDense 52.10 34.73 79.42 48.38 79.05 72.22 60.07 80.61 32.09 66.20 87.61 69.31 80.36 64.78\nLLM-Pruner 50.11 33.57 61.16 37.67 71.38 70.71 47.37 62.53 24.41 43.24 65.37 59.1951.38 52.16\nFLAP 49.89 33.91 60.90 37.65 71.44 70.69 47.54 62.43 24.78 43.26 64.91 59.19 51.34 52.15\nShortened 26.71 25.50 26.26 22.61 51.14 48.22 25.76 38.93 18.89 43.66 46.56 52.71 37.50 35.73\nShortGPT 50.13 33.97 61.32 37.88 71.4470.8047.71 62.54 24.82 43.66 65.37 59.57 51.79 52.38\nSLEB 23.76 25.41 67.85 33.8775.4163.77 48.76 62.42 25.46 45.07 50.92 58.84 41.07 47.89\nOurs 51.52 35.37 69.78 40.0274.43 70.7253.11 62.84 28.44 53.52 80.16 64.2646.43 56.20\nQwen2.5-7B\nDense 71.92 81.69 80.56 48.21 78.73 72.93 59.92 84.46 43.22 71.83 91.86 81.23 87.50 73.39\nLLM-Pruner 36.96 36.71 71.33 38.20 74.86 55.79 47.71 55.67 31.08 60.43 70.79 54.42 38.81 51.75\nFLAP 37.17 36.39 71.47 37.83 76.21 55.65 47.47 57.23 30.11 61.61 70.68 54.59 37.32 51.82\nShortened 24.90 25.08 25.25 20.31 53.65 50.99 25.69 37.83 19.50 53.52 50.92 46.21 19.64 34.88\nShortGPT 36.89 31.07 71.46 37.80 76.12 55.80 48.67 63.21 30.59 42.2580.6254.87 41.07 51.57\nSLEB 38.56 38.2571.84 39.4276.77 55.96 47.98 57.4931.1261.97 72.25 56.32 39.29 52.86\nOurs 52.96 51.3471.09 39.1677.04 56.99 51.19 72.2030.9566.2063.5365.34 57.14 58.09\nQwen2.5-14B\nDense 77.45 84.44 82.37 56.31 81.12 75.37 63.37 85.23 53.03 77.46 89.11 79.78 80.36 75.80\nLLM-Pruner 43.09 42.01 73.33 40.54 73.58 58.47 47.79 61.89 31.53 48.79 54.26 56.88 49.27 52.42\nFLAP 44.86 44.77 50.29 31.00 60.72 51.44 34.14 65.16 25.65 65.28 89.95 76.87 68.74 54.53\nShortened 24.63 25.31 25.04 20.14 52.88 50.43 25.69 37.92 18.93 52.11 48.62 51.99 37.50 36.25\nShortGPT 45.75 45.63 50.63 31.40 61.81 52.64 34.4165.7226.1666.20 91.28 78.3469.64 55.35\nSLEB 43.77 42.9074.0741.0474.3758.9648.4362.57 32.23 49.30 54.93 57.40 50.00 53.07\nOurs 72.01 76.8268.8144.3771.3870.1747.98 64.8034.9161.97 82.11 74.0169.65 64.54\nTable 1: Performance comparison of pruning methods in LLMs across a variety of benchmarks. To increase\nthe diversity of evaluation, we apply pruning rates of 13.6%, 24.4%, 15.3% and 18.6% for the four models,\ncorresponding to commonly used pruning ratios for structured pruning.\nough assessment.\nBaselinesWe conduct comparative evaluations\nagainst other methods, including LLM-Pruner (Ma\net al., 2023), FLAP (An et al., 2024), Shortened\nLLaMA (abbreviated as Shortened)(Kim et al.,\n2024), ShortGPT (Men et al., 2024) and SLEB\n(Song et al., 2024). Additionally, we also use\nSliceGPT (Ashkboos et al., 2024) to test inference\nspeed. We implement PD disaggregation versions\nof the classic channel pruning LLM-Pruner and\nblock pruning ShortGPT according to our algo-\nrithm, and use them as additional baselines. More\ndetails can be found in Appendix C.\nImplementation DetailsOur experiments are\nconducted using the PyTorch framework (Paszke\net al., 2019) and the Hugging Face Transformers\nlibrary (Wolf et al., 2020). We use two nodes,\neach equipped with one NVIDIA H100 80GB GPU.\nWhen distilling two blocks, we use the weights of\nthe block with low cosine similarity as the initial\nweights. By default, we use 256 randomly sampled\nexamples from PIQA and MMLU as the calibra-\ntion set. The hyperparameter settings and training\ndetails can be found in Appendix C.\n4.2 Main Results\nWe evaluate our method against strong baselines on\nfour representative LLMs and multiple benchmarks\nunder identical experimental settings, including the\ncalibration set. To diversify the evaluation, we\nadopt pruning ratios of 13.6%, 24.4%, 15.3% and\n18.6% across the four models. The Dense config-\nuration corresponds to the original uncompressed\nmodel, serving as a reference prior to pruning. The\nexperiments are conducted with consistent parame-\nter settings and implementation details. As shown\nin Table 1, our method consistently outperforms\nall baselines across different models. These results\nclearly confirm the effectiveness and robustness of\nour method under diverse pruning scenarios.\nOur approach serves as an optimization for PD\ndisaggregation and can be readily combined with\nother pruning methods. We extend two representa-\ntive approaches, the channel pruning method LLM-\nPruner and the block pruning method ShortGPT.\nSpecifically, we first use LLM-Pruner and Short-\nGPT to select pruning weights for the decode stage,\nand then apply our method to identify a pruned sub-\nset of weights for the prefill stage. The resulting\napproaches are denoted as LLM-Pruner (Ours) and\n6",
+    "text_sha256": "d534208b1a67999c719d940947f2b6490d822ac30ffa2abdb211ed6d01f716cb",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          70.87,
+          71.17,
+          524.43,
+          364.27
+        ],
+        "rows": [
+          [
+            "LLM",
+            "Method",
+            "MMLU CMMLU ARC-E ARC-C PIQA Winog HSwag BoolQ MathQA WNLI SST-2 RTE CB",
+            "AVG"
+          ],
+          [
+            "LLaMA3.1-8B",
+            "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+            "63.35 50.85 81.52 51.28 80.30 74.03 60.05 82.26 39.56 59.15 76.83 71.12 60.71\n52.01 41.12 67.36 42.06 74.54 69.32 51.50 73.78 32.35 50.78 69.37 49.40 55.28\n52.11 41.13 67.42 42.15 74.63 69.36 51.56 73.82 32.39 50.82 69.41 49.44 55.34\n33.54 34.28 72.31 42.15 72.63 69.61 47.96 45.23 34.27 56.34 52.52 67.15 69.64\n51.92 41.11 67.34 42.06 74.48 69.38 51.56 73.76 32.50 50.70 69.31 49.50 55.36\n28.35 25.51 71.04 36.18 75.46 62.98 49.70 57.89 27.30 46.48 55.85 57.04 35.71\n60.82 46.66 73.15 43.86 76.99 73.56 53.80 69.85 34.28 60.56 83.03 70.76 73.21",
+            "65.46\n56.07\n56.11\n53.66\n56.08\n48.42\n62.99"
+          ],
+          [
+            "LLaMA2-13B",
+            "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+            "52.10 34.73 79.42 48.38 79.05 72.22 60.07 80.61 32.09 66.20 87.61 69.31 80.36\n50.11 33.57 61.16 37.67 71.38 70.71 47.37 62.53 24.41 43.24 65.37 59.19 51.38\n49.89 33.91 60.90 37.65 71.44 70.69 47.54 62.43 24.78 43.26 64.91 59.19 51.34\n26.71 25.50 26.26 22.61 51.14 48.22 25.76 38.93 18.89 43.66 46.56 52.71 37.50\n50.13 33.97 61.32 37.88 71.44 70.80 47.71 62.54 24.82 43.66 65.37 59.57 51.79\n23.76 25.41 67.85 33.87 75.41 63.77 48.76 62.42 25.46 45.07 50.92 58.84 41.07\n51.52 35.37 69.78 40.02 74.43 70.72 53.11 62.84 28.44 53.52 80.16 64.26 46.43",
+            "64.78\n52.16\n52.15\n35.73\n52.38\n47.89\n56.20"
+          ],
+          [
+            "Qwen2.5-7B",
+            "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+            "71.92 81.69 80.56 48.21 78.73 72.93 59.92 84.46 43.22 71.83 91.86 81.23 87.50\n36.96 36.71 71.33 38.20 74.86 55.79 47.71 55.67 31.08 60.43 70.79 54.42 38.81\n37.17 36.39 71.47 37.83 76.21 55.65 47.47 57.23 30.11 61.61 70.68 54.59 37.32\n24.90 25.08 25.25 20.31 53.65 50.99 25.69 37.83 19.50 53.52 50.92 46.21 19.64\n36.89 31.07 71.46 37.80 76.12 55.80 48.67 63.21 30.59 42.25 80.62 54.87 41.07\n38.56 38.25 71.84 39.42 76.77 55.96 47.98 57.49 31.12 61.97 72.25 56.32 39.29\n52.96 51.34 71.09 39.16 77.04 56.99 51.19 72.20 30.95 66.20 63.53 65.34 57.14",
+            "73.39\n51.75\n51.82\n34.88\n51.57\n52.86\n58.09"
+          ],
+          [
+            "Qwen2.5-14B",
+            "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+            "77.45 84.44 82.37 56.31 81.12 75.37 63.37 85.23 53.03 77.46 89.11 79.78 80.36\n43.09 42.01 73.33 40.54 73.58 58.47 47.79 61.89 31.53 48.79 54.26 56.88 49.27\n44.86 44.77 50.29 31.00 60.72 51.44 34.14 65.16 25.65 65.28 89.95 76.87 68.74\n24.63 25.31 25.04 20.14 52.88 50.43 25.69 37.92 18.93 52.11 48.62 51.99 37.50\n45.75 45.63 50.63 31.40 61.81 52.64 34.41 65.72 26.16 66.20 91.28 78.34 69.64\n43.77 42.90 74.07 41.04 74.37 58.96 48.43 62.57 32.23 49.30 54.93 57.40 50.00\n72.01 76.82 68.81 44.37 71.38 70.17 47.98 64.80 34.91 61.97 82.11 74.01 69.65",
+            "75.80\n52.42\n54.53\n36.25\n55.35\n53.07\n64.54"
+          ]
+        ],
+        "row_count": 5,
+        "column_count": 4,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "experimental_setup",
+    "start_section": "experimental_setup",
+    "end_section": "experimental_setup",
+    "headings": []
+  },
+  {
+    "page": 7,
+    "text": "LLM Method MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE A VG\nLLaMA3.1-8B\nLLM-Pruner 52.01 41.12 67.36 42.06 51.50 32.35 50.78 49.40 48.32\nShortGPT 51.92 41.11 67.34 42.06 51.56 32.50 50.70 49.50 48.34\nLLM-Pruner (Ours) 54.95 44.30 72.46 43.82 52.84 34.13 53.94 52.88 51.16\nShortGPT (Ours) 54.62 43.89 71.38 43.11 53.5535.0853.62 52.63 50.98\nOurs 60.82 46.66 73.15 43.86 53.8034.2860.56 70.76 55.49\nLLaMA2-13B\nLLM-Pruner 50.11 33.57 61.16 37.67 47.37 24.41 43.24 59.19 44.59\nShortGPT 50.13 33.97 61.32 37.88 47.71 24.82 43.66 59.57 44.88\nLLM-Pruner (Ours) 52.58 34.27 65.55 39.19 49.99 25.96 44.53 62.54 46.83\nShortGPT (Ours) 53.7034.28 64.25 38.98 50.76 26.50 46.84 63.41 47.34\nOurs 51.5235.37 69.78 40.02 53.11 28.44 53.52 64.26 49.50\nQwen2.5-7B\nLLM-Pruner 36.96 36.71 71.33 38.20 47.71 31.08 60.43 54.42 47.11\nShortGPT 36.89 31.07 71.46 37.80 48.67 30.59 42.25 54.87 44.20\nLLM-Pruner (Ours) 38.99 39.42 72.41 38.66 50.5433.3461.89 56.83 49.01\nShortGPT (Ours) 39.51 33.0173.0439.01 51.18 32.88 62.96 56.64 48.53\nOurs 52.96 51.3471.0939.16 51.1930.9566.20 65.34 53.53\nQwen2.5-14B\nLLM-Pruner 43.09 42.01 73.33 40.54 47.79 31.53 48.79 56.88 48.00\nShortGPT 45.75 45.63 50.63 31.40 34.41 26.16 66.20 78.34 47.32\nLLM-Pruner (Ours) 65.75 45.32 74.49 43.13 48.75 32.43 51.27 58.44 52.45\nShortGPT (Ours) 68.34 47.36 52.21 33.16 36.37 28.0567.64 78.89 51.50\nOurs 72.01 76.8268.8144.3747.9834.9161.97 74.01 60.11\nTable 2: Performance comparison of our method with LLM-Pruner and ShortGPT, as well as their variants. LLM-\nPruner (Ours) and ShortGPT (Ours) are our PD disaggregation extensions.\nShortGPT (Ours), respectively. As shown in Ta-\nble 2, both methods exhibit substantial performance\nimprovements on the evaluated datasets after ap-\nplying PD disaggregation. Moreover, our approach\nconsistently achieves the best overall results. These\nfindings highlight the effectiveness of PD disaggre-\ngation as a general principle for enhancing pruning\nstrategies in LLMs. To validate the scalability and\ngenerality of our method, we conduct experiments\non larger model, additional datasets, and an ex-\ntra metric (perplexity), achieving promising results\n(see Appendix D).\n4.3 Efficiency Analysis\nInference LatencyWe measure the execution\ntime for a single inference of the LLaMA3.1-8B\nmodel with an input tensor of shape [1,1024] in\nFP32 format. Specifically, we evaluate the effects\nof pruning 13.58% and approximately 50% of the\nparameters in LLaMA3.1-8B. We then compare our\nproposed method against several other widely used\npruning algorithms, including SliceGPT, LLM-\nPruner and FLAP. As shown in Table 3, our ap-\nproach consistently achieves the fastest runtime,\nsignificantly reducing inference latency. This\ndemonstrates that our block pruning approach en-\nables faster inference speed.\nMethod Dense SliceGPT LLM-Pruner FLAP Ours\nTime (13.58%) 287.35 263.35 278.19 259.81236.63\nTime (∼50%) 287.35 202.69 252.69 184.16151.89\nTable 3: Comparison of inference time (ms) for the\nLLaMA3.1-8B on different pruning methods.\nPruning OverheadWe conduct a comparison of\nthe computational overhead between our proposed\npruning method and SLEB. SLEB (Song et al.,\n2024) is also a pruning strategy that aims to iden-\ntify the optimal pruning solution. We prune five\nblocks on LLaMA3.1-8B. The hyperparameters we\nuse have been provided in the experiment details\nin the previous section. As shown in Table 4, our\nmethod achieves an average runtime of only 44.06\nseconds, whereas SLEB requires 183.6 seconds on\naverage. Moreover, we conduct a comparison of\npruning overhead on LLaMA2-13B under a prun-\ning rate of 24.4%, where our approach continues\nto demonstrate a significant advantage. This effi-\nciency improvement is attributed to our iterative\npruning strategy, which can more rapidly converge\nto an effective pruning configuration.\n4.4 Evaluation in the PD Unified Setting\nWe compare the performance of our method with\nother approaches in the non-PD disaggregation set-\nting, referred to as PD Unified. In this setting, the\n7",
+    "text_sha256": "07c892a3ba6d81321b116a128125466b93ccc8efd262982bce3cb2b7bb4771c9",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          70.87,
+          71.2,
+          523.38,
+          328.32
+        ],
+        "rows": [
+          [
+            "LLM",
+            "Method",
+            "MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE",
+            "AVG"
+          ],
+          [
+            "LLM-Pruner 52.01 41.12 67.36 42.06 51.50 32.35 50.78 49.40 48.32\nShortGPT 51.92 41.11 67.34 42.06 51.56 32.50 50.70 49.50 48.34\nLLaMA3.1-8B\nLLM-Pruner (Ours) 54.95 44.30 72.46 43.82 52.84 34.13 53.94 52.88 51.16\nShortGPT (Ours) 54.62 43.89 71.38 43.11 53.55 35.08 53.62 52.63 50.98\nOurs 60.82 46.66 73.15 43.86 53.80 34.28 60.56 70.76 55.49",
+            null,
+            "52.01 41.12 67.36 42.06 51.50 32.35 50.78 49.40\n51.92 41.11 67.34 42.06 51.56 32.50 50.70 49.50",
+            null
+          ],
+          [
+            null,
+            null,
+            "54.95 44.30 72.46 43.82 52.84 34.13 53.94 52.88\n54.62 43.89 71.38 43.11 53.55 35.08 53.62 52.63\n60.82 46.66 73.15 43.86 53.80 34.28 60.56 70.76",
+            null
+          ],
+          [
+            "LLM-Pruner 50.11 33.57 61.16 37.67 47.37 24.41 43.24 59.19 44.59\nShortGPT 50.13 33.97 61.32 37.88 47.71 24.82 43.66 59.57 44.88\nLLaMA2-13B\nLLM-Pruner (Ours) 52.58 34.27 65.55 39.19 49.99 25.96 44.53 62.54 46.83\nShortGPT (Ours) 53.70 34.28 64.25 38.98 50.76 26.50 46.84 63.41 47.34\nOurs 51.52 35.37 69.78 40.02 53.11 28.44 53.52 64.26 49.50",
+            null,
+            "50.11 33.57 61.16 37.67 47.37 24.41 43.24 59.19\n50.13 33.97 61.32 37.88 47.71 24.82 43.66 59.57",
+            null
+          ],
+          [
+            null,
+            null,
+            "52.58 34.27 65.55 39.19 49.99 25.96 44.53 62.54\n53.70 34.28 64.25 38.98 50.76 26.50 46.84 63.41\n51.52 35.37 69.78 40.02 53.11 28.44 53.52 64.26",
+            null
+          ],
+          [
+            "LLM-Pruner 36.96 36.71 71.33 38.20 47.71 31.08 60.43 54.42 47.11\nShortGPT 36.89 31.07 71.46 37.80 48.67 30.59 42.25 54.87 44.20\nQwen2.5-7B\nLLM-Pruner (Ours) 38.99 39.42 72.41 38.66 50.54 33.34 61.89 56.83 49.01\nShortGPT (Ours) 39.51 33.01 73.04 39.01 51.18 32.88 62.96 56.64 48.53\nOurs 52.96 51.34 71.09 39.16 51.19 30.95 66.20 65.34 53.53",
+            null,
+            "36.96 36.71 71.33 38.20 47.71 31.08 60.43 54.42\n36.89 31.07 71.46 37.80 48.67 30.59 42.25 54.87",
+            null
+          ],
+          [
+            null,
+            null,
+            "38.99 39.42 72.41 38.66 50.54 33.34 61.89 56.83\n39.51 33.01 73.04 39.01 51.18 32.88 62.96 56.64\n52.96 51.34 71.09 39.16 51.19 30.95 66.20 65.34",
+            null
+          ],
+          [
+            "LLM-Pruner 43.09 42.01 73.33 40.54 47.79 31.53 48.79 56.88 48.00\nShortGPT 45.75 45.63 50.63 31.40 34.41 26.16 66.20 78.34 47.32\nQwen2.5-14B\nLLM-Pruner (Ours) 65.75 45.32 74.49 43.13 48.75 32.43 51.27 58.44 52.45\nShortGPT (Ours) 68.34 47.36 52.21 33.16 36.37 28.05 67.64 78.89 51.50\nOurs 72.01 76.82 68.81 44.37 47.98 34.91 61.97 74.01 60.11",
+            null,
+            "43.09 42.01 73.33 40.54 47.79 31.53 48.79 56.88\n45.75 45.63 50.63 31.40 34.41 26.16 66.20 78.34",
+            null
+          ],
+          [
+            null,
+            null,
+            "65.75 45.32 74.49 43.13 48.75 32.43 51.27 58.44\n68.34 47.36 52.21 33.16 36.37 28.05 67.64 78.89\n72.01 76.82 68.81 44.37 47.98 34.91 61.97 74.01",
+            null
+          ]
+        ],
+        "row_count": 9,
+        "column_count": 4,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          308.21,
+          382.74,
+          523.38,
+          420.82
+        ],
+        "rows": [
+          [
+            "Method",
+            "Dense SliceGPT LLM-Pruner FLAP Ours"
+          ],
+          [
+            "Time (13.58%)",
+            "287.35 263.35 278.19 259.81 236.63"
+          ],
+          [
+            "Time (∼50%)",
+            "287.35 202.69 252.69 184.16 151.89"
+          ]
+        ],
+        "row_count": 3,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "experimental_setup",
+    "start_section": "experimental_setup",
+    "end_section": "experimental_setup",
+    "headings": []
+  },
+  {
+    "page": 8,
+    "text": "Model Method Pruning Time (s)\nLLaMA3.1-8B SLEB (Song et al., 2024) 183.6\nOurs 44.06\nLLaMA2-13B SLEB (Song et al., 2024) 858.12\nOurs 96.52\nTable 4: Comparison of pruning time between our\nmethod and SLEB on LLaMA series models.\nprefill and decode stages are not explicitly disag-\ngregated during inference. Specifically, we evalu-\nate our method on the LLaMA2-13B model with\n24.4% of its parameters pruned across multiple\nbenchmarks. As shown in Table 5, our approach\ncontinues to achieve strong and consistent perfor-\nmance in the PD Unified scenario. These results\ndemonstrate that, even without explicit disaggrega-\ntion of the prefill and decode stages, our method\nmaintains performance across diverse tasks.\n4.5 Comparison between Disaggregation and\nUnified\nTo validate the effectiveness of our strategy, we\nconduct extensive benchmarks on LLaMA2-13B\nby pruning 24.4% of the model parameters. As a\nbaseline, PD Unified applies the same parameter re-\nmoval configuration to both the prefill and decode\nstages, without accounting for their differing sen-\nsitivities to pruning. As shown in Table 6, our PD\ndisaggregation compression strategy consistently\noutperforms the PD unified baseline across bench-\nmarks. These results provide strong evidence for\nthe effectiveness of PD disaggregation pruning.\n4.6 Orthogonal to Quantization\nTo evaluate the compatibility and effectiveness of\nour method under combined compression strate-\ngies, we further integrate it with quantization tech-\nniques. Specifically, we apply our approach to the\nQwen2.5-32B with a pruning ratio of 25% in con-\njunction with 8-bit AWQ quantization (Lin et al.,\n2024). As shown in Table 7, our method consis-\ntently demonstrates robust performance, indicating\nthat the pruning strategy is largely orthogonal to\nquantization and can be effectively combined with-\nout significant degradation.\n5 Conclusion\nIn this paper, we propose a pruning method that\nis deeply integrated with PD disaggregation. In\nparticular, we construct pruning and distillation\nsets to perform iterative block removal, indepen-\ndently tailored to the prefill and decode, achieving\nbetter solutions compared to prior block pruning\napproaches. Moreover, we analyze the pruning sen-\nsitivity of the prefill and decode stages and identify\nremovable blocks specific to each stage, making\nit well suited for PD disaggregation deployment.\nUnder the same settings, our method achieves im-\nproved performance and faster inference. Extensive\nexperiments demonstrate our approach consistently\nachieves strong performance in both PD disaggre-\ngation and PD unified (non-PD disaggregation) set-\ntings, and can also be extended to other non-block\npruning methods.\nLimitations\nIn this work, we conduct extensive experiments to\nevaluate the effectiveness of our pruning method.\nThe results demonstrate that our approach achieves\ncompetitive performance compared to the base-\nlines. However, due to computational constraints,\nwe have not yet been able to evaluate it on larger\nscale models, such as those with 70 billion param-\neters. Exploring the scalability of our method to\nsuch large models constitutes an important direc-\ntion for future work.\nReferences\n2019. Winogrande: An adversarial winograd schema\nchallenge at scale.\nAida Amini, Saadia Gabriel, Peter Lin, Rik Koncel-\nKedziorski, Yejin Choi, and Hannaneh Hajishirzi.\n2019. Mathqa: Towards interpretable math word\nproblem solving with operation-based formalisms.\narXiv preprint arXiv:1905.13319.\nYongqi An, Xu Zhao, Tao Yu, Ming Tang, and Jinqiao\nWang. 2024. Fluctuation-based adaptive structured\npruning for large language models. InProceedings\nof the AAAI Conference on Artificial Intelligence,\nvolume 38, pages 10865–10873.\nSaleh Ashkboos, Maximilian L Croci, Marcelo Gen-\nnari do Nascimento, Torsten Hoefler, and James\nHensman. 2024. Slicegpt: Compress large language\nmodels by deleting rows and columns.arXiv preprint\narXiv:2401.15024.\nYonatan Bisk, Rowan Zellers, Jianfeng Gao, Yejin Choi,\nand 1 others. 2020. Piqa: Reasoning about physical\ncommonsense in natural language. InProceedings\nof the AAAI conference on artificial intelligence, vol-\nume 34, pages 7432–7439.\nYuchen Cai, Zhen Wang, Yujun Li, Sheng Wang,\nZhiyuan Liu, and Maosong Sun. 2023. Gptq:\n8",
+    "text_sha256": "a023b300e27b09bc4271094717cd8c8e57d5e4d1ab57273631a5be348345cd80",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          73.15,
+          88.43,
+          288.85,
+          108.15
+        ],
+        "rows": [
+          [
+            "LLaMA3.1-8B",
+            "SLEB (Song et al., 2024)\nOurs",
+            "183.6\n44.06"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "experimental_setup",
+    "start_section": "experimental_setup",
+    "end_section": "references",
+    "headings": [
+      {
+        "section": "conclusion",
+        "title": "5 Conclusion",
+        "char_offset": 1863
+      },
+      {
+        "section": "limitations",
+        "title": "Limitations",
+        "char_offset": 2694
+      },
+      {
+        "section": "references",
+        "title": "References",
+        "char_offset": 3177
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "text": "Method MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE A VG\nDense 52.10 34.73 79.42 48.38 60.07 32.09 66.20 69.31 55.29\nLLM-Pruner 50.11 33.57 61.16 37.67 47.37 24.41 43.24 59.19 44.59\nFLAP 49.89 33.91 60.90 37.65 47.54 24.78 43.26 59.19 44.64\nShortened 26.71 25.50 26.26 22.61 25.76 18.89 43.66 52.71 30.26\nShortGPT 50.13 33.97 61.3237.8847.71 24.82 43.66 59.57 44.88\nSLEB 23.76 25.4167.8533.87 48.76 25.46 45.07 58.84 41.13\nOurs (Unified) 51.05 33.9964.0237.88 48.83 26.06 53.12 63.54 47.31\nTable 5: Evaluation of pruning performance in the PD Unified scenario with LLaMA2-13B.\nStrategy MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE A VG\nUnified 51.05 33.99 64.02 37.88 48.83 26.06 53.12 63.54 47.31\nDisaggregation 51.52 35.37 69.78 40.02 53.11 28.44 53.52 64.26 49.50\nTable 6: Performance comparison between PD Unified and PD Disaggregation on LLaMA2-13B.\nMethod PIQA Winog HellaSwag ARC-E ARC-C\nDense 81.88 75.3 64.91 80.51 53.41\nFLAP 77.56 61.08 55.23 70.36 42.37\nOurs 78.45 72.85 57 75.8 46.67\nOurs + Quant 78.21 71.98 56.88 75.21 46.1\nTable 7: Performance of our pruning method with 8-bit\nAWQ quantization on Qwen2.5-32B.\nAccurate post-training quantization for genera-\ntive pre-trained transformers.arXiv preprint\narXiv:2302.06557.\nMark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan,\nHenrique Ponde De Oliveira Pinto, Jared Kaplan,\nHarri Edwards, Yuri Burda, Nicholas Joseph, Greg\nBrockman, and 1 others. 2021. Evaluating large\nlanguage models trained on code.arXiv preprint\narXiv:2107.03374.\nXiaodong Chen, Yuxuan Hu, Jing Zhang, Yanling Wang,\nCuiping Li, and Hong Chen. 2024. Streamlining\nredundant layers to compress large language models.\narXiv preprint arXiv:2403.19135.\nSeonghwan Choi, Beomseok Kang, Dongwon Jo, and\nJae-Joon Kim. 2025. Retrospective sparse attention\nfor efficient long-context generation.arXiv preprint\narXiv:2508.09001.\nChristopher Clark, Kenton Lee, Ming-Wei Chang,\nTom Kwiatkowski, Michael Collins, and Kristina\nToutanova. 2019. Boolq: Exploring the surprising\ndifficulty of natural yes/no questions.arXiv preprint\narXiv:1905.10044.\nPeter Clark, Isaac Cowhey, Oren Etzioni, Tushar Khot,\nAshish Sabharwal, Carissa Schoenick, and Oyvind\nTafjord. 2018. Think you have solved question an-\nswering? try arc, the ai2 reasoning challenge.arXiv\npreprint arXiv:1803.05457.\nG. Ding and 1 others. 2022. Efficient fine-tuning for\nresource-constrained systems.Proceedings of the\nMachine Learning Conference.\nXianzhe Dong, Tongxuan Liu, Yuting Zeng, Liangyu\nLiu, Yang Liu, Siyu Wu, Yu Wu, Hailong Yang,\nKe Zhang, and Jing Li. 2025. Hydrainfer: Hybrid dis-\naggregated scheduling for multimodal large language\nmodel serving.arXiv preprint arXiv:2505.12658.\nJianping Gou, Baosheng Yu, Stephen J Maybank, and\nDacheng Tao. 2021. Knowledge distillation: A\nsurvey.International journal of computer vision,\n129(6):1789–1819.\nAaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri,\nAbhinav Pandey, Abhishek Kadian, Ahmad Al-\nDahle, Aiesha Letman, Akhil Mathur, Alan Schelten,\nAlex Vaughan, and 1 others. 2024. The llama 3 herd\nof models.arXiv preprint arXiv:2407.21783.\nDan Hendrycks, Collin Burns, Steven Basart, Andy Zou,\nMantas Mazeika, Dawn Song, and Jacob Steinhardt.\n2020. Measuring massive multitask language under-\nstanding.arXiv preprint arXiv:2009.03300.\nGeoffrey Hinton, Oriol Vinyals, and Jeff Dean. 2015.\nDistilling the knowledge in a neural network.arXiv\npreprint arXiv:1503.02531.\nCunchen Hu, Heyang Huang, Junhao Hu, Jiang Xu,\nXusheng Chen, Tao Xie, Chenxi Wang, Sa Wang,\nYungang Bao, Ninghui Sun, and 1 others. 2024a.\nMemserve: Context caching for disaggregated llm\nserving with elastic memory pool.arXiv preprint\narXiv:2406.17565.\nCunchen Hu, Heyang Huang, Liangliang Xu, Xusheng\nChen, Jiang Xu, Shuang Chen, Hao Feng, Chenxi\nWang, Sa Wang, Yungang Bao, and 1 others. 2024b.\nInference without interference: Disaggregate llm in-\nference for mixed downstream workloads.arXiv\npreprint arXiv:2401.11181.\n9",
+    "text_sha256": "6e0311f8f754f4a15fcb505a585f1f2e2a6ac067cfba1b299af3094b2c85247b",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          72.3,
+          74.64,
+          523.17,
+          89.32
+        ],
+        "rows": [
+          [
+            "Method",
+            "MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE",
+            "AVG"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          72.3,
+          92.54,
+          523.17,
+          182.94
+        ],
+        "rows": [
+          [
+            "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs (Unified)",
+            "52.10 34.73 79.42 48.38 60.07 32.09 66.20 69.31\n50.11 33.57 61.16 37.67 47.37 24.41 43.24 59.19\n49.89 33.91 60.90 37.65 47.54 24.78 43.26 59.19\n26.71 25.50 26.26 22.61 25.76 18.89 43.66 52.71\n50.13 33.97 61.32 37.88 47.71 24.82 43.66 59.57\n23.76 25.41 67.85 33.87 48.76 25.46 45.07 58.84\n51.05 33.99 64.02 37.88 48.83 26.06 53.12 63.54",
+            "55.29\n44.59\n44.64\n30.26\n44.88\n41.13\n47.31"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          72.3,
+          220.94,
+          523.17,
+          235.38
+        ],
+        "rows": [
+          [
+            "Strategy",
+            "MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE",
+            "AVG"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-4",
+        "bbox": [
+          72.3,
+          238.55,
+          523.17,
+          265.53
+        ],
+        "rows": [
+          [
+            "Unified\nDisaggregation",
+            "51.05 33.99 64.02 37.88 48.83 26.06 53.12 63.54\n51.52 35.37 69.78 40.02 53.11 28.44 53.52 64.26",
+            "47.31\n49.50"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-5",
+        "bbox": [
+          72.3,
+          308.07,
+          286.96,
+          363.1
+        ],
+        "rows": [
+          [
+            "Method",
+            "PIQA Winog HellaSwag ARC-E ARC-C"
+          ],
+          [
+            "Dense\nFLAP\nOurs\nOurs + Quant",
+            "81.88 75.3 64.91 80.51 53.41\n77.56 61.08 55.23 70.36 42.37\n78.45 72.85 57 75.8 46.67\n78.21 71.98 56.88 75.21 46.1"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 10,
+    "text": "Bo-Kyeong Kim, Geonmin Kim, Tae-Ho Kim, Thibault\nCastells, Shinkook Choi, Junho Shin, and Hyoung-\nKyu Song. 2024. Shortened llama: A simple depth\npruning for large language models.arXiv preprint\narXiv:2402.02834, 11.\nC. Li and 1 others. 2023a. Fine-tuning techniques for\nefficient model adaptation.AI Research Journal.\nHaonan Li, Yixuan Zhang, Fajri Koto, Yifei Yang, Hai\nZhao, Yeyun Gong, Nan Duan, and Timothy Bald-\nwin. 2023b. Cmmlu: Measuring massive multitask\nlanguage understanding in chinese.arXiv preprint\narXiv:2306.09212.\nYong Li, Wei Du, Liquan Han, Zhenjian Zhang,\nand Tongtong Liu. 2023c. A communication-\nefficient, privacy-preserving federated learning algo-\nrithm based on two-stage gradient pruning and differ-\nentiated differential privacy.Sensors, 23(23):9305.\nYunkai Liang, Zhangyu Chen, Pengfei Zuo, Zhi Zhou,\nXu Chen, and Zhou Yu. 2025. Injecting adrenaline\ninto llm serving: Boosting resource utilization and\nthroughput via attention disaggregation.arXiv\npreprint arXiv:2503.20552.\nJi Lin, Jiaming Tang, Haotian Tang, Shang Yang, Wei-\nMing Chen, Wei-Chen Wang, Guangxuan Xiao,\nXingyu Dang, Chuang Gan, and Song Han. 2024.\nAwq: Activation-aware weight quantization for on-\ndevice llm compression and acceleration.Proceed-\nings of machine learning and systems, 6:87–100.\nZhenhua Liu, Yunhe Wang, Kai Han, Wei Zhang, Siwei\nMa, and Wen Gao. 2021. Post-training quantization\nfor vision transformer.Advances in Neural Informa-\ntion Processing Systems, 34:28092–28103.\nLingkun Long, Rubing Yang, Yushi Huang, Desheng\nHui, Ao Zhou, and Jianlei Yang. 2025. Sliminfer:\nAccelerating long-context llm inference via dynamic\ntoken pruning.arXiv preprint arXiv:2508.06447.\nXinyin Ma, Gongfan Fang, and Xinchao Wang. 2023.\nLlm-pruner: On the structural pruning of large lan-\nguage models.Advances in neural information pro-\ncessing systems, 36:21702–21720.\nXin Men, Mingyu Xu, Qingyu Zhang, Bingning Wang,\nHongyu Lin, Yaojie Lu, Xianpei Han, and Weipeng\nChen. 2024. Shortgpt: Layers in large language\nmodels are more redundant than you expect.arXiv\npreprint arXiv:2403.03853.\nSaurav Muralidharan, Sharath Turuvekere Sreenivas,\nRaviraj Joshi, Marcin Chochowski, Mostofa Patwary,\nMohammad Shoeybi, Bryan Catanzaro, Jan Kautz,\nand Pavlo Molchanov. 2024. Compact language mod-\nels via pruning and knowledge distillation.Advances\nin Neural Information Processing Systems, 37:41076–\n41102.\nAdam Paszke, Sam Gross, Francisco Massa, Adam\nLerer, James Bradbury, Gregory Chanan, Trevor\nKilleen, Zeming Lin, Natalia Gimelshein, Luca\nAntiga, and 1 others. 2019. Pytorch: An impera-\ntive style, high-performance deep learning library.\nAdvances in neural information processing systems,\n32.\nPratyush Patel, Esha Choukse, Chaojie Zhang, Aashaka\nShah, Íñigo Goiri, Saeed Maleki, and Ricardo Bian-\nchini. 2024. Splitwise: Efficient generative llm in-\nference using phase splitting. In2024 ACM/IEEE\n51st Annual International Symposium on Computer\nArchitecture (ISCA), pages 118–132. IEEE.\nA. Qin and 1 others. 2023. Advances in state-of-the-\nart natural language processing.Journal of NLP\nResearch.\nRuoyu Qin, Zheming Li, Weiran He, Mingxing Zhang,\nYongwei Wu, Weimin Zheng, and Xinran Xu.\n2024. Mooncake: A kvcache-centric disaggre-\ngated architecture for llm serving.arXiv preprint\narXiv:2407.00079.\nJiwon Song, Kyungseok Oh, Taesu Kim, Hyungjun\nKim, Yulhwa Kim, and Jae-Joon Kim. 2024. Sleb:\nStreamlining llms through redundancy verification\nand elimination of transformer blocks.arXiv preprint\narXiv:2402.09025.\nWeigao Sun, Jiaxi Hu, Yucheng Zhou, Jusen Du, Disen\nLan, Kexin Wang, Tong Zhu, Xiaoye Qu, Yu Zhang,\nXiaoyu Mo, and 1 others. 2025. Speed always wins:\nA survey on efficient architectures for large language\nmodels.arXiv preprint arXiv:2508.09834.\nHugo Touvron, Louis Martin, Kevin Stone, Peter Al-\nbert, Amjad Almahairi, Yasmine Babaei, Nikolay\nBashlykov, Soumya Batra, Prajjwal Bhargava, Shruti\nBhosale, and 1 others. 2023. Llama 2: Open foun-\ndation and fine-tuned chat models.arXiv preprint\narXiv:2307.09288.\nAlex Wang, Yada Pruksachatkun, Nikita Nangia, Aman-\npreet Singh, Julian Michael, Felix Hill, Omer Levy,\nand Samuel Bowman. 2019. Superglue: A stick-\nier benchmark for general-purpose language under-\nstanding systems.Advances in neural information\nprocessing systems, 32.\nAlex Wang, Amanpreet Singh, Julian Michael, Felix\nHill, Omer Levy, and Samuel R Bowman. 2018.\nGlue: A multi-task benchmark and analysis platform\nfor natural language understanding.arXiv preprint\narXiv:1804.07461.\nChao Wang, Pengfei Zuo, Zhangyu Chen, Yunkai Liang,\nZhou Yu, and Ming-Chang Yang. 2025. Prefill-\ndecode aggregation or disaggregation? unifying both\nfor goodput-optimized llm serving.arXiv preprint\narXiv:2508.01989.\nThomas Wolf, Lysandre Debut, Victor Sanh, Julien\nChaumond, Clement Delangue, Anthony Moi, Pier-\nric Cistac, Tim Rault, Rémi Louf, Morgan Funtowicz,\nand 1 others. 2020. Transformers: State-of-the-art\nnatural language processing. InProceedings of the\n2020 conference on empirical methods in natural\n10",
+    "text_sha256": "48db1f6c80b69b1eb10ed327a195087a6eab0c06a8719f38a82148226ffe4625",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 11,
+    "text": "language processing: system demonstrations, pages\n38–45.\nAn Yang, Baosong Yang, Beichen Zhang, Binyuan Hui,\nBo Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu,\nFei Huang, Haoran Wei, and 1 others. 2024a. Qwen2.\n5 technical report.arXiv preprint arXiv:2412.15115.\nYifei Yang, Zouying Cao, and Hai Zhao. 2024b. Laco:\nLarge language model pruning via layer collapse.\narXiv preprint arXiv:2402.11187.\nZhen Yang, Zilun Zhang, Sheng Wang, Jie Li, Meis-\nhan Zhang, Zhiyuan Liu, and Maosong Sun. 2021.\nKnowledge distillation: A survey.arXiv preprint\narXiv:2106.05860.\nRowan Zellers, Ari Holtzman, Yonatan Bisk, Ali\nFarhadi, and Yejin Choi. 2019. Hellaswag: Can a\nmachine really finish your sentence?arXiv preprint\narXiv:1905.07830.\nD. Zhang and 1 others. 2023. Parameter-efficient fine-\ntuning methods for llms.Journal of Machine Learn-\ning Research.\nQifan Zhang, Yunhui Guo, and Yu Xiang. 2024.\nContinual distillation learning: Knowledge distilla-\ntion in prompt-based continual learning.Preprint,\narXiv:2407.13911.\nSusan Zhang, Stephen Roller, Naman Goyal, Mikel\nArtetxe, Moya Chen, Shuohui Chen, Christopher De-\nwan, Mona Diab, Xian Li, Xi Victoria Lin, and 1\nothers. 2022. Opt: Open pre-trained transformer\nlanguage models.arXiv preprint arXiv:2205.01068.\nYinmin Zhong, Shengyu Liu, Junda Chen, Jianbo Hu,\nYibo Zhu, Xuanzhe Liu, Xin Jin, and Hao Zhang.\n2024. {DistServe}: Disaggregating prefill and de-\ncoding for goodput-optimized large language model\nserving. In18th USENIX Symposium on Operat-\ning Systems Design and Implementation (OSDI 24),\npages 193–210.\nJeffrey Zhou, Tianjian Lu, Swaroop Mishra, Sid-\ndhartha Brahma, Sujoy Basu, Yi Luan, Denny Zhou,\nand Le Hou. 2023a. Instruction-following evalu-\nation for large language models.arXiv preprint\narXiv:2311.07911.\nYuxiao Zhou, Zhen Wang, Yujun Li, Sheng\nWang, Zhiyuan Liu, and Maosong Sun. 2023b.\nSmoothquant: Accurate and efficient post-training\nquantization for large language models.arXiv\npreprint arXiv:2302.06557.\nYuxiao Zhou, Zhen Wang, Yujun Li, Sheng Wang,\nZhiyuan Liu, and Maosong Sun. 2024. Framequant:\nFlexible low-bit quantization for transformers.arXiv\npreprint arXiv:2402.06557.\nB. Zhu and 1 others. 2023. Large language models:\nProgress and applications.Advances in NLP.\n11",
+    "text_sha256": "6ffa2506913b6a3269f427aa41159c7e0ef079474bb28c17c549db9bd54c69db",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 12,
+    "text": "A Detailed Derivation of the Theoretical\nFormula\nDenote by X∈R N×d the input sequence in the\nprefill stage and by xt ∈R 1×d the initial input\nin the decode stage. We denote the perturbations\nof the attention parameters WQ,WK andWV by\n∆WQ, ∆WK and ∆WV , respectively. The query\nvectorq and its perturbation ∆q forxt are as fol-\nlows:\nq=x tWQ,∆q=x t∆WQ (19)\nThe concatenated key and value matrices (K,V) ,\nalong with their perturbations (∆K,∆V) , can be\nrepresented as follows:\nK= [K pre, xtWK], V= [V pre, xtWV ](20)\n∆K= [∆K pre, xt∆WK],∆V= [∆V pre, xt∆WV ] (21)\nHere, Kpre =XW K and ∆K=X∆W K; the\nsame applies to the others. Then, the attention\noutput before (o) and after perturbation (˜o), as\nwell as the resulting error (E), can be expressed as\nfollows:\no=softmax\n\u0010\nqK ⊤\n√\nd\n\u0011\nV(22)\n˜o=softmax\n\u0010\n(q+∆q)(K+∆K) ⊤\n√\nd\n\u0011\n(V+ ∆V) (23)\n˜A=softmax\n\u0010\n(q+∆q)(K+∆K) ⊤\n√\nd\n\u0011\n(24)\n∆A= ˜A−softmax\n\u0010\nqK ⊤\n√\nd\n\u0011\n(25)\nE= ˜o−o= ∆AV+ ˜A∆V(26)\nTo bound the Frobenius norm of the attention out-\nput perturbationE, we apply the triangle inequality\nto separate the contributions from the two terms,\nyielding the following expression:\n∥E∥F≤∥∆AV∥ F +∥ ˜A∆V∥ F (27)\nThen, using the submultiplicativity of matrix\nnorms, we can directly obtain the following\nbounds:\n∥∆AV∥ F≤∥∆A∥ F∥V∥ F (28)\n∥ ˜A∆V∥ F≤∥ ˜A∥2∥∆V∥ F (29)\nBy the Lipschitz continuity of the softmax, the per-\nturbation ∆A can naturally be bounded as follows:\n∥∆A∥F≤L sof tmax\n∥(q+∆q)(K+∆K) ⊤−qK ⊤∥F√\nd (30)\nHere, Lsof tmax is the Lipschitz constant of the\nsoftmax. Upon expanding the product, we can ex-\nplicitly obtain the resulting expression as follows:\n(q+ ∆q)(K+ ∆K) ⊤−qK⊤\n= ∆qK⊤ +q(∆K) ⊤ + (∆q)(∆K)⊤ (31)\nwhere the last term (∆q)(∆K)⊤ is of second or-\nder and can be neglected in a first order analysis.\nApplying the submultiplicativity of the Frobenius\nnorm, we can further obtain the following bounds:\n∥∆qK⊤∥F≤∥∆q∥ 2∥K∥F (32)\n∥q(∆K)⊤∥F≤∥q∥ 2∥∆K∥F (33)\nConsidering all above analysis, we can express the\nFrobenius norm of the errorEas follows:\n∥E∥F≤ Lsof tmax√\nd\n\u0010\n∥∆q∥2∥K∥F +∥q∥ 2\n∥∆K∥F\n\u0011\n∥V∥ F +∥ ˜A∥2∥∆V∥ F\n(34)\nConsidering that∥ ˜A∥2≤1 , we obtain the follow-\ning expression:\n∥E∥F≤ Lsof tmax√\nd\n\u0010\n∥∆q∥2∥K∥F +∥q∥ 2\n∥∆K∥F\n\u0011\n·∥V∥ F +∥∆V∥ F\n(35)\nBuilding on the above formula, and to more clearly\nillustrate the effect of pruning, we can express the\nerrorE at stept using an abstract error functionG\nas follows:\nE=G(x t,Y pre,∆)(36)\nwhereYpre denotes the set of all results (including\nboth intermediate and final outputs) produced in\nthe previous step that can be reused in the current\nstep, and∆represents the set of perturbations.\nB Frobenius Norm of∆Avia Softmax\nLipschitz Continuity\nFor any a,b∈R n, the softmax function is Lip-\nschitz continuous with respect to the Frobenius\nnorm, which can be expressed as follows:\n∥softmax(a)−softmax(b)∥ F≤L sof tmax∥a−b∥ F (37)\nHere, Lsof tmax is the Lipschitz constant of the\nsoftmax. Based on the derivations in the main text,\nwe obtain the following expression:\n∆A=softmax\n\u0010\n(q+∆q)(K+∆K) ⊤\n√\nd\n\u0011\n−softmax\n\u0010\nqK ⊤\n√\nd\n\u0011 (38)\n12",
+    "text_sha256": "9b6adcaf1e1f0a247dbe4b146fbb9bdeb6216307e09613cdb5a9c57a6609099f",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [
+      {
+        "text": "q = xtWQ, ∆q = xt∆WQ",
+        "bbox": [
+          119.91,
+          203.84,
+          239.59,
+          215.8
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "K = [Kpre, xtWK], V = [Vpre, xtWV ]",
+        "bbox": [
+          82.42,
+          276.47,
+          260.5,
+          289.07
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∆K = [∆Kpre, xt∆WK], ∆V = [∆Vpre, xt∆WV ] (21)",
+        "bbox": [
+          77.25,
+          302.15,
+          289.86,
+          313.72
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "Here, Kpre = XWK and ∆K = X∆WK; the",
+        "bbox": [
+          70.87,
+          322.46,
+          289.13,
+          335.34
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "o = softmax",
+        "bbox": [
+          125.93,
+          401.63,
+          188.22,
+          412.54
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "˜o = softmax",
+        "bbox": [
+          76.43,
+          433.94,
+          135.6,
+          444.3
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "˜A = softmax",
+        "bbox": [
+          95.13,
+          458.5,
+          160.31,
+          472.17
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∆A = ˜A −softmax",
+        "bbox": [
+          114.48,
+          486.61,
+          210.27,
+          500.28
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "E = ˜o −o = ∆A V + ˜A ∆V",
+        "bbox": [
+          114.61,
+          512.21,
+          242.96,
+          525.88
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥E∥F ≤∥∆A V ∥F + ∥˜A ∆V ∥F",
+        "bbox": [
+          106.93,
+          598.39,
+          251.39,
+          613.74
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥∆A V ∥F ≤∥∆A∥F ∥V ∥F",
+        "bbox": [
+          117.93,
+          678.04,
+          240.39,
+          690.64
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥˜A ∆V ∥F ≤∥˜A∥2 ∥∆V ∥F",
+        "bbox": [
+          119.09,
+          700.85,
+          239.24,
+          716.06
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥∆A∥F ≤Lsoftmax",
+        "bbox": [
+          76.55,
+          764.44,
+          160.21,
+          776.15
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥∆q K⊤∥F ≤∥∆q∥2 ∥K∥F",
+        "bbox": [
+          352.48,
+          220.26,
+          476.39,
+          235.03
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥q(∆K)⊤∥F ≤∥q∥2 ∥∆K∥F",
+        "bbox": [
+          349.15,
+          241.13,
+          479.73,
+          255.89
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥E∥F ≤Lsoftmax",
+        "bbox": [
+          313.42,
+          291.06,
+          395.98,
+          311.1
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "Considering that ∥˜A∥2 ≤1, we obtain the follow-",
+        "bbox": [
+          306.14,
+          348.0,
+          526.23,
+          363.16
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥E∥F ≤Lsoftmax",
+        "bbox": [
+          313.42,
+          382.44,
+          395.98,
+          402.47
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "E = G(xt, Ypre, ∆)",
+        "bbox": [
+          371.3,
+          501.0,
+          459.25,
+          512.9
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∥softmax(a) −softmax(b)∥F ≤Lsoftmax∥a −b∥F (37)",
+        "bbox": [
+          311.73,
+          668.15,
+          525.14,
+          680.39
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "∆A = softmax",
+        "bbox": [
+          326.77,
+          739.08,
+          401.04,
+          749.98
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 13,
+    "text": "By jointly considering Equations 37 and 38, we\ncan derive the following expression:\n∥∆A∥F≤L sof tmax\n∥(q+∆q)(K+∆K) ⊤−qK ⊤∥F√\nd (39)\nC Experimental Setup\nBaselinesWe conduct extensive comparative eval-\nuations against other pruning algorithms. LLM-\nPruner (Ma et al., 2023) adopts structural prun-\ning that selectively removes non-critical coupled\nstructures based on gradient information. FLAP\n(An et al., 2024) is a structured pruning frame-\nwork that reduces storage by leveraging fluctua-\ntion based metrics and adaptive model compres-\nsion. Shortened LLaMA (Kim et al., 2024) se-\nlectively removes less important blocks based on\nblock level importance scores, thereby accelerating\nmodel inference without significantly impacting\nperformance. ShortGPT (Men et al., 2024) defines\na BI metric to measure the importance of each layer\nwithin the model and directly removes those layers.\nSLEB (Song et al., 2024) employs a logit based ap-\nproach to identify unnecessary transformer layers\nand updates the importance scores after each layer\nremoval. SliceGPT (Ashkboos et al., 2024) is a\npost-training sparsification scheme which replaces\neach weight matrix with a smaller matrix. Through\nthese comprehensive comparisons, we thoroughly\nassess the strengths of our approach.\nImplementation DetailsOur experiments are\nconducted using the PyTorch framework (Paszke\net al., 2019) and the Hugging Face Transformers\nlibrary (Wolf et al., 2020). We use two nodes\nwithin the same local area network, with each node\nequipped with one NVIDIA H100 80GB GPU. We\nfollow the respective compression strategies for\nprefill and decode as mentioned above. We set\nthe parameter dT to 0.95 by default. During the\niterative block selection process, we initialize the\nannealing temperatureT0 at 15 to ensure sufficient\nexploration in the early stages. The temperature\nis then gradually reduced with a decay coefficient\nα= 0.85 until it reaches the minimum temperature\nTmin = 0.05. When distilling two blocks, we use\nthe weights of the block with low cosine similarity\nas the initial weights. We distill the block using the\nPIQA and MMLU as the training set. The train-\ning is performed using the Adam optimizer with\na learning rate of 1×10 −5, a batch size of 64 for\n10 epochs. When sparsifying the KV Cache, we\nset the pruning ratio p= 0.3 , with an attention\nscore thresholdγ= 0.75 to preserve the most se-\nmantically important key value pairs. We set the\nperformance improvement threshold mentioned in\nSection 3.3 to 3%. We conduct experiments with\nvarious hyperparameters to demonstrate the stabil-\nity of our method. By default, we use 256 ran-\ndomly sampled examples from PIQA and MMLU\nas the calibration set. In the zero shot performance\ncomparisons, we maintain consistent experimental\nsettings, including the calibration datasets.\nD Experiments on Strong Scalability and\nRobust Generality (Larger Model,\nMore Datasets and Additional Metric)\nWe further evaluate our method on the larger\nQwen2.5-32B model with a pruning ratio of 25%.\nAs reported in Table 8, our approach consistently\nachieves strong performance. Additionally, we re-\nport perplexity on WikiText2 using LLaMA2-13B\nand OPT-6.7B with pruning ratios of 24.37% and\n20%, respectively, where our method achieves the\nbest results (Table 9). Beyond these evaluations,\nwe assess LLaMA3.1-8B-Instruct (Grattafiori et al.,\n2024) under a pruning ratio of 15.3% on two fur-\nther benchmarks: the instruction-following dataset\nIFEval (Zhou et al., 2023a) and the code genera-\ntion dataset HumanEval (Chen et al., 2021). As\nshown in Table 10, our method maintains strong\nperformance across these tasks.\nMethod PIQA Winog HSwag ARC-E ARC-C\nDense 81.88 75.3 64.91 80.51 53.41\nLLM-Pruner 78.02 61.64 55.02 70.24 42.24\nFLAP 77.56 61.08 55.23 70.36 42.37\nShortened 76.55 61.81 55.39 71.31 41.7\nShortGPT 76.66 72.53 52.4 72.85 42.24\nSLEB 72.28 65.88 56.32 69.22 38.61\nOurs 78.45 72.85 57 75.8 46.67\nTable 8: Performance comparison of various methods\non Qwen2.5-32B.\nE Ablation Study\nWe conduct comprehensive ablation studies to eval-\nuate the individual contributions of the key compo-\nnent of our framework: the iterative block removal\nstrategy. We conduct experiments on LLaMA3.1-\n8B, involving the pruning of 9.38% blocks. The\nother hyperparameter settings used in these exper-\niments are in the implementation details above.\nBlock pruning performance, as shown in Figure\n2, is significantly enhanced by the iterative opti-\n13",
+    "text_sha256": "259f7b08557e91c21fd7e638fd12acae00153581dd93bae7f60d16ff1117c0a7",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          308.44,
+          483.9,
+          522.11,
+          572.74
+        ],
+        "rows": [
+          [
+            "Method",
+            "PIQA Winog HSwag ARC-E ARC-C"
+          ],
+          [
+            "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+            "81.88 75.3 64.91 80.51 53.41\n78.02 61.64 55.02 70.24 42.24\n77.56 61.08 55.23 70.36 42.37\n76.55 61.81 55.39 71.31 41.7\n76.66 72.53 52.4 72.85 42.24\n72.28 65.88 56.32 69.22 38.61\n78.45 72.85 57 75.8 46.67"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [
+      {
+        "text": "∥∆A∥F ≤Lsoftmax",
+        "bbox": [
+          77.4,
+          115.56,
+          161.05,
+          127.28
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "α = 0.85 until it reaches the minimum temperature",
+        "bbox": [
+          70.87,
+          655.92,
+          289.14,
+          667.05
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "Tmin = 0.05. When distilling two blocks, we use",
+        "bbox": [
+          70.87,
+          669.46,
+          289.14,
+          682.01
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "set the pruning ratio p = 0.3, with an attention",
+        "bbox": [
+          70.87,
+          764.31,
+          289.13,
+          775.5
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "score threshold γ = 0.75 to preserve the most se-",
+        "bbox": [
+          306.14,
+          73.3,
+          526.22,
+          84.49
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 14,
+    "text": "Model Dense LLM-Pruner FLAP Shortened ShortGPT SLEB Ours\nOPT-6.7B 10.86 11.92 11.68 12.51 13.68 12.9411.28\nLLaMA2-13B 4.88 8.16 9.73 10.81 9.25 8.967.38\nTable 9: Evaluation of perplexity on WikiText2 for LLaMA2-13B and OPT-6.7B with pruning.\nBenchmark Dense LLM-Pruner FLAP Shortened ShortGPT SLEB Ours\nIFEval 76.36 65.41 65.45 62.60 65.42 56.4873.48\nHumanEval 68.95 59.36 60.26 57.27 60.44 51.3966.99\nTable 10: Evaluation of LLaMA3.1-8B-Instruct under 15.3% pruning on IFEval and HumanEval.\nmization mechanism, which consistently outper-\nforms its non iterative counterpart. This advantage\nstems from the iterative strategy’s ability to more\neffectively navigate the search space, ultimately\nidentifying superior block combinations that yield\nnotable improvements in performance.\nPerformance Comparison Across Different Benchmark Tasks\n0.0\n10.0\n20.0\n30.0\n40.0\n50.0\n60.0\n70.0\n80.0\nPerformance Score\nBenchmark T ask\n45.39 47.18\nARC-C\n71.27 72.53\nWinogrande\n42.25\n60.56\nWNLI\n63.54\n71.12\nRTE\n41.07\n73.21\nCB\nw/o Iter\nw/ Iter\nFigure 2: Ablation study on the effectiveness of the iter-\native block removal strategy: performance comparison\nwith and without the strategy.\nF Results of Different Pruning Ratios\nFigure 3 illustrates the impact of different prun-\ning ratios on LLaMA3.1-8B performance. As the\npruning ratio increases, the accuracy of most tasks\nremains relatively stable despite a general down-\nward trend, indicating the strong robustness of our\nmethod. Block pruning accuracy remains stable\neven when the number of pruned blocks increases,\nespecially on tasks such as PIQA, Winogrande and\nRTE. This phenomenon validates the effectiveness\nof our redundancy aware iterative block pruning\nstrategy, which selectively removes non-critical\nblocks while preserving the model’s core functional\ncapabilities.\nFigure 3: Results of model performance under different\npruning blocks on LLaMA3.1-8B.\nG Hyperparameter Impact Analysis\nWe evaluate the impact of key hyperparameters\nin our iterative block removal strategy, including\nthe initial temperature T , temperature decay co-\nefficientα, and minimum temperature Tmin. We\nprune 9.38% blocks on LLaMA3.1-8B. As shown\nin Table 11, increasingT andα from the first con-\nfiguration to the second configuration improves the\naverage accuracy from 63.49 to 63.56. This indi-\ncates that a slower cooling schedule helps more\neffectively explore the solution space and avoid\nconverging to suboptimal local minima. Impor-\ntantly, further increasing the parameter values in\nthe third configuration does not change the perfor-\nmance across all benchmarks, suggesting that the\npruning process has converged. This convergence\nimplies that the algorithm has identified a near op-\ntimal block removal combination, beyond which\nadditional iterations or a larger search space will\nnot yield further gains. Overall, all three configura-\ntions are able to find a high quality solution space.\n14",
+    "text_sha256": "a6735813f562a2964254d6a5c65c85460c3a693a4c2c982819e339d78a8fa6bd",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          84.62,
+          94.18,
+          510.66,
+          123.68
+        ],
+        "rows": [
+          [
+            "OPT-6.7B\nLLaMA2-13B",
+            "10.86 11.92 11.68 12.51 13.68 12.94 11.28\n4.88 8.16 9.73 10.81 9.25 8.96 7.38"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          88.86,
+          181.3,
+          506.42,
+          210.8
+        ],
+        "rows": [
+          [
+            "IFEval\nHumanEval",
+            "76.36 65.41 65.45 62.60 65.42 56.48 73.48\n68.95 59.36 60.26 57.27 60.44 51.39 66.99"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          92.69,
+          390.44,
+          260.48,
+          460.79
+        ],
+        "rows": [
+          [
+            "",
+            null,
+            null,
+            null,
+            "",
+            "",
+            "60.56 63.54",
+            null,
+            null,
+            null,
+            null,
+            "",
+            "",
+            null,
+            ""
+          ],
+          [
+            "45.39 47.18",
+            null,
+            null,
+            null,
+            "",
+            "",
+            "",
+            null,
+            "",
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "42.25",
+            null,
+            "",
+            "",
+            "",
+            "",
+            "41.07",
+            null,
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
+        ],
+        "row_count": 7,
+        "column_count": 15,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [
+      {
+        "region_id": "image-1",
+        "bbox": [
+          306.14,
+          253.08,
+          524.41,
+          420.14
+        ],
+        "width": 12864,
+        "height": 9846,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      }
+    ],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 15,
+    "text": "T α T min ARC-E ARC-C PIQA Winog BoolQ MathQA WNLI SST-2 RTE CB MMLU CMMLU HSwag A VG\n5 0.70 0.10 76.77 47.53 79.11 73.09 80.24 33.84 59.15 63.53 67.51 75.00 62.79 49.97 56.78 63.49\n10 0.80 0.10 78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33 63.56\n15 0.85 0.05 78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33 63.56\nTable 11: Performance comparison across three key hyperparameter settings on the LLaMA3.1-8B. Under all these\ndifferent parameter configurations, the model maintains a high level of performance.\ndT ARC-E ARC-C PIQA Winog BoolQ MathQA WNLI SST-2 RTE CB MMLU CMMLU HSwag A VG\n0.97 77.44 47.18 78.40 72.53 76.82 36.82 60.56 59.75 71.12 73.21 58.74 48.39 55.38 62.80\n0.96 78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33 63.56\n0.95 77.65 47.18 78.40 73.40 79.57 36.21 64.79 69.72 73.29 76.79 60.76 43.37 57.22 64.49\n0.94 76.77 47.53 79.11 73.09 80.24 33.84 59.15 63.53 67.51 75.00 62.79 49.97 56.78 63.49\nTable 12: Evaluation of the influence of the block distillation thresholdd T on the LLaMA3.1-8B.\nAdditionally, we further assess the threshold pa-\nrameterdT for constructing the distillation set. We\nprune 9.38% blocks of the LLaMA3.1-8B model.\nAs shown in Table 12, the experimental results in-\ndicate that different threshold parameters can all\nachieve relatively optimal outcomes, consistently\ndemonstrating good performance.\nH Analysis of Iterative Block Removal\nSolutions\nTo validate the effectiveness of our iterative block\nremoval method, we compare its solutions with\nthe global optimum obtained via exhaustive search.\nIt is important to note that exhaustive search re-\nquires evaluating all possible block combinations,\nwhich is practically intractable. To make this com-\nparison feasible, we select all elements from the\ndistillation set and the top five elements from the\npruning set, and treat the optimal solution among\nall their combinations as the global optimum. Even\nso, solving it still demands substantial computa-\ntional time. We apply our method to prune 13.6%\nof the parameters in LLaMA3.1-8B and evaluate it\nacross various benchmarks. As shown in Table 13,\nour approach achieves results consistent with the\nglobal optimum. This demonstrates that our it-\nerative method efficiently finds superior pruning\nsolutions.\nMethod PIQA Winog HSwag ARC-E ARC-C\nGlobal Optimum 76.99 73.56 53.80 73.15 43.86\nOurs 76.99 73.56 53.80 73.15 43.86\nTable 13: Performance of iterative block removal com-\npared to the global optimum on LLaMA3.1-8B.\nI Analysis of Using Cosine Similarity\nBesides cosine similarity, dot product and Eu-\nclidean distance are also commonly used, but they\nare sensitive to vector magnitude. Previous work\n(Chen et al., 2024) has shown that in Transformers,\nhidden states tend to expand with depth, leading\ndeeper layers to exhibit higher dot-product simi-\nlarity, while shallower layers maintain smaller Eu-\nclidean distances. To avoid this bias, we use cosine\nsimilarity, which is insensitive to magnitude. In\naddition, we measure the L2 norms of the hidden\nstates at each layer of Qwen2.5-7B. As shown in\nTable 15, the norm magnitude exhibits a clear up-\nward trend with increasing depth, which highlights\nthe inherent bias of other similarity metrics that\nare sensitive to vector magnitude. Furthermore, we\nevaluate the performance of Qwen2.5-7B and OPT-\n13B under 15% parameter pruning with different\nsimilarity metrics. As shown in Table 14, cosine\nsimilarity consistently outperforms the other met-\nrics.\nMetric PIQA Winog HSwag\nEuclidean distance 75.70 52.20 50.51\nDot product 75.87 55.88 47.62\nCosine similarity 77.04 56.99 51.19\nTable 14: Performance comparison on Qwen2.5-7B\nusing different similarity metrics.\nJ Robustness on Different Calibration\nSets\nTo evaluate the stability of our proposed block prun-\ning strategy, we systematically analyze the consis-\ntency of results across different calibration sets\n15",
+    "text_sha256": "258a85429da2889f4e072e2c8d7801d7c1c0c671ebedd6e3e274af565040f8b7",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          72.32,
+          71.19,
+          523.6,
+          119.8
+        ],
+        "rows": [
+          [
+            "T α Tmin",
+            "ARC-E ARC-C PIQA Winog BoolQ MathQA WNLI SST-2 RTE CB MMLU CMMLU HSwag",
+            "AVG"
+          ],
+          [
+            "5 0.70 0.10\n10 0.80 0.10\n15 0.85 0.05",
+            "76.77 47.53 79.11 73.09 80.24 33.84 59.15 63.53 67.51 75.00 62.79 49.97 56.78\n78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33\n78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33",
+            "63.49\n63.56\n63.56"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          72.32,
+          166.29,
+          523.6,
+          229.17
+        ],
+        "rows": [
+          [
+            "d\nT",
+            "ARC-E ARC-C PIQA Winog BoolQ MathQA WNLI SST-2 RTE CB MMLU CMMLU HSwag",
+            "AVG"
+          ],
+          [
+            "0.97\n0.96\n0.95\n0.94",
+            "77.44 47.18 78.40 72.53 76.82 36.82 60.56 59.75 71.12 73.21 58.74 48.39 55.38\n78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33\n77.65 47.18 78.40 73.40 79.57 36.21 64.79 69.72 73.29 76.79 60.76 43.37 57.22\n76.77 47.53 79.11 73.09 80.24 33.84 59.15 63.53 67.51 75.00 62.79 49.97 56.78",
+            "62.80\n63.56\n64.49\n63.49"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          309.07,
+          596.74,
+          523.6,
+          638.5
+        ],
+        "rows": [
+          [
+            "Euclidean distance\nDot product\nCosine similarity",
+            "75.70 52.20 50.51\n75.87 55.88 47.62\n77.04 56.99 51.19"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-4",
+        "bbox": [
+          72.32,
+          684.91,
+          288.85,
+          721.67
+        ],
+        "rows": [
+          [
+            "Method",
+            "PIQA Winog HSwag ARC-E ARC-C"
+          ],
+          [
+            "Global Optimum\nOurs",
+            "76.99 73.56 53.80 73.15 43.86\n76.99 73.56 53.80 73.15 43.86"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 16,
+    "text": "Layer 0 1 2 3 4 5···21 22 23 24 25 26 27\nNorm 14 19 25 116 141 146···264 300 350 408 470 474 620\nTable 15: The norms of the hidden states output at each layer of Qwen2.5-7B. The first row represents the layer IDs,\nand the second row represents the corresponding norms.\nCalibration Set Size 15.63% Blocks Removal 9.38% Blocks Removal\nPIQA\n256\n24, 25, 26, [22, 23], [27, 28] 25, 26, [27, 28]512\n1024\nWikiText-2\n256\n24, 25, 26, [22, 23], [27, 28] 25, 26, [27, 28]512\n1024\nTable 16: Results comparison across different calibration sets. Under the LLaMA3.1-8B model, we report\nthe selected block indices for removal across different calibration datasets and various sizes under two pruning\nconfigurations: removing 15.63% blocks and removing 9.38% blocks. The indices within square brackets denote\nthe distilled blocks.\nand sizes. Our analysis distinguishes between two\ntypes of removal operations: direct block pruning\nand block distillation. Direct block pruning refers\nto the removal of blocks, while block distillation\ninvolves merging blocks instead of removing them.\nAs shown in Table 16, the experimental results\ndemonstrate significant stability in the selection of\nremoved blocks across all experimental conditions.\nThis consistency strongly indicates that our pruning\ndecisions are driven by the inherent architectural\nredundancy within the model itself, exhibiting ro-\nbustness across different datasets.\nK More Details on Prefill and Decode\nRemoval Schemes\nOur approach first determines the optimal removal\nstrategy and then derives separate removal schemes\nfor the prefill and decode stages. Specifically, the\nprefill scheme is designed as a subset of the decode\nscheme, ensuring that every retained block in the\ndecode node can directly reuse the corresponding\nKV Cache from the prefill node. In contrast, if\nseparate removal schemes are determined for the\nprefill and decode stages at the initial stage, without\nany subset relationship, it is likely that some blocks\nretained in the decode node would have no corre-\nsponding KV Cache in the prefill node, hindering\ncache reuse and reducing system efficiency.\nL Comparison with Work of Similar\nNames\nWe compare our approach with another method\n(Muralidharan et al., 2024) that bears a similar\nname, as both involve concepts such as iteration\nand distillation. In their work, iteration refers to\nrepeatedly performing pruning to gradually reduce\nthe model size, whereas in our approach, iteration\nis used to search for the optimal pruning configu-\nration, and the two notions are not directly related.\nSimilarly, their distillation is applied after pruning\nto the entire model in order to restore performance,\nwhile our distillation occurs during the pruning\nprocess itself, serving as a mechanism for block\nremoval.\nM Case Study\nTo qualitatively assess the impact of pruning on\ngeneration quality, we compared the outputs of\nthe original model and the pruned model for sev-\neral representative prompts, as shown in Table\n17. We prune 9.38% blocks on LLaMA3.1-8B.\nDespite a substantial reduction in model size,\nthe pruned model consistently generates coherent,\ninformation-rich, and well-structured responses, re-\ntaining the core semantics of the original output.\nThese examples confirm that our pruning strategy\nmaintains strong generation capabilities and fac-\ntual consistency even under significant structural\ncompression.\n16",
+    "text_sha256": "9d910a9e1a5282012b9cdc541139418a12ccd5f1fb373b63520c54377ced6406",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          88.44,
+          74.93,
+          506.84,
+          90.72
+        ],
+        "rows": [
+          [
+            "Layer",
+            "0 1 2 3 4 5 · · · 21 22 23 24 25 26 27"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          111.32,
+          160.46,
+          483.95,
+          176.24
+        ],
+        "rows": [
+          [
+            "Calibration Set",
+            "Size",
+            "15.63% Blocks Removal 9.38% Blocks Removal"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          111.32,
+          179.71,
+          483.95,
+          222.59
+        ],
+        "rows": [
+          [
+            "PIQA",
+            "256\n512\n1024",
+            "24, 25, 26, [22, 23], [27, 28] 25, 26, [27, 28]"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-4",
+        "bbox": [
+          111.32,
+          226.05,
+          483.95,
+          269.1
+        ],
+        "rows": [
+          [
+            "WikiText-2",
+            "256\n512\n1024",
+            "24, 25, 26, [22, 23], [27, 28] 25, 26, [27, 28]"
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 17,
+    "text": "Original Model Pruned Model\nExplain what artificial intelligence is. Artificial in-\ntelligence (AI) is the simulation of human intelli-\ngence processes by machines, especially computer\nsystems. These processes include learning (the acqui-\nsition of information and rules for using the informa-\ntion), reasoning (using the rules to reach approximate\nor definite conclusions), and self-correction. Particu-\nlar applications of AI ...\nExplain what artificial intelligence is. Artificial in-\ntelligence, or AI, is a field of computer science that\ndeals with the creation of machines that can perform\ntasks that normally require human intelligence. This\nincludes things such as understanding natural lan-\nguage, recognizing objects in images, and making\ndecisions based on complex data. While AI has been\naround for decades, recent ...\nProvide some tips for learning a new language. 1.\nSet realistic goals: Start by setting realistic goals\nfor yourself, such as learning a few basic phrases\nor mastering a specific skill. 2. Practice regularly:\nConsistency is key when it comes to learning a new\nlanguage. 3. Find a language partner: Finding a\nlanguage partner can be a great way to practice and\nimprove your language skills. 4. Use technology...\nProvide some tips for learning a new language.\nHere are some tips for learning a new language: 1.\nStart by learning the basics of the language, such as\nthe alphabet, common words and phrases, and basic\ngrammar rules. 2. Find a language learning app or\nprogram that suits your learning style and goals. 3.\nPractice speaking and listening to the language as\nmuch as possible. 4. Practice ...\nExplain how a car engine works. A car engine is a\nmachine that converts the chemical energy stored in\ngasoline into mechanical energy that can be used to\nmove the car. The engine consists of several parts\nthat work together to produce this energy. The first\npart of the engine is the combustion chamber. This\nis where the gasoline is mixed with air and ignited\nto create an explosion. The explosion pushes down\non a piston, which is connected to a crankshaft. The\ncrankshaft is what turns wheels ...\nExplain how a car engine works. A car engine works\nby converting chemical energy stored in fuel into\nmechanical energy that drives the car. The process of\nconverting chemical energy into mechanical energy\nis known as combustion. In a car engine, combustion\noccurs in the combustion chamber, which is located\nin the center of the engine. The combustion chamber\nis connected to the intake manifold, which is where\nthe fuel and air mixture enters the engine. The intake\nmanifold ...\nTable 17: Qualitative examples comparing outputs from the original and the pruned versions of the LLaMA3.1-8B\nmodels configured as described above. Each example illustrates the model’s response to the same input prompt,\nwith the underlined text indicating the user’s question.\n17",
+    "text_sha256": "8fa885b49fc820ade095b3c58e8ca76bdb7c0cf6c098c3138c96f6f71471b7e3",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          73.43,
+          237.9,
+          521.87,
+          341.72
+        ],
+        "rows": [
+          [
+            "Explain what artifciial intelligence is. Artificial in-\ntelligence (AI) is the simulation of human intelli-\ngence processes by machines, especially computer\nsystems. These processes include learning (the acqui-\nsition of information and rules for using the informa-\ntion), reasoning (using the rules to reach approximate\nor definite conclusions), and self-correction. Particu-\nlar applications of AI ...",
+            "Explain what artificial intelligence is. Artificial in-\ntelligence, or AI, is a field of computer science that\ndeals with the creation of machines that can perform\ntasks that normally require human intelligence. This\nincludes things such as understanding natural lan-\nguage, recognizing objects in images, and making\ndecisions based on complex data. While AI has been\naround for decades, recent ..."
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          73.43,
+          344.97,
+          521.87,
+          448.79
+        ],
+        "rows": [
+          [
+            "Provide some tips for learning a new language. 1.\nSet realistic goals: Start by setting realistic goals\nfor yourself, such as learning a few basic phrases\nor mastering a specific skill. 2. Practice regularly:\nConsistency is key when it comes to learning a new\nlanguage. 3. Find a language partner: Finding a\nlanguage partner can be a great way to practice and\nimprove your language skills. 4. Use technology...",
+            "Provide some tips for learning a new language.\nHere are some tips for learning a new language: 1.\nStart by learning the basics of the language, such as\nthe alphabet, common words and phrases, and basic\ngrammar rules. 2. Find a language learning app or\nprogram that suits your learning style and goals. 3.\nPractice speaking and listening to the language as\nmuch as possible. 4. Practice ..."
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          73.43,
+          452.04,
+          521.87,
+          581.45
+        ],
+        "rows": [
+          [
+            "Explain how a car engine works. A car engine is a\nmachine that converts the chemical energy stored in\ngasoline into mechanical energy that can be used to\nmove the car. The engine consists of several parts\nthat work together to produce this energy. The first\npart of the engine is the combustion chamber. This\nis where the gasoline is mixed with air and ignited\nto create an explosion. The explosion pushes down\non a piston, which is connected to a crankshaft. The\ncrankshaft is what turns wheels ...",
+            "Explain how a car engine works. A car engine works\nby converting chemical energy stored in fuel into\nmechanical energy that drives the car. The process of\nconverting chemical energy into mechanical energy\nis known as combustion. In a car engine, combustion\noccurs in the combustion chamber, which is located\nin the center of the engine. The combustion chamber\nis connected to the intake manifold, which is where\nthe fuel and air mixture enters the engine. The intake\nmanifold ..."
+          ]
+        ],
+        "row_count": 1,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  }
+]

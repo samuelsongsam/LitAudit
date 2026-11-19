@@ -1,0 +1,2445 @@
+[
+  {
+    "page": 1,
+    "text": "SPAD: Specialized Prefill and Decode Hardware for\nDisaggregated LLM Inference\nHengrui Zhang\nhengrui.zhang@princeton.edu\nPrinceton University\nPratyush Patel\npatelp1@cs.washington.edu\nUniversity of Washington\nAugust Ning\naning@princeton.edu\nPrinceton University\nDavid Wentzlaff\nwentzlaf@princeton.edu\nPrinceton University\nAbstract\nLarge Language Models (LLMs) have gained popularity in\nrecent years, driving up the demand for inference. LLM infer-\nence is composed of two phases with distinct characteristics:\na compute-bound prefill phase followed by a memory-bound\ndecode phase. To efficiently serve LLMs, prior work proposes\nprefill-decode disaggregation to run each phase on separate\nhardware. However, existing hardware poorly matches the\ndifferent requirements of each phase. Current datacenter\nGPUs and TPUs follow amore-is-betterdesign philosophy\nthat maximizes compute and memory resources, causing\nmemory bandwidth underutilization in the prefill phase and\ncompute underutilization in the decode phase. Such under-\nutilization directly translates into increased serving costs.\nThis paper proposes SPAD (Specialized Prefill and Decode\nhardware), adopting aless-is-moremethodology to design\nspecialized chips tailored to the distinct characteristics of\nprefill and decode phases. The proposed Prefill Chips have\nlarger systolic arrays and use cost-effective GDDR memory,\nwhereas the proposed Decode Chips retain high memory\nbandwidth but reduce compute capacity. Compared to mod-\neled H100s, simulations show that the proposed Prefill Chips\ndeliver 8% higher prefill performance on average at 52% lower\nhardware cost, while the proposed Decode Chips achieve\n97% of the decode performance with 28% lower TDP.\nEnd-to-end simulations on production traces show that\nSPAD reduces hardware cost by 19%-41% and TDP by 2%-\n17% compared to modeled baseline clusters while offering\nthe same performance. Even when models and workloads\nchange, SPAD can reallocate either type of chip to run ei-\nther phase and still achieve 11%-43% lower hardware costs,\ndemonstrating the longevity of the SPAD design.\n1 Introduction\nLarge Language Models (LLMs) have become immensely pop-\nular due to their advanced capabilities and are being widely\nadopted in various applications spanning chatbots and code\ngeneration tools. However, serving LLMs incurs significant\nhardware costs. In early 2023, only three months after the\nintroduction of GPT-3.5, it was estimated that ChatGPT cost\nnearly $700,000 per day to serve with around 30,000 NVIDIA\n0 1 2 3 4 5 6 7 8\n0.0\n0.5\n1.0\n1.5\n2.0\n2.5\n3.0Tensor Performance (PFLOPs) A100\n H100\n B200\n MI300X\n TPUv5p\n TPUv6e\n Prefill Chip\n Decode Chip\nPrefill Arithmetic Intensity\nDecode Arithmetic Intensity\n79 80 81\n Groq\nMemory Bandwidth (TB/s)\nFigure 1.Comparison of LLM Serving Hardware. We esti-\nmate prefill and decode arithmetic intensities for BLOOM-\n176B (FP16, sequence length 1024) with batch sizes of 2 and\n64 respectively (shown as the dashed lines). Only the FLOPs\nand memory accesses related to matrix multiplications are\nincluded. The tensor performance and memory bandwidth\nnumbers are theoretical values reported by their specifica-\ntions [8, 15, 16, 26, 42–44].\nA100 GPUs [49]. The demand for LLMs has increased rapidly\nsince then. In March 2025, NVIDIA announced that they had\nreceived orders for 3.6 million of their newest flagship Black-\nwell GPUs from cloud providers [38], of which a significant\nfraction will likely be used to serve LLMs.\nServing LLMs is expensive due to tight latency constraints\ncoupled with high hardware requirements. LLM inference ex-\necutes in two phases with different computational properties.\nIn the compute-boundprefillphase, all tokens in the input\nprompt are processed in parallel to generate the KV cache\nand the first output token. In the memory-bounddecode\nphase, subsequent output tokens are generated sequentially,\nwhere each new token depends on the KV cache state of all\nprevious tokens. This dual-phase nature poses a challenge\nfor existing hardware since each phase effectively utilizes\nonly a subset of the hardware resources.\nTo improve efficiency, prior work has proposed two broad\nscheduling techniques.Co-location-based schedulings batch\nthe prefill and decode phases of different requests together to\nimprove hardware utilization, leveraging the fact that both\n1",
+    "text_sha256": "648947ecdd7888b647fa105fe4f421beaf468718501c4e936d284dfc0cc30758",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": null,
+    "end_section": "introduction",
+    "headings": [
+      {
+        "section": "abstract",
+        "title": "Abstract",
+        "char_offset": 320
+      },
+      {
+        "section": "introduction",
+        "title": "1 Introduction",
+        "char_offset": 2097
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "text": "phases share the same model weights [4, 69]. However, this\napproach incurs large tail latencies due to prefill-decode in-\nterference [74], leading to a less responsive user experience.\nDisaggregation-based scheduling separates the execution\nof the prefill and decode phases onto different hardware\nby using interconnects to transfer the KV cache [ 51, 74].\nAlthough this approach incurs transfer overheads, it im-\nproves overall performance by enabling phase-specific re-\nsource management and using hardware that better matches\nthe computational characteristics of each phase.\nDespite these software-level optimizations, the hard-\nware efficiency of serving LLM inference is still funda-\nmentally limited by the mismatch between the work-\nload requirements (i.e., TFLOPS and memory accesses)\nand hardware resources (i.e., compute capacity and\nmemory bandwidth).Current datacenter GPU/TPU de-\nsign philosophy tends to fit as much compute capacity and\ncache as possible onto a reticle-sized die and pair it with\nHigh Bandwidth Memory (HBM) using the advanced CoWoS\n(Chip-on-Wafer-on-Substrate) packaging technology [28].\nThe resulting enormous TFLOPs and memory bandwidths\nmake them the most popular hardware platform for serving\nLLMs. However, thismore-is-betterdesign philosophy drives\nup costs for disaggregation-based LLM inference: the high\narithmetic intensity of the prefill phase leaves the expensive\nHBM underutilized, and the low arithmetic intensity of the\ndecode phase leaves the compute capacity underutilized. Our\nsimulations show that reducing the memory bandwidth of a\nmodeled NVIDIA H100 by 40% would only increase prefill\nlatency by 17%. Likewise, the simulated decode latency only\nincreases by 22% if we reduce the compute capacity by half.\nWe propose SPAD (Specialized Prefill and Decode\nhardware), tailoring specialized hardware to the dis-\ntinct characteristics of prefill and decode phases to\nimprove disaggregation-based LLM serving efficiency.\nIn contrast to themore-is-betterdesign philosophy of GPUs,\nSPAD embraces aless-is-moredesign philosophy that right-\nsizes hardware for each phase, while still retaining the ability\nto run the other phase. For the compute-heavy prefill phase,\nwe propose a specialized Prefill Chip with larger systolic\narrays and a cost-effective GDDR-based memory system.\nFor the low-arithmetic-intensity decode phase, we propose\nan area- and TDP-efficient Decode Chip with smaller sys-\ntolic arrays and caches. Simulations with LLMCompass [71]\nshow that compared to modeled H100s, our proposed Prefill\nChips deliver 8% higher prefill performance on average at\n52% lower hardware cost, while our proposed Decode Chips\nachieve 97% of the decode performance with 28% lower TDP.\nWe evaluate SPAD by provisioning cost-optimized het-\nerogeneous clusters. End-to-end simulations on production\ntraces for chatbot and code generation applications show\nthat SPAD clusters reduce hardware cost by 19%-41% and\nTDP by 2%-17% compared to modeled baseline clusters while\nmaintaining the same performance. Even as the models and\nworkloads change, SPAD can reallocate either type of chip to\nrun either phase and still achieve an 11%-43% lower hardware\ncost, demonstrating the longevity of our design.\nIn summary, our contributions are as follows:\n● Identify the inherent hardware inefficiency of modern\nGPUs for disaggregated LLM serving. (Section 3)\n● Propose SPAD, a heterogeneous system that adopts aless-\nis-morephilosophy to design specialized Prefill and De-\ncode Chips to efficiently serve the corresponding phases\nof LLM inference. (Sections 4 and 5)\n● Conduct extensive end-to-end cluster-level simulations\ndemonstrating the cost-effectiveness and longevity of SPAD\nunder various workloads and model architectures. (Sec-\ntions 6 and 7)\n2 Background and Related Work\nWe start by providing an overview of LLM architecture, hard-\nware choices, and software-based serving techniques.\n2.1 Generative LLMs\nTransformers.Most modern LLMs like GPT-4 [47], DeepSeek-\nV3 [20], Llama-3 [ 25], and Grok-3 [ 66] are based on the\ndecoder-only transformer architecture [62]. Each transformer\nblock consists of two key components: a self-attention mech-\nanism and a feed-forward neural network. Self-attention\nenables each token to directly compute relationships with\nall prior tokens in the sequence. Feed-forward networks\n(FFNs) process the attention-weighted tensors through lin-\near and non-linear transformations. To support larger model\nsizes with cheaper inference, a sparse Mixture-of-Experts\n(MoE) architecture [20] has been adopted, which uses multi-\nple FFNs, called experts, of which only a subset is dynami-\ncally activated through a communication-intensive routing\nmechanism [14].\nInference Phases.Generative LLMs operate in two distinct\ncomputational phases with different resource requirements.\nThe prefill phase processes the input prompts provided by\nthe user in one forward pass to generate the first output\ntoken and the key-value (KV) cache, which facilitates further\ntoken generation. Prefill computation is parallelized across\nall input tokens and has high compute utilization. The decode\nphase generates subsequent tokens one at a time by running\nforward passes with the previously generated token along\nwith the KV cache of all prior tokens. This phase is memory-\nbound because generating each new token requires loading\nthe entire model weights along with the growing KV cache.\nPerformance SLOs.LLM serving usually has tight latency\nrequirements expressed as Service-Level Objectives (SLO).\nFrom a user perspective, the prefilltime to first token(TTFT)\nmeasures the latency to receive an initial response, while the\ntime between tokens(TBT) measures how quickly the decode\n2",
+    "text_sha256": "1ffb952db2f540d879ea69a094b778863c7fcfa5e570ff0af43c94a0dd683b8c",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "introduction",
+    "headings": []
+  },
+  {
+    "page": 3,
+    "text": "phase generates the rest of the response. Both TTFT and\nTBT are important to ensure an interactive user experience.\n2.2 Hardware for LLMs\nToday, LLMs are mainly served with GPUs and TPUs. To\nmeet high resource demands, such hardware tends to maxi-\nmize memory and compute capacities as much as possible.\nMemory.LLM inference has high memory bandwidth and\ncapacity requirements due to the large model sizes and KV\ncache sizes involved. High-end GPUs and TPUs incorpo-\nrate high-bandwidth memory (HBM) [ 8, 15, 44] to meet\nthese needs, and Groq uses SRAMs for even better perfor-\nmance [26], despite needing a large number of chips to meet\ncapacity requirements. LPDDR and CXL memory have also\nbeen explored to reduce cost and power usage [48, 71].\nCompute.Tensor operations like matrix multiplications\ndominate LLM execution, which has led hardware to adopt\nspecialized components to accelerate their computation. For\nexample, NVIDIA H100s incorporate 528 Tensor Cores to de-\nliver nearly 1000 TFLOPs of FP16 dense matrix multiplication\nperformance [44] and Google TPUs use large systolic arrays\nspecifically designed for matrix computations [ 30–32, 40].\nNon-tensor operations, such as activation or normalization\nfunctions, are usually mapped to a more general-purpose\nSIMD (Single Instruction Multiple Data) or vector units with\nlower peak performance. These tensor units and vector units\ncan take a significant amount of die area, driving up the\nhardware manufacturing cost and TDP.\n2.3 Efficient Serving Techniques\nThe computational differences between prefill and decode\nphases cause efficiency issues, inspiring software solutions.\nCo-location.Traditional serving systems like Orca [ 69] run\nrequests end-to-end on the same hardware [9, 69], batching\nthem at request or iteration granularity. Recent systems like\nSarathi [4], POD-Attention [33], and Nanoflow [75] chunk\nprefill phases to match hardware compute capacity and batch\nthem with decode phases of different requests to better utilize\nmemory bandwidth. This approach improves hardware uti-\nlization and can support very high throughput, but it incurs\nresource contention between prefill and decode computa-\ntions [74], causing large tail TTFT and TBT latencies that\ncan violate SLOs.\nDisaggregation.Splitwise [ 51] and DistServe [74] disaggre-\ngate inference phases across different hardware clusters and\nuse fast interconnects like Infiniband or NVLink to efficiently\ntransfer KV caches between them. This approach eliminates\ncross-phase interference and enables phase-specific resource\nmanagement and hardware choices. Prefills can optimize\nTTFTs by matching hardware compute capabilities, while\ndecodes can optimize throughput by batching more requests\nTable 1.LLM Serving Cluster Design Space\nSpec. Hetero. Disagg. Latency Throughput Cost\nOrca [69]✕ ✕ ✕Variable Low High\nSarathi [4]✕ ✕ ✕Variable Very High High\nGroq [26]✔ ✕? Very Low ? ?\nDistServe [74]✕ ✕ ✔Low High Med\nSplitwise [51]✕ ✔ ✔Low High Med\nSPAD✔ ✔ ✔Low High Low\nSpec: specialized chip,Hetero: heterogeneous,Disagg: disaggregation-\nbased scheduling,Cost: Cost per goodput.?: Groq likely runs with small\nbatches due to low memory capacity and has lower throughput.\nto improve performance under SLOs. Due to its effective-\nness, this idea has been adopted in production systems like\nNVIDIA Dynamo [45], Mooncake [53], and DeepSeek [20]\nalongside other optimizations. Some disaggregated systems\nalso adopt co-location-based techniques, such as chunked\nprefills to better match hardware capacity [45, 73] and mixed\nbatching to handle workload changes and provide better\nhardware utilization [51].\nOther Techniques.Recent works improve serving efficiency\nusing a variety of software-based techniques including ef-\nficient scheduling [ 52, 55, 58], memory management [ 24,\n34, 70], kernel optimizations [18, 65, 68], quantization [22,\n27, 72], power management [50], etc. These techniques are\northogonal to our work, so we do not discuss them here.\n2.4 Cluster Designs and Trade-offs\nLLM serving clusters can be characterized across three di-\nmensions: hardware specialization, hardware homogeneity,\nand scheduling. Cluster operators usually choose the design\nbased on hardware availability and workload requirements.\nPrior work has explored different points within this de-\nsign space, as shown in Table 1. Sarathi uses general-purpose\nGPUs, homogeneous chips, and co-location-based schedul-\ning to enable high utilization with lower management com-\nplexity [4]. Clouds built using Google TPUs and Groq lever-\nage specialized hardware to reduce latency and TCO, but\nprobably use the same chips for the entire execution [2, 30].\nDistServe disaggregates inference phases on homogeneous\nGPUs to improve throughput under SLOs [ 74]. Splitwise\nfurther shows that phase-specific hardware, such as H100s\nfor prefills and A100s for decodes, can reduce overall TCO\nand power consumption [51]. ThunderServe further shows\neffective disaggregation using diverse cloud GPUs [29].\nOur work explores a new point in the design space by\nspecializing hardware for each phase in a disaggregation-\nbased scheduling. We show that this approach substantially\nreduces costs while providing the same performance as ex-\nisting cluster designs.\n3",
+    "text_sha256": "cd9e1d5234f3be07c1b8a7b932b9cc9de9835ab5c739a5ceb5c40a1ef1f57a98",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "introduction",
+    "headings": []
+  },
+  {
+    "page": 4,
+    "text": "1000 1500 2000 2500 3352 4000\nMemory Bandwidth (GB/s)\n0.0\n0.1\n0.2\n0.3\n0.4Prefill Latency (s)\n1.59x\n1.32x\n1.17x 1.08x 0.97x\nH100\nLatency Breakdown\nOthers\nAllReduce\nActivation\nLayerNorm\nSoftmax\nMatmul\nFigure 2.Simulated Prefill Latency Under Varying Memory\nBandwidths. Hardware specifications are set according to\na modeled H100 except for memory bandwidth. Simulated\nusing LLMCompass [71] for an FP16 BLOOM-176B configu-\nration with batch size 2, sequence length 1024, and tensor\nparallelism 8.\n3 Motivations for Phase-Specialized\nHardware\nToday’s GPUs (also referred to as GPGPUs, General-Purpose\nGraphics Processing Units) are designed with amore-is-better\nphilosophy to cater to the need of various workloads. This\napproach provides flexibility, but using the latest and great-\nest technologies also drives up costs. Given the dual-phase\nnature of LLM serving, prefill-decode disaggregation is com-\nmonly used to meet stringent latency SLOs and ensure a\ngood user experience. In this section, we quantitatively show\nhow GPUs are inefficient when running disaggregated pre-\nfill and decode phases. We choose BLOOM-176B [54] as a\nrepresentative dense LLM because it fits on a typical 8-H100\nmachine, and we simulate it with FP16 precision as it can\nprovide high production-class accuracy.\nPrefills Underutilize Memory Bandwidth.Figure 2 shows\nhow prefill phases underutilize the memory bandwidth on\nmodeled H100 GPUs. We use LLMCompass [71] to simulate\nhow the prefill phase latency changes as a function of the\navailable memory bandwidth. Prefills are simulated with a\nbatch size of 2 and a sequence length of 1024. We simulate an\nH100 GPU (3.35TB/s) as the baseline and sweep its memory\nbandwidth from 1TB/s to 4TB/s while keeping the rest of the\nhardware specifications the same.\nOur results show that computation-intensive matrix multi-\nplications dominate prefill time. Crucially, the prefill latency\ndoes not scale in proportion to the memory bandwidth. Even\nwhen the memory bandwidth is reduced to 2500 GB/s (about\n0.75× that of H100), the latency only increases by 8%. This\ntrend indicates that prefill phases do not require the large\nmemory bandwidth provisioned on the H100 chip.\nDecodes Underutilize Compute Capacity.Decode ma-\nchines underutilize GPU compute cores when deployed using\nprefill-decode disaggregation due to their low arithmetic in-\ntensity. Figure 3 shows this by plotting the decode latency\nbreakdown of BLOOM-176B while sweeping the core count\n(i.e., the Streaming Multiprocessor count) on a simulated\n44 66 108 132 144 160\nCore Count\n0.00\n0.02\n0.04\n0.06Decode Latency (s)\n1.40x\n1.22x\n1.02x 0.99x 0.99x\nH100 Latency Breakdown\nOthers\nAllReduce\nActivation\nLayerNorm\nSoftmax\nMatmul\nFigure 3.Simulated Decode Latency Under Varying Core\nCounts (SM count in NVIDIA GPUs). Hardware specifica-\ntions are set according to a modeled H100 except the core\ncount. Simulated by LLMCompass [71] with BLOOM-176B,\nbatch size 64, sequence length 1024, and tensor parallelism\n8.\nH100 with LLMCompass. We use FP16, a batch size of 64, a\nsequence length of 1024, and a tensor parallelism of 8. We\nvary the number of cores from 44 to 160 while setting the\nother hardware specifications according to a modeled H100.\nWe find that decode performance scales sub-linearly with an\nincreased core count. Specifically, despite using nearly 20%\nfewer cores (108) than an H100 (132), the decode latency only\nincreases by about 2%. This indicates that decode phases do\nnot require the large compute capacity provisioned on the\nH100 chip for efficient execution.\nThe prefill/decode bottleneck shifting under various con-\nditions is further explored in Section B.1.\nTakeaway.Underutilized hardware directly translates into\nincreased costs for disaggregated LLM serving. These costs\ncan be reduced by “right-sizing” regular GPU designs into\nseparate chips to run the prefill and decode phases, respec-\ntively. The evolving models and workloads require that the\nhardware specialized for one phase should efficiently run\nthe other phase to ensure flexibility [51]. In the remainder\nof this paper, we address these challenges and show how to\ntailor an existing hardware such as H100 into phase-specific\ndesigns to lower LLM serving costs at cluster scale.\n4 SPAD: Overview\nSPAD (SpecializedPrefillandDecode hardware) is a hetero-\ngeneous system incorporating specialized hardware for each\ninference phase to reduce disaggregated LLM serving costs\nat scale. In this section, we start by describing how SPAD\nclusters are organized and managed. In Section 5, we will\ndescribe the design methodology of our proposed chips.\nCluster Organization.Figure 4 shows an overview of a\nSPAD cluster. The design is similar to existing GPU-based\ndisaggregated serving clusters but with one key difference:\ninstead of homogeneous GPU machines, SPAD clusters con-\nsist of heterogeneous Prefill and Decode Machines optimized\nto run prefill and decode phases, respectively. Each proposed\n4",
+    "text_sha256": "bffd138d6d5bee38aab77d128927ffa0df005eb51c848b9aefd08560e068610b",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          76.84,
+          76.58,
+          241.97,
+          134.82
+        ],
+        "rows": [
+          [
+            "1.59x\n1.32x 1.17x 1.08x H100\n0.97x",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 9,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          343.45,
+          76.58,
+          505.93,
+          134.82
+        ],
+        "rows": [
+          [
+            "1.40x\n1.22x H100\n1.02x 0.99x 0.99x",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 13,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "introduction",
+    "headings": []
+  },
+  {
+    "page": 5,
+    "text": "GDDR7 Interface\n32 Prefill Cores32 Prefill Cores\nPrefill Chip\nPCIe\n×32\nGDDR7\n512-bit\n(2TB/s)\n32MB L2 Cache 64GB\nGDDR7\n×128\nCore\n320KB L1 Cache\nLane\nVector Unit\n16-wide\nSystolic Array\n32×32\n×4\n320KB L1 Cache\nLane\nVector Unit\n16-wide\nSystolic Array\n32×32\n×4\nPrefill Core\n128 Prefill Cores\nin Total\n422mm²\n32MB L2 Cache & Crossbar 111mm²\nGDDR7 Interface\nGDDR7 Interface (32-bit×16 in Total) 106mm²\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nGDDR7 \nPackage\nInterconnect Interface\n28mm²\nPCIe Interface x32\n39mm²\nInterconnect Interface (900GB/s)\nDecode Chip\nPCIe\n×32\nHBM3\n5120-bit\n(3.3TB/s)\n30MB L2 Cache 80GB\nHBM3\n×144\nCore\n320KB L1 Cache\nLane\nVector Unit\n16-wide\nSystolic Array\n32×32\n×4\n128KB L1 Cache\nLane\nVector Unit\n8-wide\nSystolic Array\n16×16\n×4\nDecode Core\n144 Decode Cores\nin Total\n206mm²\n30MB L2 Cache & Crossbar 107mm²\nHBM3 Interface\nHBM3 Interface (1024-bit×5 in Total) 88mm²\nHBM3\nPackage\nInterconnect\n 14mm²\nPCIe Interface x32\n39mm²\nInterconnect Interface (900GB/s)\nHBM3 InterfaceInterconnect\n 14mm²\nHBM3\nPackage\nHBM3\nPackage\nHBM3\nPackage\nHBM3\nPackage\nPrefill Chip Design and \nHypothetical Floorplan\nDecode Chip Design and \nHypothetical Floorplan\n...\nScale-Out Interconnect\nScale-Up Interconnect\nPrefill Machine\nSPAD Cluster\nScale-Up Interconnect\nDecode Machine\nFigure 4.Proposed SPAD Cluster and Chips Overview. Die area is estimated and will be further explained in Section 6.1.\nPrefill/Decode Machine contains 8 Prefill/Decode Chips tai-\nlored to match the computational properties of the corre-\nsponding phase. Specifically, Prefill Chips optimize compute\ncapabilities, whereas Decode Chips optimize memory band-\nwidth. Chips within a machine are connected to each other\nwith a high bandwidth scale-up interconnect (e.g., NVLink).\nChips across machines are connected using a lower band-\nwidth scale-out interconnect (e.g., Infiniband). We assume the\nsame scale-up (900 GB/s total bandwidth per chip) and scale-\nout (50 GB/s per chip) interconnect as NVIDIA H100s [44].\nDisaggregated Serving.LLM replicas run separately on\nPrefill and Decode Machines. Incoming requests are first\nscheduled on Prefill Machines, which run the prefill phase\nand transfer the computed KV caches to Decode Machines\nover scale-out interconnects to finish the request [51, 74].\nWorkload-Driven Provisioning.SPAD clusters are pro-\nvisioned for a target workload by deciding the number of\nphase-specific chips to deploy. Due to the heterogeneity of\nthe cluster, it is necessary to carefully select the ratio of Pre-\nfill and Decode Chips to ensure optimal performance and\nefficiency. Given a target model and the workload distri-\nbution, cluster operators can estimate the ideal number of\nmachines required for each phase by sweeping the cluster\ndesign space [51]. Furthermore, operators can also use ex-\nisting workload estimation techniques to allocate sufficient\ncapacity to accommodate future workload demands [11, 13].\nAdaptive Reallocation.Models and workloads can change\nduring the multi-year lifespan of the cluster. In such cases,\nthe provisioned ratio of Prefill and Decode Machines may\nnot perfectly match the new requirements, leading to sub-\noptimal performance. Since hardware is difficult to change\nonce deployed, SPAD clusters retain efficiency by logically\nreallocating Prefill and Decode Machines as needed to run ei-\nther phase. This consideration is fundamentally incorporated\ninto our hardware design methodology, which enables each\nchip to also run the other phase cost-effectively. Techniques\nto further improve adaptability are discussed in Section B.2.\n5 SPAD: Chip Design\nIn this section, we describe ourless-is-moremethodology\nto design SPAD chips. Using the H100 GPU as a reference\ndesign, we conduct a cost-aware architectural design space\nexploration to tailor specialized Prefill and Decode chips\nfor a target workload. Crucially, we design our proposed\nchips with the flexibility to handle either phase, enabling\nthem to be reallocated as workload profiles evolve. Later in\nSection 7.2, we show the longevity of our design through\nadaptive reallocation.\n5.1Less-is-MoreDesign Methodology\nOur goal is to design Prefill/Decode Chips that align\nwith the characteristics of prefill/decode phases.Cur-\nrent mainstream LLM serving hardware, such as GPUs, fails\nto meet this goal due to theirmore-is-betterdesign methodol-\nogy: they tend to fit as much compute capacity as is possible\nonto reticle-limited dies paired with high-end HBMs to pro-\nvide substantial memory bandwidth and capacity. NVIDIA\nH100 has a die area of814 𝑚𝑚2 with 80 GB of HBM3 and\n3.35 TB/s memory bandwidth [44]. Chiplet technology has\nbeen adopted to further increase the die area to fit more com-\npute capacity. AMD MI300X has 8 compute chiplets with\n192 GB of HBM3 and 256 MB of LLC (Last-Level Cache) [7, 8].\nNVIDIA B200s are reported to have two recticle-limited dies\nwith 186 GB of HBM3E and 8 TB/s of memory bandwidth [43].\nOn the other hand, Groq uses SRAM instead of HBMs, achiev-\ning a memory bandwidth of up to 80 TB/s [26].\n5",
+    "text_sha256": "c190b14792d7dcc05efae1036f0df1d6e3afee8b4e0d06eb8e1a83de905863d6",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          57.0,
+          73.06,
+          554.34,
+          268.29
+        ],
+        "rows": [
+          [
+            "Prefill Chip Design and\nGDDR7 GDDR7 GDDR7 GDDR7 GDDR7 GDDR7\nHypothetical Floorplan PackagePackagePackagePackagePackagePackage\nPrefill Chip GDDR7 Interface (32-bit×16 in Total) 106mm² Interconnect\nPrefill CCoorree ×128 128 P inre Tf oill t aC lores PG aD cD kaR g7 e 28mm²\nLaneLane 422mm²\nVe 1c 6t -o wVr e 1dUc 6etn-o wirt idU enit PG aD cD kaR g7 Interface GDDR7\ni e\nSyst 3o 2Sli ×cy 3 sA 23tor2rli ×ac 3y A 2r ×ra 4y ×4 GDDR7 33 22 PM reB fill L C2 or eC sache & Crossb 3a 2 r P 1 re1 fi1 ll m Com re² s GDDR7 PCIe Interface\n320KB32 L0K1B C La1c Chaeche (5 21 T2 B-b /sit ) Package 39mm² Interface\nGDDR7\nP ×C 3I 2e 32MB L2 Cache G6 D4 DG RB 7 Package x32\nGDDR7 Interface\nInterconnect Interface (900GB/s)\nGDDR7 GDDR7 GDDR7 GDDR7 GDDR7 GDDR7\nPackagePackagePackagePackagePackagePackage",
+            null,
+            null,
+            "Decode\nHypoth\nDeco\nLaneL\nVe 8c -t woVr id e 1Uc 6e\nSyst 1o 6Sli ×cy sA 63t\n1\n128KB32\nPCIe\n×32\nIntercon",
+            "Chip Design and\netical Floorplan HBM3 HBM3\nPackage Package\nDecode Chip\ndeC Coroere ×144 HBM3 Interface (1024-bit×5 in Total) 88mm² ane 144 Decode Cores in Total tn-o wirt idU enit 206mm² 14mm² Interconnect ²ect mn on m 4c 1r Inte\nor2rli ×ac 3y A 2r ×ra 4y ×4 HBM3 30MB L2 Cache & Crossbar 107mm² HBM3 39mm² Interface PCIe Interface HBM3\nL0K1 BC La1c hCeache (5 31 .32 T0 B-b /sit ) Package\nx32\nHBM3 Interface\n30MB L2 Cache H80 BG MB 3 HBM3 HBM3\nnect Interface (900GB/s) Package Package"
+          ],
+          [
+            "Prefill Machine\nScale-Up Interconnect",
+            "SPAD Cluster\n...\nScale-Out Interconne",
+            null,
+            null,
+            "Decode Machine\nScale-Up Interconnect\nct"
+          ],
+          [
+            null,
+            null,
+            "Scale-Out Interconne",
+            null,
+            null
+          ]
+        ],
+        "row_count": 3,
+        "column_count": 5,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          180.64,
+          77.03,
+          270.02,
+          178.95
+        ],
+        "rows": [
+          [
+            "DR7\nckage",
+            "GDDR\nPackag",
+            "7 GDDR7\nePackage",
+            "GDDR7\nPackage",
+            "GDDR7 GDDR7\nPackagePackage"
+          ],
+          [
+            "GDDR7 Interface (32-bit×16 in Total) 106mm²\n128 Prefill Cores\nin Total\n422mm²\nGDDR7\n32MB L2 Cache & Crossbar 111mm² In",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "terface\n32 Prefill Cores 32 Prefill Cores\nGDDR7 Interface",
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "row_count": 3,
+        "column_count": 5,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "introduction",
+    "headings": []
+  },
+  {
+    "page": 6,
+    "text": "Thismore-is-betterdesign methodology is not cost-\neffective for disaggregation-based LLM inference.As Sec-\ntion 3 shows, the prefill latency of a modeled H100 only\nincreases by 17% if we reduce the memory bandwidth by\n40%, and the decode latency only increases by 22% if we cut\nthe compute capacity by 50%. These imply that prefills do\nnot fully utilize the memory bandwidth offered by expensive\nHBMs, and decodes underutilize the compute capacity of the\nenormous dies. Thus, we reconsider whethermore-is-better\noffers a favorable trade-off between performance and cost.\nWe adopt aless-is-moredesign methodology, treat-\ning cost as a first-class citizen.Our goal is to achieve the\nthroughput and latency requirements of LLM serving at the\nlowest possible cost. A large die or high-end memory can in-\ncrease the manufacturing cost and TDP, and a larger TDP can\nlead to higher power delivery and cooling equipment costs.\nThus, we assess the cost-performance trade-offs with design\nspace explorations. If an architectural component does not\nsignificantly impact performance, we consider cutting it to\nsave cost. However, we cannot be too aggressive with cutting\ncomponents since a phase-specialized chip needs to be able\nto run the other phase after adaptive reallocation. By care-\nfully choosing the memory technology and using cost-aware\narchitectural designs, our proposed Prefill/Decode Chips\ncould achieve similar performance with lower hardware cost\nand TDP than H100s since their hardware characteristics\nalign better with the arithmetic intensity of prefill/decode\nphases. We call this theless-is-moremethodology, which re-\nduces the cost/TDP per chip while allowing more chips to\nbe deployed in clusters under the same cost/TDP budgets to\nachieve higher overall performance.\n5.2 Prefill Chip Design\n5.2.1 Memory.Figure 2 shows that even if the memory\nbandwidth of a modeled H100 is reduced by 40% to 2 TB/s , its\nsimulated prefill latency will only be 17% higher. However,\nfurther reducing the bandwidth to 1.5 TB/s increases the\nlatency by 32%. Latency breakdowns show that the latency\nincrease is mainly caused by memory-bound non-tensor op-\nerations, such as Layer Normalization or Softmax, whose\nperformance scales almost linearly with memory bandwidth.\nOn the other hand, Matmul latency only increases by 16%,\neven when decreasing memory bandwidth from 4 TB/s to\n2 TB/s. Therefore, we conclude that reduced memory band-\nwidth can be manageable as long as it is not decreased too\nmuch, and the increase in non-tensor operation latency can\nbe compensated for by increasing Matmul performance. Also,\nsince Prefill Machines only temporarily store the KV cache\nbefore transferring it to the Decode Machines, their memory\ncapacity requirement is lower than that of the decode phase.\nFollowing ourless-is-moredesign philosophy, we\npropose to replace HBMs with GDDR memory as a\ncheaper alternative for prefill, which is commonly used\nin gaming GPUs [46] and desktop workstation GPUs [ 41].\nPrefill Chip    \n600 700 800 900 1000\n0.18\n0.19\n0.2\n0.21\n0.22\n0.23\n0.24\n0.25\nSystolic Array\n16x32\n24x32\n32x32\n192\n256\n320\n384\n448\n512\nL1 Size\n  (KB)\nDie Area (mm²)\nPrefill Latency (s)\nH100\n(a)\nPrefill Chip    \n600 700 800 900 1000\n0.18\n0.19\n0.2\n0.21\n0.22\n0.23\n0.24\n0.25\nVector Width\n8\n16\n32\n24\n32\n40\n48\n56\n64\n72\nL2 Size\n  (MB)\nDie Area (mm²)\nPrefill Latency (s)\nH100\n(b)\nFigure 5.Prefill Chip Design Space Exploration. Latencies\nof our chips and H100 are all simulated with LLMCom-\npass [71]. Die areas of our chips are estimated and will be\nfurther explained in Section 6.1. H100 die area is reported by\nNVIDIA [44]. We use FP16 BLOOM-176B with tensor paral-\nlelism 8, sequence length 1024, and batch size 2. Larger sys-\ntolic arrays significantly boost prefill performance. Smaller\nvector units have minimal performance impact.\nTable 2.Comparison of Memory Technologies\nSource\nProcessor\nProcessor\nBandwidth\nBandwidth/\nBeachfront(PHY)❖\nEstimated\nCost◆\nLPDDR5X Apple M4 (3 nm) 120 GB/s 8 GB/s/mm ?\nGDDR7 RTX 5090 (4 nm) 1792 GB/s 22 GB/s/mm $3/GB\nHBM3 H100 (4 nm) 3352 GB/s 68 GB/s/mm $9/GB\n❖ Bandwidth per beachfront of the processor PHYs, estimated based on\nspecifications and annotated die photos [36, 44, 46, 56, 63].\n◆ Cost modeling is explained in Section 6.1.\nWe do not choose other memory technologies like LPDDR\nsince they have a lower bandwidth under the chip beachfront\nlimits and do not meet the requirements of the prefill phase,\nas shown in Table 2. In contrast, as Table 3 shows, GDDR7 can\nprovide 2 TB/s of bandwidth and 64 GB of capacity with a 512-\nbit bus and 16 packages, which meets prefill requirements.\nWe estimate substituting HBM with GDDR could reduce\nmemory cost by3×, which we further explain in Section 6.1.\nNote that our proposed Prefill Chip has a smaller memory\ncapacity (64 GB) compared to H100s (80 GB), and later in\nSection 7 our end-to-end simulations show that it is not\na bottleneck for prefill phases since the KV cache is only\ntemporarily stored.\n6",
+    "text_sha256": "d9f83ef698f114e499c03be35ef8ca1259163ac70bf7bca50243f62c8d893704",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          346.75,
+          75.9,
+          525.42,
+          152.59
+        ],
+        "rows": [
+          [
+            "",
+            "",
+            null,
+            "",
+            "Sy",
+            "stol",
+            "ic Array"
+          ],
+          [
+            "",
+            "",
+            null,
+            "",
+            "",
+            "1",
+            "6x32"
+          ],
+          [
+            "",
+            "",
+            null,
+            "",
+            "",
+            "2\n3",
+            "4x32\n2x32"
+          ],
+          [
+            "",
+            "",
+            null,
+            "H100",
+            "",
+            "",
+            ""
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            ""
+          ],
+          [
+            "",
+            "",
+            null,
+            "",
+            "",
+            null,
+            ""
+          ],
+          [
+            "",
+            "Prefill C",
+            "",
+            "hip",
+            "",
+            null,
+            ""
+          ],
+          [
+            "",
+            "",
+            null,
+            "",
+            "",
+            null,
+            ""
+          ]
+        ],
+        "row_count": 8,
+        "column_count": 7,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          346.75,
+          192.62,
+          525.42,
+          269.32
+        ],
+        "rows": [
+          [
+            "",
+            "",
+            "",
+            "V",
+            "ecto",
+            "r Width"
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "8"
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "16\n32"
+          ],
+          [
+            "",
+            "",
+            "H100",
+            "",
+            "",
+            ""
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ],
+          [
+            "",
+            "Prefill C",
+            "hip",
+            "",
+            null,
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ]
+        ],
+        "row_count": 8,
+        "column_count": 6,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          321.08,
+          454.37,
+          554.88,
+          508.93
+        ],
+        "rows": [
+          [
+            "",
+            "Source Processor Bandwidth/ Estimated\nProcessor Bandwidth Beachfront(PHY)❖ Cost◆"
+          ],
+          [
+            "LPDDR5X\nGDDR7\nHBM3",
+            "Apple M4 (3 nm) 120 GB/s 8 GB/s/mm ?\nRTX 5090 (4 nm) 1792 GB/s 22 GB/s/mm $3/GB\nH100 (4 nm) 3352 GB/s 68 GB/s/mm $9/GB"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [
+      {
+        "region_id": "image-1",
+        "bbox": [
+          325.1,
+          72.0,
+          550.85,
+          170.77
+        ],
+        "width": 3200,
+        "height": 1400,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-2",
+        "bbox": [
+          325.1,
+          72.0,
+          550.85,
+          170.77
+        ],
+        "width": 3200,
+        "height": 1400,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-3",
+        "bbox": [
+          528.0,
+          93.0,
+          538.0,
+          151.0
+        ],
+        "width": 10,
+        "height": 58,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-4",
+        "bbox": [
+          325.1,
+          188.72,
+          550.85,
+          287.49
+        ],
+        "width": 3200,
+        "height": 1400,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-5",
+        "bbox": [
+          325.1,
+          188.72,
+          550.85,
+          287.49
+        ],
+        "width": 3200,
+        "height": 1400,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-6",
+        "bbox": [
+          528.0,
+          209.0,
+          538.0,
+          268.0
+        ],
+        "width": 10,
+        "height": 59,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      }
+    ],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "introduction",
+    "headings": []
+  },
+  {
+    "page": 7,
+    "text": "H100\n400 500 600 700 800\n0.044\n0.045\n0.046\n0.047\n0.048\n0.049\n0.05\nSystolic Array\n16x8\n16x16\n16x32\n64\n128\n192\n256\nL1 Size\n  (KB)\nDie Area (mm²)\nDecode Latency (s)Decode Chip\n(a)\nH100\n400 500 600 700 800\n0.044\n0.045\n0.046\n0.047\n0.048\n0.049\n0.05\nVector Width\n8\n16\n32\n24\n32\n40\n48\nL2 Size\n  (MB)\nDie Area (mm²)\nDecode Latency (s)Decode Chip\n(b)\nFigure 6.Decode Chip Design Space Exploration. Laten-\ncies of our chips and H100 are all simulated with LLMCom-\npass [71]. Die areas are estimated and will be explained in\nSection 6.1. H100 die area is reported by NVIDIA [44]. We\nuse FP16 BLOOM-176B with tensor parallelism 8, sequence\nlength 1024, and batch size 64. Our design strikes a desirable\nbalance between performance and die area.\n5.2.2 Compute.Figure 1 shows the compute-intensive\nnature of the prefill phase. We observe that tensor opera-\ntions, such as Matmuls, largely contribute to the compute\nintensity of prefill phases, and are commonly mapped to\nsystolic arrays (or Tensor Cores in NVIDIA GPUs). On the\nother hand, memory-bound non-tensor operations, such as\nLayer Normalization, are mapped to general-purpose vector\nunits (or CUDA Cores in NVIDIA GPUs).\nConsequently, we propose to increase the tensor\ncompute capacity to accelerate compute-bound ten-\nsor operations and reduce the non-tensor compute ca-\npacity since those non-tensor operations are memory-\nbound anyway.As shown in Figure 5, we use LLMCom-\npass [71] to conduct a design space exploration for different\ncombinations of core counts, vector widths, systolic array\nsizes, and cache sizes. We find that increasing the size of the\nsystolic arrays significantly increases prefill performance\nwhile decreasing the size of the vector units has minimal\nperformance impact. The L1 cache size is increased to ac-\ncommodate the larger systolic arrays. We also decrease the\nL2 cache size as we find that approximately 30 MB of L2 is\nenough for LLM inference, and there is a diminishing return\nin further increasing L2 sizes.\nTable 3.SPAD Chips Compared with NVIDIA H100\nSpecifications Prefill Chip Decode Chip H100[44]\nCore Count 128 144 132\nLane per Core 4 4 4\nVector Width 16 8 Eq. to 32\nSystolic Array 32×32 16×16Eq. to16×32\nL1 Cache per Core 320 KB 128 KB 256 KB\nL2 Cache 32 MB 30 MB 50 MB\nMemory Protocol GDDR7 HBM3 HBM3\nMemory Bus Width 512-bit 5120-bit 5120-bit\nPin Speed 32 Gb/s 5.2 Gb/s 5.2 Gb/s\nMemory Package Count 16 5 5\nCapacity per Package 4 GB 16 GB 16 GB\nClock (Tensor) 1.83 GHz 1.83 GHz 1.83 GHz\nClock (Non-Tensor) 1.98 GHz 1.98 GHz 1.98 GHz\nFP16/BF16 Tensor PFLOPs 1.92 0.54 0.99\nFP32 Non-Tensor TFLOPs 32.4 18.2 66.9\nTotal L1 & L2 Cache Size 73 MB 48 MB 84 MB\nMemory Configuration 64 GB GDDR7 80 GB HBM3 80 GB HBM3\nMemory Bandwidth 2048 GB/s 3352 GB/s 3352 GB/s\nEst. Die Area (@4nm)◆ 784𝑚𝑚 2 520𝑚𝑚 2 814𝑚𝑚 2\nEst. Die Cost◆ $301 $187 $315\nEst. Memory Cost◆ $192 $720 $720\nEst. Norm. Total HW Cost◆ 0.48 0.88 1\nEst. TDP◆ 596 W 507 W 700 W\nNorm. Prefill Perf.✿ 1.08 0.69 1\nNorm. Decode Perf.✿ 0.80 0.97 1\n◆ The die area for our Prefill/Decode Chip is estimated. H100 die area is\nreported by NVIDIA [44]. Cost and TDP modeling is explained in Section 6.1.\n✿ Performance numbers are from Fig. 7, simulated with LLMCompass [71].\n5.3 Decode Chip Design\n5.3.1 Memory.According to Figure 1, the decode phase is\nheavily memory bandwidth bound. While Prefill Machines\nonly temporarily retain KV caches before transferring them,\nDecode Machines retain and use the KV cache for the rest\nof the request processing. Specifically, multiple requests are\noften batched together in decode phases to improve model\nweight reuse, and we need to store the KV cache for all of\nthem. Also, since every newly generated token contributes to\nthe KV cache, the KV cache size grows continuously until the\nrequest is complete. Therefore, the decode phase has higher\nmemory capacity requirements to store these KV caches.\nBased on these observations, we choose to use HBM3 due to\nits high bandwidth and large capacity. Unlike Groq [26], we\ndo not consider on-chip SRAM due to the high cost it would\nrequire to meet the memory capacity requirement.\n5.3.2 Compute.Figure 3 shows that the simulated decode\nlatency only increases by 22% even if we reduce the core\ncount of a modeled H100 by half. Due to themore-is-better\ndesign methodology of H100s, the compute capacity remains\nunderutilized for decodes. To eliminate this inefficiency, we\nfollow ourless-is-morephilosophy and conduct a design\nspace exploration to sweep different architectural configu-\nrations, as shown in Figure 6, identifying which hardware\n7",
+    "text_sha256": "37f189542f50ff9e5fd5cf6c7bef0d64ceba1d3c520122cba0393da8ea1ee40e",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          85.9,
+          75.9,
+          261.48,
+          153.34
+        ],
+        "rows": [
+          [
+            "",
+            "",
+            "",
+            "Sy",
+            "stolic",
+            "Array"
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "16x",
+            "8"
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "16x\n16x",
+            "16\n32"
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ],
+          [
+            "Decod",
+            "e Chip",
+            "",
+            "H",
+            null,
+            "100"
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ]
+        ],
+        "row_count": 7,
+        "column_count": 6,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          319.15,
+          97.54,
+          556.8,
+          364.79
+        ],
+        "rows": [
+          [
+            "Specifciations",
+            "Preflil Chip Decode Chip H100 [44]"
+          ],
+          [
+            "Core Count\nLane per Core\nVector Width\nSystolic Array\nL1 Cache per Core\nL2 Cache",
+            "128 144 132\n4 4 4\n16 8 Eq. to 32\n32 × 32 16 × 16 Eq. to 16 × 32\n320 KB 128 KB 256 KB\n32 MB 30 MB 50 MB"
+          ],
+          [
+            "Memory Protocol\nMemory Bus Width\nPin Speed\nMemory Package Count\nCapacity per Package",
+            "GDDR7 HBM3 HBM3\n512-bit 5120-bit 5120-bit\n32 Gb/s 5.2 Gb/s 5.2 Gb/s\n16 5 5\n4 GB 16 GB 16 GB"
+          ],
+          [
+            "Clock (Tensor)\nClock (Non-Tensor)\nFP16/BF16 Tensor PFLOPs\nFP32 Non-Tensor TFLOPs\nTotal L1 & L2 Cache Size\nMemory Configuration\nMemory Bandwidth",
+            "1.83 GHz 1.83 GHz 1.83 GHz\n1.98 GHz 1.98 GHz 1.98 GHz\n1.92 0.54 0.99\n32.4 18.2 66.9\n73 MB 48 MB 84 MB\n64 GB GDDR7 80 GB HBM3 80 GB HBM3\n2048 GB/s 3352 GB/s 3352 GB/s"
+          ],
+          [
+            "Est. Die Area (@4nm)◆ 784 𝑚𝑚2 520 𝑚𝑚2 814 𝑚𝑚2\nEst. Die Cost◆ $301 $187 $315\nEst. Memory Cost◆ $192 $720 $720\nEst. Norm. Total HW Cost◆ 0.48 0.88 1\nEst. TDP◆ 596 W 507 W 700 W",
+            null
+          ],
+          [
+            "Norm. Prefill Perf.✿\nNorm. Decode Perf.✿",
+            "1.08 0.69 1\n0.80 0.97 1"
+          ]
+        ],
+        "row_count": 6,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          85.9,
+          192.62,
+          261.48,
+          270.06
+        ],
+        "rows": [
+          [
+            "",
+            "",
+            "",
+            "V",
+            "ector",
+            "Width"
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "8\n16",
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "32",
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ],
+          [
+            "Decod",
+            "e Chip",
+            "",
+            "H",
+            null,
+            "100"
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            null,
+            ""
+          ]
+        ],
+        "row_count": 7,
+        "column_count": 6,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [
+      {
+        "region_id": "image-1",
+        "bbox": [
+          61.14,
+          72.0,
+          286.9,
+          170.77
+        ],
+        "width": 3200,
+        "height": 1400,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-2",
+        "bbox": [
+          61.14,
+          72.0,
+          286.9,
+          170.77
+        ],
+        "width": 3200,
+        "height": 1400,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-3",
+        "bbox": [
+          264.0,
+          93.0,
+          274.0,
+          151.0
+        ],
+        "width": 10,
+        "height": 58,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-4",
+        "bbox": [
+          61.14,
+          188.72,
+          286.9,
+          287.49
+        ],
+        "width": 3200,
+        "height": 1400,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-5",
+        "bbox": [
+          61.14,
+          188.72,
+          286.9,
+          287.49
+        ],
+        "width": 3200,
+        "height": 1400,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-6",
+        "bbox": [
+          264.0,
+          209.0,
+          274.0,
+          268.0
+        ],
+        "width": 10,
+        "height": 59,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      }
+    ],
+    "formula_candidates": [],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "introduction",
+    "headings": []
+  },
+  {
+    "page": 8,
+    "text": "64 128 256 512 768 1024 1536 2048 3072 4096 6144 8192 1228816384\nSequence Length\n1 2 4 6 8 12 16 24 32 48 64 128256\nBatch Size\n1.2 1.2 1.2 1.0 0.9 0.9 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.1\n1.2 1.2 1.0 0.9 0.9 0.9 0.9 0.9 0.9 1.0 1.0 1.0 1.0 1.1\n1.2 1.0 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 1.0 1.0\n1.0 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 1.0\n1.0 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9\n0.9 0.9 0.8\n0.8 0.8\n0.85\n0.90\n0.95\n1.00\n1.05\n1.10\n1.15\n1.20\n(a)Prefill Latency of the Prefill Chip (Norm. to Simulated H100)\n64 128 256 512 768 1024 1536 2048 3072 4096 6144 8192 1228816384\nSequence Length\n1 2 4 6 8 12 16 24 32 48 64 128256\nBatch Size\n1.2 1.2 1.2 1.2 1.2 1.2 1.3 1.3 1.3 1.2 1.2 1.2 1.2 1.2\n1.2 1.2 1.2 1.2 1.3 1.3 1.3 1.2 1.2 1.2 1.3 1.3 1.3 1.2\n1.2 1.2 1.2 1.3 1.3 1.2 1.2 1.2 1.3 1.3 1.3 1.3\n1.2 1.2 1.2 1.3 1.2 1.2 1.2 1.3 1.2 1.3 1.3\n1.2 1.2 1.3 1.2 1.2 1.2 1.3 1.3 1.3 1.3\n1.2 1.2 1.3 1.2 1.2 1.3 1.2 1.3 1.3\n1.2 1.2 1.2 1.2 1.3 1.3 1.3 1.3\n1.2 1.2 1.2 1.3 1.2 1.3 1.3\n1.2 1.2 1.2 1.3 1.3 1.3\n1.2 1.2 1.2 1.3 1.3\n1.2 1.2 1.3 1.3\n1.2 1.2 1.3\n1.2 1.2\n1.20\n1.22\n1.24\n1.26\n1.28 (b)Decode Latency of the Prefill Chip (Norm. to Simulated H100)\n64 128 256 512 768 1024 1536 2048 3072 4096 6144 8192 1228816384\nSequence Length\n1 2 4 6 8 12 16 24 32 48 64 128256\nBatch Size\n1.0 1.0 1.3 1.4 1.4 1.4 1.4 1.5 1.4 1.5 1.5 1.5 1.4 1.4\n1.0 1.3 1.4 1.4 1.4 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.4 1.4\n1.3 1.4 1.4 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.4 1.4\n1.3 1.4 1.4 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5\n1.4 1.4 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5\n1.4 1.4 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5\n1.4 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5\n1.4 1.5 1.5 1.5 1.5 1.5 1.5 1.5\n1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5\n1.5 1.5 1.5 1.5 1.5 1.5\n1.5 1.5 1.5 1.5 1.5 1.5\n1.5 1.5 1.5 1.5\n1.5 1.5 1.5\n1.1\n1.2\n1.3\n1.4\n1.5\n(c)Prefill Latency of the Decode Chip (Norm. to Simulated H100)\n64 128 256 512 768 1024 1536 2048 3072 4096 6144 8192 1228816384\nSequence Length\n1 2 4 6 8 12 16 24 32 48 64 128256\nBatch Size\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.1 1.1 1.0\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.1\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.1\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0\n1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0\n1.0 1.0 1.0 1.0 1.0 1.0\n1.0 1.0 1.0 1.0 1.0 1.0\n1.0 1.0 1.0 1.0\n1.3 1.2 1.2\n1.00\n1.05\n1.10\n1.15\n1.20\n1.25 (d)Decode Latency of the Decode Chip (Norm. to Simulated H100)\nFigure 7.Chip Performance Under Various Batch Sizes and Sequence Lengths. Lower is better. Latencies of our proposed\nchips and H100 are all simulated with LLMCompass [71] modeling FP16 BLOOM-176B with tensor parallelism 8. Only the\ncombinations that fit the memory capacity are shown. A sensitivity study on parallelism strategies is further shown in Fig. 11\nin Section A.\nresources and to what extent can be cut without impacting\nperformance.\nWe find that smaller systolic arrays and vector units\nare more efficient than larger ones for decode.Due\nto the low arithmetic intensity and memory-bound nature,\nlarge systolic arrays and vector units bring very marginal\nperformance gains since decode phases cannot fully utilize\nthem. Therefore, our proposed Decode Chip adopts a systolic\narray size of16×16and a vector width of 8. We did not further\nreduce tensor performance because the area savings were\noutweighed by the significant slowdown of running prefill,\nwhich can affect flexibility after reallocation.\nWe find that smaller caches are sufficient for decode.\nLarge caches improve performance through better memory\nreuse. However, since decode phases are memory-bound in\nreading model weights and KV caches, larger caches do not\nhelp much for these streaming memory accesses. Compared\nto a modeled H100, we cut the L1 size by 50% and the L2 size\nby 40%.\n5.4 Summary\nA comparison of our proposed Prefill/Decode Chips with\nH100s is summarized in Table 3. The extra complexity arising\nfrom heterogeneous chips is discussed in Section B.3.\nPrefill Chip.Compared to a modeled H100, our proposed\nPrefill Chip roughly doubles the tensor performance while\nmaintaining a similar die area by reducing the unessential\nnon-tensor performance by half and cutting down L2 cache\nsize. A hypothetical floorplan is shown in Figure 4.\nFigures 7a and 7b show the performance of the proposed\nPrefill Chip simulated with LLMCompass [71]. Compared to\na modeled H100, it is 8% faster for prefills on average: the\ntensor operations are faster due to larger systolic arrays, but\nthe non-tensor operations are slower due to reduced memory\nbandwidth. The hardware cost is reduced by 52%, mainly\nfrom substituting HBMs with cheaper GDDR7 memory.\nOur proposed Prefill Chip can be slightly slower than mod-\neled H100s on very few total batched tokens (≤ 256tokens) or\nvery long input prompts (≥ 12288tokens). Very short input\nsequences have little weights reuse and low arithmetic inten-\nsity. For very long input sequences, the Softmax operation\ninside the attention mechanism becomes more dominant due\nto its quadratic complexity with respect to sequence length.\nSince our Prefill Chip has less memory bandwidth and non-\ntensor compute capability, Softmax becomes the new bottle-\nneck. This bottleneck could be alleviated by chunking long\nprefills [4] or using sequence parallelism [64].\n8",
+    "text_sha256": "4dc07bce5b3126e30008a12d320c97ea808b60a0c967ff9d9a8f35fa66810ee3",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          78.6,
+          73.71,
+          270.85,
+          173.0
+        ],
+        "rows": [
+          [
+            "0.8",
+            "0.8",
+            "0.8\n0.9 0.9\n0.9 0.9 0.9\n0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9\n0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 1.0\n0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 1.0 1.0",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "0.9",
+            "0.9",
+            "0.8",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.0",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.0",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "1.0",
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.0",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "1.0",
+            "1.0",
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.0",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "0.9",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.1"
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.0",
+            "0.9",
+            "0.9",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.1"
+          ]
+        ],
+        "row_count": 13,
+        "column_count": 14,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          327.93,
+          73.71,
+          518.72,
+          173.0
+        ],
+        "rows": [
+          [
+            "1.2",
+            "1.2",
+            "1.3\n1.3 1.3\n1.2 1.3 1.3\n1.2 1.3 1.3 1.3\n1.2 1.3 1.2 1.3 1.3\n1.2 1.2 1.3 1.3 1.3 1.3\n1.3 1.2 1.2 1.3 1.2 1.3 1.3\n1.3 1.2 1.2 1.2 1.3 1.3 1.3 1.3\n1.2 1.3 1.2 1.2 1.2 1.3 1.2 1.3 1.3\n1.2 1.3 1.3 1.2 1.2 1.2 1.3 1.3 1.3 1.3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            "1.3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.2",
+            "1.3",
+            "1.3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            "1.3",
+            "1.3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.2",
+            "1.3",
+            "1.3",
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            "1.3",
+            "1.3",
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.2",
+            "1.3",
+            "1.3",
+            null,
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            "1.3",
+            "1.3",
+            null,
+            null
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            "1.3",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            "1.3",
+            "1.2"
+          ],
+          [
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.3",
+            "1.3",
+            "1.3",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.2",
+            "1.2"
+          ]
+        ],
+        "row_count": 13,
+        "column_count": 14,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          78.6,
+          246.17,
+          270.85,
+          313.04
+        ],
+        "rows": [
+          [
+            "1.5\n1.4\n1.4\n1.4",
+            "1.5\n1.5\n1.5\n1.4",
+            "1.5\n1.5\n1.5\n1.5",
+            "1.5\n1.5\n1.5\n1.5",
+            "1.5\n1.5\n1.5\n1.5",
+            "1.5\n1.5\n1.5\n1.5",
+            "1.5\n1.5\n1.5\n1.5",
+            "1.5\n1.5\n1.5\n1.5",
+            "1.5 1.5\n1.5 1.5\n1.5 1.5 1.5 1.5\n1.5 1.5 1.5 1.5",
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.4",
+            "1.4",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            null,
+            null
+          ],
+          [
+            "1.3",
+            "1.4",
+            "1.4",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            null,
+            null
+          ],
+          [
+            "1.3",
+            "1.4",
+            "1.4",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.4",
+            "1.4"
+          ],
+          [
+            "1.0",
+            "1.3",
+            "1.4",
+            "1.4",
+            "1.4",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.4",
+            "1.4"
+          ],
+          [
+            "1.0",
+            "1.0",
+            "1.3",
+            "1.4",
+            "1.4",
+            "1.4",
+            "1.4",
+            "1.5",
+            "1.4",
+            "1.5",
+            "1.5",
+            "1.5",
+            "1.4",
+            "1.4"
+          ]
+        ],
+        "row_count": 6,
+        "column_count": 14,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-4",
+        "bbox": [
+          327.93,
+          246.17,
+          518.72,
+          313.04
+        ],
+        "rows": [
+          [
+            "1.0\n1.0\n1.0\n1.0",
+            "1.0\n1.0\n1.0\n1.0",
+            "1.0\n1.0\n1.0\n1.0",
+            "1.0\n1.0\n1.0\n1.0",
+            "1.0\n1.0\n1.0\n1.0",
+            "1.0\n1.0\n1.0\n1.0",
+            "1.0\n1.0\n1.0\n1.0",
+            "1.0\n1.0\n1.0\n1.0",
+            "1.0 1.0\n1.0 1.0\n1.0 1.0 1.0 1.1\n1.0 1.0 1.0 1.1",
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.1",
+            null,
+            null
+          ],
+          [
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.1",
+            null,
+            null
+          ],
+          [
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.1",
+            "1.1",
+            "1.0"
+          ],
+          [
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0"
+          ],
+          [
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0",
+            "1.0"
+          ]
+        ],
+        "row_count": 6,
+        "column_count": 14,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [
+      {
+        "region_id": "image-1",
+        "bbox": [
+          281.31,
+          74.56,
+          286.18,
+          173.29
+        ],
+        "width": 19,
+        "height": 385,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-2",
+        "bbox": [
+          530.68,
+          74.48,
+          535.55,
+          173.2
+        ],
+        "width": 57,
+        "height": 1155,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-3",
+        "bbox": [
+          284.24,
+          212.88,
+          289.18,
+          312.92
+        ],
+        "width": 19,
+        "height": 385,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-4",
+        "bbox": [
+          530.68,
+          214.38,
+          535.55,
+          313.11
+        ],
+        "width": 57,
+        "height": 1155,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      }
+    ],
+    "formula_candidates": [
+      {
+        "text": "eled H100s on very few total batched tokens (≤256 tokens) or",
+        "bbox": [
+          317.95,
+          581.29,
+          558.19,
+          591.34
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "very long input prompts (≥12288 tokens). Very short input",
+        "bbox": [
+          317.71,
+          593.25,
+          558.0,
+          603.29
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "introduction",
+    "headings": []
+  },
+  {
+    "page": 9,
+    "text": "Decode Chip.The key specifications of our proposed De-\ncode Chip are summarized in Table 3, and a hypothetical\nfloorplan is shown in Figure 4. Compared to a modeled H100,\nour proposed Decode Chip reduces the die area by 36% and\nlower the TDP by 28%, primarily due to its lower compute\ncapacity and smaller caches. Figure 7d shows that it still\nachieves 97% of the decode performance of a modeled H100\non average. Our Decode Chip can be slower for very large\nbatch sizes (≥ 256) due to increased arithmetic intensities.\nHowever, such large batch sizes can be rare in production,\nespecially for latency-sensitive workloads, due to the HBM\ncapacity limit and the diminishing return of batching.\n6 Evaluation Methodology\n6.1 Cost and TDP Modeling\nTotal Hardware Cost.We account for the combined man-\nufacturing costs of the die and memory. We exclude other\ncosts such as masking, packaging, and design, since they are\nnot commonly disclosed and estimates vary widely. Addi-\ntionally, when manufacturing at scale, one-time mask and\ndesign costs can be amortized across all dies.\nWe modify LLMCompass’ area model to model the die\nareas of our proposed Prefill Chip and Decode Chip guided\nby annotated H100 die photos [ 36]. For our proposed de-\nsigns, we assume a 10% area overhead to account for white\nspace and disabled defective components and a TSMC 4nm\nprocess node. We assume 4nm wafer costs of $20,000 per\n300mm wafer, which aligns with estimates for modern pro-\ncess nodes [39, 61, 67]. To find die costs, we calculate the\nnumber of dies that can fit a single wafer.\nFor device memory costs, we estimate $3 per GB for GDDR7\nbased on current GDDR6 spot prices [60]. HBM pricing is\nless transparent, and estimates vary between $10 to $35 per\nGB [10, 21]. For our cost model, we assume that HBM costs\nare between2×-4× the cost of GDDR based on publicly dis-\nclosed industry estimates [23]. In Section A Table 9, we fur-\nther explore different HBM3 cost assumptions. Note that\neven the highest 1:4 ratio of $12 per GB is on the lower end\nof cost estimates for HBM3.\nTable 3 details die area estimates for the proposed Pre-\nfill/Decode Chips. Based on these, we calculate die costs,\nmemory costs (assuming a 1:3 GDDR7:HBM3 cost ratio), and\ntotal hardware costs for the three devices.\nTDP Modeling for our Prefill/Decode Chip.The H100\nhas a TDP of 700 W [44], and we assume a 10% TDP over-\nhead to account for VRM conversion loss and other peripher-\nals [5, 35]. We assume each HBM package has a power con-\nsumption of 30 W [57]. Based on these, we assume the H100\ndie itself excluding HBMs has a TDP of700 × 90%− 30× 5=\n480𝑊 , and we assume our Prefill/Decode Chip has the same\npower density as an H100 die. GDDR7 power consumption\nis estimated by the reported 4.5 pJ/bit from Micron [37].\nCluster Scheduling\nSimulation\nHW Simulation\nLLMCompassVidur (Sarathi)\nSplitwiseSim\nWorkload Trace\nArrival time, input/output\nlength of each request\nScheduler Choice\nCluster Config\nHW\nConfig\nScheduling Decision\nWhich requests to run on\nwhich machine\nCo-location\nDisaggregation\nIteration\nLatency\nPer\nIteration\nTTFT & TBT\nFigure 8.End-to-End Simulation Setup\n6.2 End-to-end Simulations\nWe perform end-to-end evaluations that include both hard-\nware architectural simulation and cluster-level scheduling\nsimulation with workload traces to estimate how our designs\ntranslate into performance and cost improvements at scale.\nAn overview of our simulation setup is shown in Figure 8.\nGiven a cluster configuration and a workload trace, the\nscheduler will dispatch each request to a machine within\nthe cluster. We explore two such scheduling approaches:\nSplitwiseSim [51] as an implementation for disaggregated\nscheduling (Splitwise), and Vidur [3] as an implementation\nfor co-location-based scheduling (Sarathi [4]). The fidelity of\nthese scheduler implementations has been explored in their\ncorresponding publications [3, 51].\nAt each iteration, cluster simulators make scheduling deci-\nsions to assign requests to machines, and these iteration-level\nrequest batches are fed into LLMCompass [71] to estimate\nhow long it will take each machine to finish one iteration\nfor the request batch scheduled upon it.\nWe extended LLMCompass to support H100 modeling and\nnew models with a similar error rate as in the original pa-\nper [71]. We also extended SpitwiseSim and Vidur to use\nLLMCompass as their performance model. With LLMCom-\npass serving as the unified architectural performance model\nacross different schedulers and hardware, fair comparisons\nare achieved.All results in this paper are simulated, not\nmeasured on real hardware.In other words, we model\nthe execution rather than performing the computation with\nactual parameter values.\n6.3 Experimental Setup\nModels.We evaluated three open-source models with dif-\nferent sizes, model architectures, and deployment strategies:\n① BLOOM-176B [54] uses Multi-Head Attention [62] and we\ndeployed it with FP16 and a tensor parallelism of 8 (TP=8).\n② Llama3-70B [25] uses Grouped-Query Attention [6] with\nsmaller KV cache footprints, and we deployed it with FP16\nand TP=4.③ DeepSeek-V2-236B [19] uses DeepSeekMoE [17]\nwith Multi-head Latent Attention to compress the KV cache,\nand we deployed it with FP8 and expert parallelism 8 (EP=8).\nWorkloads.We use open-source request traces from Mi-\ncrosoft [12], representing two common LLM applications:\ncoding(code completion) andconversation(chatbot). The\n9",
+    "text_sha256": "ec73a1385314802c7d712071249700c90f3bcfad2724102013d0bd93b8fb9eca",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [
+      {
+        "text": "batch sizes (≥256) due to increased arithmetic intensities.",
+        "bbox": [
+          54.0,
+          169.63,
+          295.58,
+          179.68
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "deployed it with FP16 and a tensor parallelism of 8 (TP=8).",
+        "bbox": [
+          317.95,
+          604.1,
+          559.53,
+          614.07
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "and TP=4. ③DeepSeek-V2-236B [19] uses DeepSeekMoE [17]",
+        "bbox": [
+          317.95,
+          637.98,
+          558.31,
+          649.93
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "and we deployed it with FP8 and expert parallelism 8 (EP=8).",
+        "bbox": [
+          317.95,
+          663.88,
+          559.53,
+          673.84
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "introduction",
+    "start_section": "introduction",
+    "end_section": "experimental_setup",
+    "headings": [
+      {
+        "section": "experimental_setup",
+        "title": "6.3 Experimental Setup",
+        "char_offset": 4720
+      }
+    ]
+  },
+  {
+    "page": 10,
+    "text": "Table 4.Provisioning Results Summary\nCoding (70 req/s) Conversation (70 req/s)\nHW Requirement❖ Norm. HW Cost ◆ Norm. TDP◆ HW Requirement❖ Norm. HW Cost ◆ Norm. TDP◆\nSarathi 36 H100 36 36 34 H100 34 34\nSplitwise-homo 25 H100 25 25 23 H100 23 23\nSplitwise-hetero♠ 21 H100 + 9 A100 25.5 25.5 13 H100 + 32 A100 29 29\nSplitwise-pcap 21 H100 + 4 450W H100 25 23.6 6 H100 + 21 450W H100 27 19.5\nSPAD(P+D) 18 Prefill + 7 Decode14.7 20.4 8 Prefill + 17 Decode18.7 19.1\n❖ Minimum number of modeled 8-chip machines to meet the SLOs with BLOOM-176B. The unit is 8-chip machines, e.g., 36 H100 refers to 36\nmodeled 8-H100 machines and 18 Prefill refers to 18 8-Prefill-Chip machines. ◆ Normalized to the HW cost/TDP of a modeled 8-H100\nmachine. ♠ Assumes that A100s have half the hardware cost and TDP of H100s.\nTable 5.Latency SLOs. Defined as the slowdown relative to\nrunning the request on modeled H100s without batching.\nSLOs❖ P90 TBT P90 TTFT P99 TBT P99 TTFT\nLoose/Normal/Tight 2.5×/2×/1.5×4×/3×/2×6×/5×/3×8×/6×/4×\n❖ Normal SLOs are used unless otherwise specified.\ncoding workload has long input prompts (median: 1500 to-\nkens) and short output sequences (median: 13 tokens), while\nthe conversation workload has shorter input prompts (me-\ndian: 1020 tokens) and longer output sequences (median: 129\ntokens).\nSLOs.We evaluate the maximum throughput that can be\nsupported under normalized P90 and P99 TTFT and TBT\nSLOs, shown in Table 5. Similar to prior work [51], SLOs are\ndefined relative to the execution latencies of the same request\nwithout any batching or contention on modeled H100s.\nBaselines.We use Splitwise [ 51] and Sarathi [ 4] as base-\nline GPU-driven LLM serving cluster systems. Splitwise is a\ndisaggregation-based system, and we compare SPAD with\nthree of its variants: Splitwise-homo with H100s, Splitwise-\npcap that uses H100s for prefill and hypothetical power-\ncapped H100s (450W TDP)1 for decode, and Splitwise-hetero\nwith H100s for prefill and A100s for decode. Sarathi is a co-\nlocation-based system, and we configure it with modeled\nH100s. All baselines are evaluated as described in Section 6.2.\n7 Results\n7.1 Cluster Provisioning\nWe start by evaluating the efficacy of SPAD clusters when\nprovisioned for a specific workload. Table 4 summarizes the\n1In order to have a baseline that optimizes for TDP, we assume a hypo-\nthetical power-capped 450 W TDP H100 for decode with 76% of the peak\nFP16 tensor TFLOPs while retaining the same memory and interconnect\nspecifications as the original 700 W H100. Since we do not have access to\nH100 power configurations and its dynamic voltage and frequency scaling\n(DVFS) implementation, our LLMCompass simulation is based on the hard-\nware specification of the 350 W NVIDIA H100 PCIe [44]. We substitute its\nlow-end memory and NVLink interconnect with those of the original 700W\nH100, which we assume adds 100 W TDP.\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=3 \nOptimal Design\n1.0\n1.5\n2.0\n2.5\n3.0\n3.5\n4.0\n(a)Normalized P90 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=6 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7\n8 (b)Normalized P99 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=2 \nOptimal Design\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0\n2.2\n2.4\n2.6\n2.8\n(c)Normalized P90 TBT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=5 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7 (d)Normalized P99 TBT\nFigure 9.Provisioning Results with Coding Trace for SPAD.\nThe optimal design has 18 prefill and 7 decode machines.\nprovisioning results for BLOOM-176B using the coding and\nconversation workloads with a target request rate of 70 req/s.\nCoding.Compared to the best baseline, SPAD saves the\nhardware cost by41%and TDP by13%. Sarathi needs at\nleast 36 modeled 8-H100 machines to meet all SLOs, while\nSplitwise needs at least 25 modeled 8-H100 machines. The\nminimal hardware requirement is derived by sweeping ma-\nchine count as shown in Figures 12 and 13a in Section A.\nDue to prefill-decode interference, Sarathi can be unsuit-\nable for low-latency workloads compared to disaggregated\nserving. Splitwise-hetero needs at least 21 modeled 8-H100\nand 9 modeled 8-A100 machines, which does not improve\ncost-effectiveness because although the TFLOPS-to-memory-\nbandwidth ratio of A100 is closer to the theoretical arithmetic\nintensity of decode, the absolute bandwidth and TFLOPS are\nsignificantly lower, making it harder to meet strict latency\nSLOs. Figure 9 shows that SPAD needs the same amount of\n10",
+    "text_sha256": "5901e63fb1e70ad0f50aac66799d063986b1053158d15aec6706efa704aae72b",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          58.64,
+          96.25,
+          552.21,
+          177.56
+        ],
+        "rows": [
+          [
+            "",
+            "Coding (70 req/s)\n❖ ◆ ◆\nHW Requirement Norm. HW Cost Norm. TDP HW R",
+            "Conversation (70 req/s)\n❖ ◆ ◆\nequirement Norm. HW Cost Norm. TDP"
+          ],
+          [
+            "Sarathi\nSplitwise-homo\nSplitwise-hetero♠\nSplitwise-pcap\nSPAD (P+D)",
+            "36 H100 36 36 3\n25 H100 25 25 2\n21 H100 + 9 A100 25.5 25.5 13 H10\n21 H100 + 4 450W H100 25 23.6 6 H100 +\n18 Prefill + 7 Decode 14.7 20.4 8 Prefill",
+            "4 H100 34 34\n3 H100 23 23\n0 + 32 A100 29 29\n21 450W H100 27 19.5\n+ 17 Decode 18.7 19.1"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [
+      {
+        "region_id": "image-1",
+        "bbox": [
+          423.51,
+          228.59,
+          427.46,
+          307.52
+        ],
+        "width": 66,
+        "height": 1319,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-2",
+        "bbox": [
+          547.59,
+          226.03,
+          551.65,
+          307.11
+        ],
+        "width": 66,
+        "height": 1319,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-3",
+        "bbox": [
+          423.57,
+          345.98,
+          427.46,
+          423.64
+        ],
+        "width": 65,
+        "height": 1297,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-4",
+        "bbox": [
+          547.66,
+          343.45,
+          551.66,
+          423.23
+        ],
+        "width": 65,
+        "height": 1297,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      }
+    ],
+    "formula_candidates": [
+      {
+        "text": "SLO=3",
+        "bbox": [
+          351.37,
+          260.53,
+          371.03,
+          283.9
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "SLO=6",
+        "bbox": [
+          480.35,
+          256.89,
+          498.46,
+          281.44
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "SLO=2",
+        "bbox": [
+          363.83,
+          375.44,
+          382.2,
+          399.22
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "SLO=5",
+        "bbox": [
+          485.68,
+          373.65,
+          504.42,
+          398.11
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "experimental_setup",
+    "start_section": "experimental_setup",
+    "end_section": "results",
+    "headings": [
+      {
+        "section": "results",
+        "title": "7 Results",
+        "char_offset": 2115
+      }
+    ]
+  },
+  {
+    "page": 11,
+    "text": "Table 6.Provisioning Results under Various SLOs.\nWorkloads Coding (70 req/s) Conversation (70 req/s)\nSLOs Loose Normal Tight Loose Normal Tight\nSarathi (H100)◆ 33 36 45 31 34 40\nSplitwise (H100)◆ 24 25 27 22 23 27\nSplitwise (H100+A100)◆ 20+9 21+9 27+0 13+20 13+32 27+0\nSplitwise (H100+pcap)◆ 19+5 21+4 23+4 3+23 6+21 11+23\nSPAD (P+D)◆ 18+6 18+7 21+7 8+17 8+17 13+14\nHardware Saving❖ 42% 41% 40% 15% | 28% 19% | 31% 32% | 46%\nTDP Saving❖ 11% 13% 10% 13% | -8% 17% | 2% 21% | 18%\n◆ The unit is modeled 8-chip machines.\n❖ Hardware/TDP saving of SPAD compared to pareto-optimal baselines\n(underlined). There can be more than one Pareto-optimal baseline: Splitwise\n(H100) has lower hardware cost but higher TDP than Splitwise (H100+pcap).\nTable 7.SPAD Reallocation After Changing Workload\n(Model Remains Unchanged: BLOOM-176B)\nProvisioned Reallocated Reallocated Min. HW ❖◆ (HW, TDP)\nCluster (P+D)❖ Workload Throughput for Splitwise Saving\n18P+7D♠ Conversation 55 req/s 19 H100 (23%, -7%)\n8P+17D✿ Coding 60 req/s 21 H100 (11%, 9%)\n❖ The unit here is modeled 8-chip machines.\n◆ The minimum hardware required to achieve the reallocated throughput.\nSarathi performs consistently worse than Splitwise and is not shown.\n♠ Initially provisioned for Coding (70 req/s).\n✿ Initially provisioned for Conversation (70 req/s).\nmachines as Splitwise-homo, demonstrating the effective-\nness of ourless-is-moredesign methodology.\nConversation.Compared to the two Pareto-optimal base-\nlines, SPAD saves hardware cost and TDP by(19%, 17%)\nrelative to Splitwise-homo, and by(31%, 2%)relative to\nSplitwise-pcap. Splitwise-pcap saves TDP, but not hardware\ncost. Figure 14 in Section A shows the detailed provisioning\nresults for SPAD. Compared to the coding workload, the\nconversation workload requires more Decode Machines due\nto its longer output sequences.\nChanging SLOs.Table 6 shows the minimum hardware\nrequirements to sustain 70 req/s under three sets of SLOs\nfrom loose to tight (as defined in Table 5), demonstrating\nSPAD’s consistent performance under various SLOs. The\nNormal SLOs are the ones used in previous experiments.\n7.2 Cluster Reallocation\nNext, we evaluate how well an already provisioned SPAD\ncluster performs after reallocation when the workloads and\nmodels change. In this section, we compare with the modeled\n700W TDP H100 as the baseline hardware due to its balanced\nperformance across various workloads and SLO settings in\nthe provisioning experiments.\nChanging Workloads.Table 7 and Fig. 10a show that the\ncluster that was initially provisioned for the coding workload\nat 70 req/s can be repurposed for the conversation workload\nTable 8.SPAD Reallocation After Changing the Model\n(Workload Remains Unchanged)\nProvisioned Reallocated Reallocated Min. HW ❖◆ (HW, TDP)\nCluster (P+D)❖ Model Throughput for Splitwise Saving\n18P+7D♠ Llama3-70B 188 req/s 26 H100 (43%, 22%)\n8P+17D✿ Llama3-70B 171 req/s 27 H100 (31%, 29%)\n18P+7D♠ DeepSeek-V2 103 req/s 23 H100 (36%, 11%)\n8P+17D✿ DeepSeek-V2 183 req/s 24 H100 (22%, 20%)\n❖ The unit here is modeled 8-chip machines.\n◆ The minimum hardware required to achieve the reallocated throughput.\n♠ Initially provisioned for Coding (70 req/s) with BLOOM-176B.\n✿ Initially provisioned for Conversation (70 req/s) with BLOOM-176B.\n50 55 60 65 70\nRequest Rate (req/s)\n1\n2\n3\n4\n5\n6\n7\n8Normalized Latency\nP99 TTFT SLO\nMaximal\nThroughput:55\nP99 TBT SLO\nMaximal\nThroughput:55 P90 TTFT SLO\nMaximal\nThroughput:55\nP90 TBT SLO\nMaximal\nThroughput:55\nP99 TTFT\nP99 TBT\nP90 TTFT\nP90 TBT\n(a)Coding-Opt Cluster Running\nConversation (BLOOM-176B)\n50 55 60 65 70\nRequest Rate (req/s)\n1\n2\n3\n4\n5\n6\n7\n8Normalized Latency\nP99 TTFT SLO\nMaximal\nThroughput:60\nP99 TBT SLO\nMaximal\nThroughput:60P90 TTFT SLO\nMaximal\nThroughput:60\nP90 TBT SLO\nMaximal\nThroughput:60\nP99 TTFT\nP99 TBT\nP90 TTFT\nP90 TBT\n(b)Conversation-Opt. Cluster\nRunning Coding (BLOOM-176B)\n120 140 160 180 200\nRequest Rate (req/s)\n1\n2\n3\n4\n5\n6\n7\n8Normalized Latency\nP99 TTFT SLO\nMaximal\nThroughput:188\nP99 TBT SLO\nMaximal\nThroughput:188\nP90 TTFT SLO\nMaximal\nThroughput:188\nP90 TBT SLO\nMaximal\nThroughput:188\nP99 TTFT\nP99 TBT\nP90 TTFT\nP90 TBT\n(c)BLOOM-Opt. Cluster Run-\nning Llama3-70B (Coding)\n120 140 160 180\nRequest Rate (req/s)\n1\n2\n3\n4\n5\n6\n7\n8Normalized Latency\nP99 TTFT SLO\nMaximal\nThroughput:171\nP99 TBT SLO\nMaximal\nThroughput:171\nP90 TTFT SLO\nMaximal\nThroughput:171\nP90 TBT SLO\nMaximal\nThroughput:171\nP99 TTFT\nP99 TBT\nP90 TTFT\nP90 TBT\n(d)BLOOM-Opt. Cluster Run-\nning Llama3-70B (Conversation)\nFigure 10.SPAD Clusters After Reallocation. Markers indi-\ncate the highest feasible request rate under each SLO; their\nminimum is the maximum supported cluster throughput.\nat 55 req/s after reallocation, where 8 Prefill Machines are\nreallocated to run decode. The baseline needs at least 19\nmodeled 8-H100 machines to achieve the same throughput,\nso SPAD can still save the hardware cost by23%at the cost\nof7%larger TDP. Although the Prefill Chip runs decode at\na reduced hardware efficiency, its hardware cost saving by\nusing GDDR instead of HBM is still significant.\nTable 7 and Fig. 10b show that the cluster initially provi-\nsioned for the conservation workload at 70 req/s can be real-\nlocated to support 60 req/s for the coding workload, where\n14 Decode Machines are reallocated for prefill. The baseline\nneeds at least 21 modeled 8-H100 machines to achieve the\nsame throughput, so SPAD still reduces the hardware cost by\n11%and TDP by9%. We attribute this benefit to the fact that\n11",
+    "text_sha256": "ef2c9b0137908173ab940dca0fdc08b8e59dc0e166f1d91b212a6c27f48155d9",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          56.96,
+          96.19,
+          291.08,
+          184.93
+        ],
+        "rows": [
+          [
+            "Workloads\nSLOs",
+            "Coding (70 req/s)\nLoose Normal Tight",
+            "Conversation (70 req/s)\nLoose Normal Tight"
+          ],
+          [
+            "Sarathi (H100)◆\nSplitwise (H100)◆\nSplitwise (H100+A100)◆\nSplitwise (H100+pcap)◆\nSPAD (P+D)◆",
+            "33 36 45\n24 25 27\n20+9 21+9 27+0\n19+5 21+4 23+4\n18+6 18+7 21+7",
+            "31 34 40\n22 23 27\n13+20 13+32 27+0\n3+23 6+21 11+23\n8+17 8+17 13+14"
+          ],
+          [
+            "Hardware Saving❖\nTDP Saving❖",
+            "42% 41% 40%\n11% 13% 10%",
+            "15% | 28% 19% | 31% 32% | 46%\n13% | -8% 17% | 2% 21% | 18%"
+          ]
+        ],
+        "row_count": 3,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          320.86,
+          108.15,
+          551.42,
+          169.57
+        ],
+        "rows": [
+          [
+            "Provisioned R\nCluster (P+D)❖",
+            "eallocated Reallocated\nModel Throughput",
+            "Min. HW❖◆ (HW, TDP)\nfor Splitwise Saving"
+          ],
+          [
+            "18P+7D♠ Ll\n8P+17D✿ Ll\n18P+7D♠ De\n8P+17D✿ De",
+            "ama3-70B 188 req/s\nama3-70B 171 req/s\nepSeek-V2 103 req/s\nepSeek-V2 183 req/s",
+            "26 H100 (43%, 22%)\n27 H100 (31%, 29%)\n23 H100 (36%, 11%)\n24 H100 (22%, 20%)"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-3",
+        "bbox": [
+          445.66,
+          228.14,
+          551.42,
+          323.87
+        ],
+        "rows": [
+          [
+            "8\nP99 TTFT\n7 P99 TBT P90 TTFT Latency\n6 P90 TBT P99 TTFT SLO\n5 P99 TBT SLO\nNormalized\n4 Maximal\nThroughput:60\n3P90 TTFT SLO\n2 P90 TBT SLO\n1\n50 55 60 65 7\nRequest Rate (req/s)",
+            "",
+            "P99 T",
+            "TFT",
+            ""
+          ],
+          [
+            null,
+            "",
+            "P99 T\nP90 T",
+            "BT\nTFT",
+            "P99 TTFT SLO"
+          ],
+          [
+            null,
+            "",
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            "",
+            "P90 T",
+            "BT\nO",
+            ""
+          ],
+          [
+            null,
+            "P",
+            "99 TBT SL",
+            null,
+            null
+          ],
+          [
+            null,
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            null,
+            "P9",
+            "0 TTFT SL",
+            "Maxi\nThrough\nO",
+            "mal\nput:60"
+          ],
+          [
+            null,
+            "P",
+            "90 TBT SL",
+            "O",
+            ""
+          ]
+        ],
+        "row_count": 8,
+        "column_count": 5,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-4",
+        "bbox": [
+          56.96,
+          274.32,
+          291.08,
+          317.52
+        ],
+        "rows": [
+          [
+            "Provisioned Reallocated Reallocated Min. HW❖◆ (HW, TDP)\nCluster (P+D)❖ Workload Throughput for Splitwise Saving\n18P+7D♠ Conversation 55 req/s 19 H100 (23%, -7%)",
+            null,
+            null
+          ],
+          [
+            "8P+17D✿",
+            "Coding 60 req/s",
+            "21 H100 (11%, 9%)"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 3,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-5",
+        "bbox": [
+          445.66,
+          358.19,
+          551.42,
+          454.71
+        ],
+        "rows": [
+          [
+            "8 P99 TTFT Maximal\n7 P99 TBTThroughput:171 P90 TTFT Latency\n6 P90 TBT P99 TTFT SLO\n5 P99 TBT SLO\nNormalized\n4\n3 P90 TTFT SLO\n2 P90 TBT SLO\n1\n120 140 160 180\nRequest Rate (req/s)",
+            "",
+            "P99 TTFT Maximal\nP99 TBTThroughput:",
+            "171"
+          ],
+          [
+            null,
+            "",
+            "P90 TTFT\nP99 TTFT S",
+            "LO"
+          ],
+          [
+            null,
+            "",
+            "P90 TBT\nTBT SLO",
+            ""
+          ],
+          [
+            null,
+            "P99",
+            null,
+            null
+          ],
+          [
+            null,
+            "",
+            "",
+            ""
+          ],
+          [
+            null,
+            "P90",
+            "TTFT SLO",
+            ""
+          ],
+          [
+            null,
+            "P90",
+            "TBT SLO",
+            ""
+          ]
+        ],
+        "row_count": 7,
+        "column_count": 4,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "results",
+    "start_section": "results",
+    "end_section": "results",
+    "headings": []
+  },
+  {
+    "page": 12,
+    "text": "our Decode Chip is designed to run prefill phases reasonably\nwell, so it does not sacrifice the performance much.\nChanging Models.Table 8 shows that when the model\nevolves from Multi-Head Attention (MHA) to Grouped-Query\nAttention (GQA) and Multi-head Latent Attention (MLA)\nand MoE (DeepSeek-V2), the cluster initially provisioned\nfor BLOOM-176B can also serve Llama3-70B and DeepSeek-\nV2 efficiently, achieving22%-43%hardware cost saving and\n11%-29%TDP saving compared to the modeled H100 base-\nline.\nFor Llama3-70B, the cost savings tend to be greater than\nfor running BLOOM-176B, mainly because GQA enables\nKey/Value sharing inside each group, which increases the\narithmetic intensity and favors our proposed Prefill Chips.\nFor DeepSeek-V2, the cost savings are smaller mainly be-\ncause it is a sparse MoE model and has smaller arithmetic\nintensity. In DeepSeek-V2, tokens are dispatched to 160 differ-\nent routed experts. Since each token only activates a subset\nof total weights, the per-expert weight reuse across different\ntokens is smaller compared to dense models.\n8 Conclusion\nThis work introduces SPAD, a heterogeneous system to ac-\ncelerate disaggregation-based LLM serving. Leveraging the\ndual-phase nature of LLM inference, we adopt aless-is-more\nphilosophy to design cost-effective Prefill and Decode Chips\ntailored to their distinct computational characteristics. Com-\npared to modeled H100s, our proposed Prefill Chips deliver\n8% higher prefill performance on average at 52% lower hard-\nware cost, while our proposed Decode Chips achieve 97%\nof the decode performance with 28% lower TDP. End-to-\nend simulations show that SPAD reduces hardware costs by\n19%-41% and TDP by 2%-17% compared to modeled baseline\nclusters while maintaining the same performance. As models\nand workloads change, SPAD can perform an adaptive chip\nreallocation and still achieve 11%-43% lower hardware costs,\ndemonstrating the longevity of our design.\nAcknowledgments\nThis work was supported in part by ACE, one of the seven\ncenters in JUMP 2.0, a Semiconductor Research Corporation\n(SRC) program sponsored by DARPA. This material is based\nupon work supported by a Princeton Andlinger Center In-\nnovation Award, a Princeton SEAS Innovation Award, and\nthe National Science Foundation Graduate Research Fellow-\nship Program under Grant No. DGE-2039656. Any opinions,\nfindings, and conclusions or recommendations expressed in\nthis material are those of the author(s) and do not neces-\nsarily reflect the views of the National Science Foundation.\nThis work was also supported by the Princeton Yan Huo *94\nGraduate Fellowship.\nA Supplementary Results\n(1,8) (2,4) (4,2) (8,1)\n(TP, PP)\n0.0\n0.2\n0.4\n0.6\n0.8\n1.0Prefill Latency (s)\nH100\nPrefill Chip\n(1,8) (2,4) (4,2) (8,1)\n(TP, PP)\n0.00\n0.05\n0.10\n0.15\n0.20Decode Latency (s)\nH100\nDecode Chip\nFigure 11.Chip Performance Under Various Tensor (TP) and\nPipeline Parallelism (PP). Latencies of our chips and H100\nare all simulated with LLMCompass [71] and FP16 BLOOM-\n176B with sequence length 1024 and batch size 2 and 64 for\nprefill and decode respectively. Our proposed chips perform\nconsistently under various model parallelisms.\nTable 9.Chip Cost under Various HBM Cost Assumptions\nHBM Cost Assumptions $6/GB $9/GB ❖ $12/GB\nEstimated HBM Cost $480 $720 $960\nEstimated Decode Chip Cost $667 $907 $1147\nEstimated H100 Cost $795 $1035 $1275\n❖ We use $9/GB for HBM cost in the the paper.\n4 8 12 16 20 24 28\nH100 Machine Count for Prefill282420161284\nH100 Machine Count for Decode\n SLO=3 \nOptimal Design\n1.0\n1.5\n2.0\n2.5\n3.0\n3.5\n4.0\n(a)Normalized P90 TTFT\n4 8 12 16 20 24 28\nH100 Machine Count for Prefill282420161284\nH100 Machine Count for Decode\n SLO=6 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7\n8 (b)Normalized P99 TTFT\n4 8 12 16 20 24 28\nH100 Machine Count for Prefill282420161284\nH100 Machine Count for Decode\n SLO=2 \nOptimal Design\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0\n2.2\n2.4\n2.6\n2.8\n(c)Normalized P90 TBT\n4 8 12 16 20 24 28\nH100 Machine Count for Prefill282420161284\nH100 Machine Count for Decode\n SLO=5 \nOptimal Design\n1\n2\n3\n4\n5\n6\n7 (d)Normalized P99 TBT\nFigure 12.Provisioning Results with Coding Trace (70 req/s)\nand BLOOM-176B for Splitwise-homo. At least 25 modeled\n8-H100 machines are required to meet all the SLOs. Markers\nindicate one of the Pareto-optimal designs with 18 modeled\n8-H100 machines for prefill and 7 for decode. All results here\nare simulated as explained in Section 6.2.\n12",
+    "text_sha256": "aecf152842f13c2bb31075f64463ca470d5c2d0846dc8b229c30f4c09dbf1810",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          375.86,
+          310.09,
+          497.41,
+          358.33
+        ],
+        "rows": [
+          [
+            "st Assumptions",
+            "$6/GB $9/GB"
+          ],
+          [
+            "ted HBM Cost\nDecode Chip Cost\nted H100 Cost",
+            "$480 $720\n$667 $907\n$795 $1035"
+          ]
+        ],
+        "row_count": 2,
+        "column_count": 2,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [
+      {
+        "region_id": "image-1",
+        "bbox": [
+          423.6,
+          396.28,
+          427.51,
+          474.42
+        ],
+        "width": 66,
+        "height": 1319,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-2",
+        "bbox": [
+          546.55,
+          393.75,
+          550.57,
+          474.02
+        ],
+        "width": 66,
+        "height": 1319,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-3",
+        "bbox": [
+          423.66,
+          512.68,
+          427.51,
+          589.55
+        ],
+        "width": 65,
+        "height": 1297,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-4",
+        "bbox": [
+          546.61,
+          510.18,
+          550.57,
+          589.15
+        ],
+        "width": 65,
+        "height": 1297,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      }
+    ],
+    "formula_candidates": [
+      {
+        "text": "SLO=3",
+        "bbox": [
+          352.73,
+          437.54,
+          374.11,
+          459.51
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "SLO=6",
+        "bbox": [
+          479.03,
+          430.05,
+          499.02,
+          453.82
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "SLO=2",
+        "bbox": [
+          359.85,
+          542.04,
+          379.78,
+          564.98
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "SLO=5",
+        "bbox": [
+          476.08,
+          540.29,
+          496.33,
+          563.97
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "results",
+    "start_section": "results",
+    "end_section": "conclusion",
+    "headings": [
+      {
+        "section": "conclusion",
+        "title": "8 Conclusion",
+        "char_offset": 1075
+      }
+    ]
+  },
+  {
+    "page": 13,
+    "text": "20 30 40 50\nH100 Machine Count\n1\n2\n3\n4\n5\n6\n7\n8Normalized Latency\nP99 TTFT SLO\n36 \nP99 TBT SLO\n36 \nP90 TTFT SLO\n36 \nP90 TBT SLO\n36 P99 TTFT\nP99 TBT\nP90 TTFT\nP90 TBT\n(a)Coding (70 req/s): 36 H100 ma-\nchines to meet all SLOs\n20 30 40 50\nH100 Machine Count\n1\n2\n3\n4\n5\n6\n7\n8Normalized Latency\nP99 TTFT SLO\n34\nP99 TBT SLO\n34\nP90 TTFT SLO\n34\nP90 TBT SLO\n34 P99 TTFT\nP99 TBT\nP90 TTFT\nP90 TBT\n(b)Conversation (70 req/s): 34\nH100 machines to meet all SLOs\nFigure 13.Provisioning Results with Sarathi (BLOOM-176B).\nMarkers indicate the minimum modeled 8-H100 machine\ncount to meet each SLO. All results here are simulated as\nexplained in Section 6.2.\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=3 \nOptimal Design\n1.0\n1.5\n2.0\n2.5\n3.0\n3.5\n4.0\n(a)Normalized P90 TTFT\n4 8 12 16 20 24 28\nPrefill Machine Count\n282420161284\nDecode Machine Count\n SLO=2 \nOptimal Design\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0\n2.2\n2.4\n2.6\n2.8 (b)Normalized P90 TBT\nFigure 14.Provisioning Results with Conversation Trace\nfor SPAD. The optimal design has 8 prefill and 17 decode\nmachines. P99 TTFT/TBT figures are similar and not shown.\nB Extended Discussion\nB.1 Prefill/Decode Bottleneck Shifting\nIn Section 3, we show that prefill is compute-bound and\ndecode is memory-bandwidth-bound under a common batch\nsize and sequence length setting. However, these bottlenecks\ncan dynamically shift under various conditions:\nPrefill with very short sequences can shift towards\nmemory-bandwidth-bound due to limited data reuse.\nFig. 15a shows that the prefill latency is more sensitive to\nmemory bandwidth when the sequence length is very small\n(e.g., 64). As a result, on the bottom left corner in Fig. 7a, our\nproposed Prefill Chip can be slower than the modeled H100s\nwhen the batched token size is small.\nPrefill with long sequences can shift towards memory-\nbound.The quadratic complexity of the attention puts more\npressure on memory. Fig. 15a shows that the prefill latency\nis more sensitive to memory bandwidth with long sequences.\nOn the bottom right in Fig. 7a, the performance improve-\nment of our proposed Prefill Chip diminishes and eventually\nreverses. Memory capacity becomes another bottleneck with\n1000 2000 3000 4000\nMemory Bandwidth (GB/s)\n1.0\n1.2\n1.4\n1.6\n1.8\n2.0Norm. Prefill Latency\nH100\nBatch Size &\nSequence Length\nBS: 2, Seq: 64\nBS: 2, Seq: 1024\nBS: 2, Seq: 4096\nBS: 2, Seq: 16384\n(a)Normalized Prefill Latency.\nHardware specifications are set\naccording to a modeled H100 ex-\ncept for memory bandwidth.\n50 100 150\nCore Count\n1.0\n1.2\n1.4\n1.6\n1.8Norm. Decode Latency\nH100\nBatch Size &\nSequence Length\nBS: 32, Seq: 256\nBS: 64, Seq: 256\nBS: 128, Seq: 256\nBS: 256, Seq: 256\n(b)Normalized Decode Latency.\nHardware specifications are set\naccording to a modeled H100 ex-\ncept the core count.\nFigure 15.Prefill/Decode Latency Under Various Settings.\nSimulated using LLMCompass [71] for an FP16 BLOOM-176B\nwith tensor parallelism 8. All results are normalized to sim-\nulated H100s. (a) Prefill shifts towards memory-bandwidth-\nbound under very long or short sequences. (b) Decode shifts\ntowards compute-bound under large batch sizes.\nlong sequences due to increasing KV cache size: For FP16\nBLOOM-176B, assuming 90% of the memory capacity re-\nserved for model weights and KV cache, 8 of our proposed\nPrefill Chips (64GB each) can store roughly 35K tokens, while\n8 modeled H100s (80GB each) can store around 66K tokens.\nDecode with large batch sizes can shift towards compute-\nbound.Fig. 15b shows that decode can be more sensitive\nto compute capacity with large batch sizes due to increased\narithmetic intensity. On the top left corner of Fig. 7d, our\nproposed Decode Chips are slower than modeled H100s un-\nder batch size 256. However, this condition can be rare due\nto KV cache sizes and latency constraints.\nB.2 Adaptability to Highly Variable Workloads\nAs shown in Section 7.2 and Tables 7 and 8, we rely on clus-\nter reallocation to repurpose our proposed chips when the\nPrefill-to-Decode ratio of the workload changes dramatically.\nTo further improve adaptability and robustness, we provide\ntwo recommendations:\nBuffer pool.SPAD can be combined with a buffer pool\ncomposed of existing balanced hardware such as NVIDIA\nH100s. When the prefill and decode demands change, dif-\nferent portions of this pool can be allocated to prefill and\ndecode according to the changing demands dynamically. We\nenvision most of the workload still served by our proposed\nchips for the hardware cost and TDP benefits, with the buffer\npool mainly to account for future workload variability.\nLoad predictor.At the orchestrator level, SPAD can be\nfurther combined with a runtime load predictor such as\nARIMA (Autoregressive Integrated Moving Average) or Meta\n13",
+    "text_sha256": "d5223e9f3278565e3f8925c5bb2deff6c8199d6b3dadb1e3785dec0d9a3c0859",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [
+      {
+        "table_id": "table-1",
+        "bbox": [
+          341.86,
+          76.36,
+          427.14,
+          147.54
+        ],
+        "rows": [
+          [
+            "",
+            "",
+            null,
+            "Batch Siz",
+            "e &"
+          ],
+          [
+            "",
+            "",
+            "",
+            "Sequence\nBS: 2, S",
+            "Length\neq: 64"
+          ],
+          [
+            "",
+            "",
+            "",
+            "BS: 2, S",
+            "eq: 1024"
+          ],
+          [
+            "",
+            "",
+            "",
+            "BS: 2, S\nBS: 2, S",
+            "eq: 4096\neq: 16384"
+          ],
+          [
+            null,
+            null,
+            "",
+            null,
+            null
+          ],
+          [
+            "",
+            "",
+            null,
+            "",
+            "H100"
+          ]
+        ],
+        "row_count": 6,
+        "column_count": 5,
+        "status": "extracted_candidate"
+      },
+      {
+        "table_id": "table-2",
+        "bbox": [
+          464.74,
+          76.36,
+          552.99,
+          147.54
+        ],
+        "rows": [
+          [
+            "",
+            "",
+            "Bat",
+            "ch Size &",
+            ""
+          ],
+          [
+            "",
+            "",
+            "Seq\nB",
+            "uence Length\nS: 32, Seq: 25",
+            "6"
+          ],
+          [
+            "",
+            "",
+            "B\nB",
+            "S: 64, Seq: 25\nS: 128, Seq: 2",
+            "6\n56"
+          ],
+          [
+            "",
+            "B",
+            "B",
+            "S: 256, Seq: 2",
+            "56"
+          ],
+          [
+            null,
+            null,
+            null,
+            "H100",
+            ""
+          ]
+        ],
+        "row_count": 5,
+        "column_count": 5,
+        "status": "extracted_candidate"
+      }
+    ],
+    "figures": [
+      {
+        "region_id": "image-1",
+        "bbox": [
+          159.56,
+          280.98,
+          163.51,
+          359.92
+        ],
+        "width": 66,
+        "height": 1319,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      },
+      {
+        "region_id": "image-2",
+        "bbox": [
+          280.84,
+          282.26,
+          284.73,
+          359.91
+        ],
+        "width": 65,
+        "height": 1297,
+        "status": "region_detected",
+        "interpretation": "not_performed"
+      }
+    ],
+    "formula_candidates": [
+      {
+        "text": "SLO=3",
+        "bbox": [
+          101.66,
+          315.92,
+          125.2,
+          335.11
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      },
+      {
+        "text": "SLO=2",
+        "bbox": [
+          218.06,
+          313.07,
+          242.07,
+          329.75
+        ],
+        "status": "text_pattern_candidate",
+        "interpretation": "not_performed"
+      }
+    ],
+    "section": "conclusion",
+    "start_section": "conclusion",
+    "end_section": "conclusion",
+    "headings": []
+  },
+  {
+    "page": 14,
+    "text": "Prophet [59], which has been incorporated in industry frame-\nworks such as NVIDIA Dynamo Planner [1, 45]. At each time\ninterval, the load predictor estimates the prefill loads and\ndecode loads, which can be used to guide SPAD cluster real-\nlocation under highly variable workloads.\nB.3 Extra Complexity of Heterogeneous Chips\nTheless-is-moredesign methodology illustrates how to take\nan existing LLM serving hardware and tailor it into two spe-\ncialized chips for different phases. In this design process, the\nbaseline design and the derived prefill/decode chips share\narchitectural similarity, minimizing the compatibility issue\nwith existing software stacks and alleviating the extra NRE\nand software implementation costs. For example, the dif-\nferent systolic array sizes between the prefill and decode\nchips may require tuning tiling parameters, rather than de-\nveloping two entirely different software implementations.\nThere is no fundamental difficulty in supporting existing\nsoftware frameworks and inference-time optimizations like\nquantization with a minimal amount of engineering effort\ninvolved. Moreover, the increasing LLM inference demand\ncan amortize these costs through massive production and\ndeployment of these chips.\nReferences\n[1] 2025. feat : SLA-based Planner.https://github.com/ai-dynamo/dynamo/\npull/1420.\n[2] Dennis Abts, Garrin Kimmell, Andrew Ling, John Kim, Matt Boyd,\nAndrew Bitar, Sahil Parmar, Ibrahim Ahmed, Roberto DiCecco, David\nHan, John Thompson, Michael Bye, Jennifer Hwang, Jeremy Fow-\ners, Peter Lillian, Ashwin Murthy, Elyas Mehtabuddin, Chetan Tekur,\nThomas Sohmers, Kris Kang, Stephen Maresh, and Jonathan Ross.\n2022. A software-defined tensor streaming multiprocessor for large-\nscale machine learning. InProceedings of the 49th Annual International\nSymposium on Computer Architecture(New York, New York)(ISCA ’22).\nAssociation for Computing Machinery, New York, NY, USA, 567–580.\ndoi:10.1145/3470496.3527405\n[3] Amey Agrawal, Nitin Kedia, Jayashree Mohan, Ashish Panwar,\nNipun Kwatra, Bhargav S. Gulavani, Ramachandran Ramjee, and\nAlexey Tumanov. 2024. Vidur: A Large-scale Simulation Frame-\nwork for LLM Inference. InProceedings of Machine Learning and\nSystems, P. Gibbons, G. Pekhimenko, and C. De Sa (Eds.), Vol. 6.\n351–366.https://proceedings.mlsys.org/paper_files/paper/2024/file/\nb74a8de47d2b3c928360e0a011f48351-Paper-Conference.pdf\n[4] Amey Agrawal, Nitin Kedia, Ashish Panwar, Jayashree Mohan, Nipun\nKwatra, Bhargav S. Gulavani, Alexey Tumanov, and Ramachandran\nRamjee. 2024. Taming throughput-latency tradeoff in LLM inference\nwith sarathi-serve. InProceedings of the 18th USENIX Conference on\nOperating Systems Design and Implementation(Santa Clara, CA, USA)\n(OSDI’24). USENIX Association, USA, Article 7, 18 pages.https://dl.\nacm.org/doi/10.5555/3691938.3691945\n[5] Mohamed Ahmed, Chao Fei, Fred C. Lee, and Qiang Li. 2016. High\nefficiency two-stage 48V VRM with PCB winding matrix transformer.\nIn2016 IEEE Energy Conversion Congress and Exposition (ECCE). 1–8.\ndoi:10.1109/ECCE.2016.7855150\n[6] Joshua Ainslie, James Lee-Thorp, Michiel de Jong, Yury Zemlyanskiy,\nFederico Lebrón, and Sumit Sanghai. 2023. GQA: Training General-\nized Multi-Query Transformer Models from Multi-Head Checkpoints.\narXiv:2305.13245 [cs.CL]https://arxiv.org/abs/2305.13245\n[7] AMD. 2023. AMD Instinct™MI300X Accelerator Data Sheet.\nhttps://www.amd.com/content/dam/amd/en/documents/instinct-\ntech-docs/data-sheets/amd-instinct-mi300x-data-sheet.pdfAc-\ncessed: 2025-04-10.\n[8] AMD. 2024. AMD Instinct MI300X Accelerator.https://www.amd.\ncom/en/products/accelerators/instinct/mi300/mi300x.html. Accessed:\n2025-03-27.\n[9] Reza Yazdani Aminabadi, Samyam Rajbhandari, Ammar Ahmad Awan,\nCheng Li, Du Li, Elton Zheng, Olatunji Ruwase, Shaden Smith, Min-\njia Zhang, Jeff Rasley, and Yuxiong He. 2022. DeepSpeed-inference:\nenabling efficient inference of transformer models at unprecedented\nscale. InProceedings of the International Conference on High Perfor-\nmance Computing, Networking, Storage and Analysis(Dallas, Texas)\n(SC ’22). IEEE Press, Article 46, 15 pages.https://dl.acm.org/doi/abs/\n10.5555/3571885.3571946\n[10] Astute Analytica. 2025. High Bandwidth Memory Market to Worth\nOver US$ 5,810.5 Million By 2033.https://www.globenewswire.\ncom/news-release/2025/01/31/3018789/0/en/High-Bandwidth-\nMemory-Market-to-Worth-Over-US-5-810-5-Million-By-2033-\nAstute-Analytica.html\n[11] Georgios Andreadis, Fabian Mastenbroek, Vincent van Beek, and\nAlexandru Iosup. 2022. Capelin: Data-Driven Compute Capacity Pro-\ncurement for Cloud Datacenters Using Portfolios of Scenarios.IEEE\nTransactions on Parallel and Distributed Systems33, 1 (2022), 26–39.\ndoi:10.1109/TPDS.2021.3084816\n[12] Azure. 2024.Azure Public Dataset: Azure LLM Inference Trace\n2023.https://github.com/Azure/AzurePublicDataset/blob/master/\nAzureLLMInferenceDataset2023.md\n[13] Mat Brown. 2024. Sizing and Capacity planning for Nutanix Cloud\nInfrastructure.https://www.nutanix.com/tech-center/blog/hybrid-\ncloud-sizing-and-capacity-planning\n[14] Weilin Cai, Juyong Jiang, Fan Wang, Jing Tang, Sunghun Kim, and\nJiayi Huang. 2025. A Survey on Mixture of Experts in Large Language\nModels.IEEE Transactions on Knowledge and Data Engineering37, 7\n(2025), 3896–3915. doi:10.1109/TKDE.2025.3554028\n[15] Google Cloud. 2024. Cloud TPU v5p.https://cloud.google.com/tpu/\ndocs/v5p. Accessed: 2025-03-27.\n[16] Google Cloud. 2024. Cloud TPU v6e.https://cloud.google.com/tpu/\ndocs/v6e. Accessed: 2025-03-27.\n[17] Damai Dai, Chengqi Deng, Chenggang Zhao, R. X. Xu, Huazuo Gao,\nDeli Chen, Jiashi Li, Wangding Zeng, Xingkai Yu, Y. Wu, Zhenda Xie,\nY. K. Li, Panpan Huang, Fuli Luo, Chong Ruan, Zhifang Sui, and Wen-\nfeng Liang. 2024. DeepSeekMoE: Towards Ultimate Expert Specializa-\ntion in Mixture-of-Experts Language Models. arXiv:2401.06066 [cs.CL]\nhttps://arxiv.org/abs/2401.06066\n[18] Tri Dao, Daniel Y. Fu, Stefano Ermon, Atri Rudra, and Christopher Ré.\n2022. FLASHATTENTION: fast and memory-efficient exact attention\nwith IO-awareness. InProceedings of the 36th International Conference\non Neural Information Processing Systems(New Orleans, LA, USA)\n(NIPS ’22). Curran Associates Inc., Red Hook, NY, USA, Article 1189,\n16 pages.\n[19] DeepSeek-AI, Aixin Liu, Bei Feng, Bin Wang, Bingxuan Wang, Bo Liu,\nChenggang Zhao, Chengqi Dengr, Chong Ruan, Damai Dai, Daya Guo,\nDejian Yang, Deli Chen, Dongjie Ji, Erhang Li, Fangyun Lin, Fuli Luo,\nGuangbo Hao, Guanting Chen, Guowei Li, H. Zhang, Hanwei Xu, Hao\nYang, Haowei Zhang, Honghui Ding, Huajian Xin, Huazuo Gao, Hui Li,\nHui Qu, J. L. Cai, Jian Liang, Jianzhong Guo, Jiaqi Ni, Jiashi Li, Jin Chen,\nJingyang Yuan, Junjie Qiu, Junxiao Song, Kai Dong, Kaige Gao, Kang\nGuan, Lean Wang, Lecong Zhang, Lei Xu, Leyi Xia, Liang Zhao, Liyue\nZhang, Meng Li, Miaojun Wang, Mingchuan Zhang, Minghua Zhang,\nMinghui Tang, Mingming Li, Ning Tian, Panpan Huang, Peiyi Wang,\nPeng Zhang, Qihao Zhu, Qinyu Chen, Qiushi Du, R. J. Chen, R. L.\nJin, Ruiqi Ge, Ruizhe Pan, Runxin Xu, Ruyi Chen, S. S. Li, Shanghao\nLu, Shangyan Zhou, Shanhuang Chen, Shaoqing Wu, Shengfeng Ye,\n14",
+    "text_sha256": "5f49801292eb832a4954cb1f70e2d1f67cc8b39c1af047e5a3e8a9a483509004",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "conclusion",
+    "start_section": "conclusion",
+    "end_section": "references",
+    "headings": [
+      {
+        "section": "references",
+        "title": "References",
+        "char_offset": 1236
+      }
+    ]
+  },
+  {
+    "page": 15,
+    "text": "Shirong Ma, Shiyu Wang, Shuang Zhou, Shuiping Yu, Shunfeng Zhou,\nSize Zheng, T. Wang, Tian Pei, Tian Yuan, Tianyu Sun, W. L. Xiao,\nWangding Zeng, Wei An, Wen Liu, Wenfeng Liang, Wenjun Gao,\nWentao Zhang, X. Q. Li, Xiangyue Jin, Xianzu Wang, Xiao Bi, Xiaodong\nLiu, Xiaohan Wang, Xiaojin Shen, Xiaokang Chen, Xiaosha Chen,\nXiaotao Nie, Xiaowen Sun, Xiaoxiang Wang, Xin Liu, Xin Xie, Xingkai\nYu, Xinnan Song, Xinyi Zhou, Xinyu Yang, Xuan Lu, Xuecheng Su, Y.\nWu, Y. K. Li, Y. X. Wei, Y. X. Zhu, Yanhong Xu, Yanping Huang, Yao\nLi, Yao Zhao, Yaofeng Sun, Yaohui Li, Yaohui Wang, Yi Zheng, Yichao\nZhang, Yiliang Xiong, Yilong Zhao, Ying He, Ying Tang, Yishi Piao,\nYixin Dong, Yixuan Tan, Yiyuan Liu, Yongji Wang, Yongqiang Guo,\nYuchen Zhu, Yuduan Wang, Yuheng Zou, Yukun Zha, Yunxian Ma,\nYuting Yan, Yuxiang You, Yuxuan Liu, Z. Z. Ren, Zehui Ren, Zhangli\nSha, Zhe Fu, Zhen Huang, Zhen Zhang, Zhenda Xie, Zhewen Hao,\nZhihong Shao, Zhiniu Wen, Zhipeng Xu, Zhongyu Zhang, Zhuoshu Li,\nZihan Wang, Zihui Gu, Zilin Li, and Ziwei Xie. 2024. DeepSeek-V2: A\nStrong, Economical, and Efficient Mixture-of-Experts Language Model.\narXiv:2405.04434 [cs.CL]https://arxiv.org/abs/2405.04434\n[20] DeepSeek-AI, Aixin Liu, Bei Feng, Bing Xue, Bingxuan Wang, Bochao\nWu, Chengda Lu, Chenggang Zhao, Chengqi Deng, Chenyu Zhang,\nChong Ruan, Damai Dai, Daya Guo, Dejian Yang, Deli Chen, Dongjie Ji,\nErhang Li, Fangyun Lin, Fucong Dai, Fuli Luo, Guangbo Hao, Guanting\nChen, Guowei Li, H. Zhang, Han Bao, Hanwei Xu, Haocheng Wang,\nHaowei Zhang, Honghui Ding, Huajian Xin, Huazuo Gao, Hui Li,\nHui Qu, J. L. Cai, Jian Liang, Jianzhong Guo, Jiaqi Ni, Jiashi Li, Jiawei\nWang, Jin Chen, Jingchang Chen, Jingyang Yuan, Junjie Qiu, Junlong\nLi, Junxiao Song, Kai Dong, Kai Hu, Kaige Gao, Kang Guan, Kexin\nHuang, Kuai Yu, Lean Wang, Lecong Zhang, Lei Xu, Leyi Xia, Liang\nZhao, Litong Wang, Liyue Zhang, Meng Li, Miaojun Wang, Mingchuan\nZhang, Minghua Zhang, Minghui Tang, Mingming Li, Ning Tian,\nPanpan Huang, Peiyi Wang, Peng Zhang, Qiancheng Wang, Qihao\nZhu, Qinyu Chen, Qiushi Du, R. J. Chen, R. L. Jin, Ruiqi Ge, Ruisong\nZhang, Ruizhe Pan, Runji Wang, Runxin Xu, Ruoyu Zhang, Ruyi Chen,\nS. S. Li, Shanghao Lu, Shangyan Zhou, Shanhuang Chen, Shaoqing\nWu, Shengfeng Ye, Shengfeng Ye, Shirong Ma, Shiyu Wang, Shuang\nZhou, Shuiping Yu, Shunfeng Zhou, Shuting Pan, T. Wang, Tao Yun,\nTian Pei, Tianyu Sun, W. L. Xiao, Wangding Zeng, Wanjia Zhao, Wei\nAn, Wen Liu, Wenfeng Liang, Wenjun Gao, Wenqin Yu, Wentao Zhang,\nX. Q. Li, Xiangyue Jin, Xianzu Wang, Xiao Bi, Xiaodong Liu, Xiaohan\nWang, Xiaojin Shen, Xiaokang Chen, Xiaokang Zhang, Xiaosha Chen,\nXiaotao Nie, Xiaowen Sun, Xiaoxiang Wang, Xin Cheng, Xin Liu, Xin\nXie, Xingchao Liu, Xingkai Yu, Xinnan Song, Xinxia Shan, Xinyi Zhou,\nXinyu Yang, Xinyuan Li, Xuecheng Su, Xuheng Lin, Y. K. Li, Y. Q.\nWang, Y. X. Wei, Y. X. Zhu, Yang Zhang, Yanhong Xu, Yanhong Xu,\nYanping Huang, Yao Li, Yao Zhao, Yaofeng Sun, Yaohui Li, Yaohui\nWang, Yi Yu, Yi Zheng, Yichao Zhang, Yifan Shi, Yiliang Xiong, Ying\nHe, Ying Tang, Yishi Piao, Yisong Wang, Yixuan Tan, Yiyang Ma,\nYiyuan Liu, Yongqiang Guo, Yu Wu, Yuan Ou, Yuchen Zhu, Yuduan\nWang, Yue Gong, Yuheng Zou, Yujia He, Yukun Zha, Yunfan Xiong,\nYunxian Ma, Yuting Yan, Yuxiang Luo, Yuxiang You, Yuxuan Liu,\nYuyang Zhou, Z. F. Wu, Z. Z. Ren, Zehui Ren, Zhangli Sha, Zhe Fu,\nZhean Xu, Zhen Huang, Zhen Zhang, Zhenda Xie, Zhengyan Zhang,\nZhewen Hao, Zhibin Gou, Zhicheng Ma, Zhigang Yan, Zhihong Shao,\nZhipeng Xu, Zhiyu Wu, Zhongyu Zhang, Zhuoshu Li, Zihui Gu, Zijia\nZhu, Zijun Liu, Zilin Li, Ziwei Xie, Ziyang Song, Ziyi Gao, and Zizheng\nPan. 2025. DeepSeek-V3 Technical Report. arXiv:2412.19437 [cs.CL]\nhttps://arxiv.org/abs/2412.19437\n[21] Depend. 2024. HBM Market Insight.https://depend-ele.com/hbm-\nmarket-insight-2/\n[22] Tim Dettmers, Mike Lewis, Younes Belkada, and Luke Zettlemoyer.\n2022. LLM.int8(): 8-bit Matrix Multiplication for Transformers at Scale.\narXiv:2208.07339 [cs.LG]https://arxiv.org/abs/2208.07339\n[23] Jonathon Evans. 2022. Nvidia Grace. In2022 IEEE Hot Chips 34 Sym-\nposium (HCS). 1–20. doi:10.1109/HCS55958.2022.9895599\n[24] Suyu Ge, Yunan Zhang, Liyuan Liu, Minjia Zhang, Jiawei Han, and\nJianfeng Gao. 2024. Model Tells You What to Discard: Adaptive KV\nCache Compression for LLMs. arXiv:2310.01801 [cs.CL]https://arxiv.\norg/abs/2310.01801\n[25] Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav\nPandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil\nMathur, Alan Schelten, Alex Vaughan, Amy Yang, Angela Fan, Anirudh\nGoyal, Anthony Hartshorn, Aobo Yang, Archi Mitra, Archie Sravanku-\nmar, Artem Korenev, Arthur Hinsvark, Arun Rao, Aston Zhang, Au-\nrelien Rodriguez, Austen Gregerson, Ava Spataru, Baptiste Roziere,\nBethany Biron, Binh Tang, Bobbie Chern, Charlotte Caucheteux,\nChaya Nayak, Chloe Bi, Chris Marra, Chris McConnell, Christian\nKeller, Christophe Touret, Chunyang Wu, Corinne Wong, Cristian Can-\nton Ferrer, Cyrus Nikolaidis, Damien Allonsius, Daniel Song, Danielle\nPintz, Danny Livshits, Danny Wyatt, David Esiobu, Dhruv Choud-\nhary, Dhruv Mahajan, Diego Garcia-Olano, Diego Perino, Dieuwke\nHupkes, Egor Lakomkin, Ehab AlBadawy, Elina Lobanova, Emily Di-\nnan, Eric Michael Smith, Filip Radenovic, Francisco Guzmán, Frank\nZhang, Gabriel Synnaeve, Gabrielle Lee, Georgia Lewis Anderson,\nGovind Thattai, Graeme Nail, Gregoire Mialon, Guan Pang, Guillem\nCucurell, Hailey Nguyen, Hannah Korevaar, Hu Xu, Hugo Touvron,\nIliyan Zarov, Imanol Arrieta Ibarra, Isabel Kloumann, Ishan Misra,\nIvan Evtimov, Jack Zhang, Jade Copet, Jaewon Lee, Jan Geffert, Jana\nVranes, Jason Park, Jay Mahadeokar, Jeet Shah, Jelmer van der Linde,\nJennifer Billock, Jenny Hong, Jenya Lee, Jeremy Fu, Jianfeng Chi,\nJianyu Huang, Jiawen Liu, Jie Wang, Jiecao Yu, Joanna Bitton, Joe\nSpisak, Jongsoo Park, Joseph Rocca, Joshua Johnstun, Joshua Saxe,\nJunteng Jia, Kalyan Vasuden Alwala, Karthik Prasad, Kartikeya Up-\nasani, Kate Plawiak, Ke Li, Kenneth Heafield, Kevin Stone, Khalid El-\nArini, Krithika Iyer, Kshitiz Malik, Kuenley Chiu, Kunal Bhalla, Kushal\nLakhotia, Lauren Rantala-Yeary, Laurens van der Maaten, Lawrence\nChen, Liang Tan, Liz Jenkins, Louis Martin, Lovish Madaan, Lubo\nMalo, Lukas Blecher, Lukas Landzaat, Luke de Oliveira, Madeline\nMuzzi, Mahesh Pasupuleti, Mannat Singh, Manohar Paluri, Marcin\nKardas, Maria Tsimpoukelli, Mathew Oldham, Mathieu Rita, Maya\nPavlova, Melanie Kambadur, Mike Lewis, Min Si, Mitesh Kumar Singh,\nMona Hassan, Naman Goyal, Narjes Torabi, Nikolay Bashlykov, Niko-\nlay Bogoychev, Niladri Chatterji, Ning Zhang, Olivier Duchenne,\nOnur Çelebi, Patrick Alrassy, Pengchuan Zhang, Pengwei Li, Petar\nVasic, Peter Weng, Prajjwal Bhargava, Pratik Dubal, Praveen Krish-\nnan, Punit Singh Koura, Puxin Xu, Qing He, Qingxiao Dong, Ragavan\nSrinivasan, Raj Ganapathy, Ramon Calderer, Ricardo Silveira Cabral,\nRobert Stojnic, Roberta Raileanu, Rohan Maheswari, Rohit Girdhar,\nRohit Patel, Romain Sauvestre, Ronnie Polidoro, Roshan Sumbaly,\nRoss Taylor, Ruan Silva, Rui Hou, Rui Wang, Saghar Hosseini, Sahana\nChennabasappa, Sanjay Singh, Sean Bell, Seohyun Sonia Kim, Sergey\nEdunov, Shaoliang Nie, Sharan Narang, Sharath Raparthy, Sheng Shen,\nShengye Wan, Shruti Bhosale, Shun Zhang, Simon Vandenhende,\nSoumya Batra, Spencer Whitman, Sten Sootla, Stephane Collot, Suchin\nGururangan, Sydney Borodinsky, Tamar Herman, Tara Fowler, Tarek\nSheasha, Thomas Georgiou, Thomas Scialom, Tobias Speckbacher,\nTodor Mihaylov, Tong Xiao, Ujjwal Karn, Vedanuj Goswami, Vibhor\nGupta, Vignesh Ramanathan, Viktor Kerkez, Vincent Gonguet, Vir-\nginie Do, Vish Vogeti, Vítor Albiero, Vladan Petrovic, Weiwei Chu,\nWenhan Xiong, Wenyin Fu, Whitney Meers, Xavier Martinet, Xi-\naodong Wang, Xiaofang Wang, Xiaoqing Ellen Tan, Xide Xia, Xinfeng\nXie, Xuchao Jia, Xuewei Wang, Yaelle Goldschlag, Yashesh Gaur, Yas-\nmine Babaei, Yi Wen, Yiwen Song, Yuchen Zhang, Yue Li, Yuning Mao,\nZacharie Delpierre Coudert, Zheng Yan, Zhengxing Chen, Zoe Pa-\npakipos, Aaditya Singh, Aayushi Srivastava, Abha Jain, Adam Kelsey,\nAdam Shajnfeld, Adithya Gangidi, Adolfo Victoria, Ahuva Goldstand,\nAjay Menon, Ajay Sharma, Alex Boesenberg, Alexei Baevski, Allie\nFeinstein, Amanda Kallet, Amit Sangani, Amos Teo, Anam Yunus,\nAndrei Lupu, Andres Alvarado, Andrew Caples, Andrew Gu, Andrew\n15",
+    "text_sha256": "cab9e776fa1acf7acd1fd75127e8c9a5f7b0fc5334ff2b74b636fdf0a5e17a2b",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 16,
+    "text": "Ho, Andrew Poulton, Andrew Ryan, Ankit Ramchandani, Annie Dong,\nAnnie Franco, Anuj Goyal, Aparajita Saraf, Arkabandhu Chowdhury,\nAshley Gabriel, Ashwin Bharambe, Assaf Eisenman, Azadeh Yazdan,\nBeau James, Ben Maurer, Benjamin Leonhardi, Bernie Huang, Beth\nLoyd, Beto De Paola, Bhargavi Paranjape, Bing Liu, Bo Wu, Boyu Ni,\nBraden Hancock, Bram Wasti, Brandon Spence, Brani Stojkovic, Brian\nGamido, Britt Montalvo, Carl Parker, Carly Burton, Catalina Mejia,\nCe Liu, Changhan Wang, Changkyu Kim, Chao Zhou, Chester Hu,\nChing-Hsiang Chu, Chris Cai, Chris Tindal, Christoph Feichtenhofer,\nCynthia Gao, Damon Civin, Dana Beaty, Daniel Kreymer, Daniel Li,\nDavid Adkins, David Xu, Davide Testuggine, Delia David, Devi Parikh,\nDiana Liskovich, Didem Foss, Dingkang Wang, Duc Le, Dustin Hol-\nland, Edward Dowling, Eissa Jamil, Elaine Montgomery, Eleonora\nPresani, Emily Hahn, Emily Wood, Eric-Tuan Le, Erik Brinkman, Este-\nban Arcaute, Evan Dunbar, Evan Smothers, Fei Sun, Felix Kreuk, Feng\nTian, Filippos Kokkinos, Firat Ozgenel, Francesco Caggioni, Frank\nKanayet, Frank Seide, Gabriela Medina Florez, Gabriella Schwarz,\nGada Badeer, Georgia Swee, Gil Halpern, Grant Herman, Grigory\nSizov, Guangyi, Zhang, Guna Lakshminarayanan, Hakan Inan, Hamid\nShojanazeri, Han Zou, Hannah Wang, Hanwen Zha, Haroun Habeeb,\nHarrison Rudolph, Helen Suk, Henry Aspegren, Hunter Goldman,\nHongyuan Zhan, Ibrahim Damlaj, Igor Molybog, Igor Tufanov, Ilias\nLeontiadis, Irina-Elena Veliche, Itai Gat, Jake Weissman, James Ge-\nboski, James Kohli, Janice Lam, Japhet Asher, Jean-Baptiste Gaya, Jeff\nMarcus, Jeff Tang, Jennifer Chan, Jenny Zhen, Jeremy Reizenstein,\nJeremy Teboul, Jessica Zhong, Jian Jin, Jingyi Yang, Joe Cummings,\nJon Carvill, Jon Shepard, Jonathan McPhie, Jonathan Torres, Josh\nGinsburg, Junjie Wang, Kai Wu, Kam Hou U, Karan Saxena, Kartikay\nKhandelwal, Katayoun Zand, Kathy Matosich, Kaushik Veeraragha-\nvan, Kelly Michelena, Keqian Li, Kiran Jagadeesh, Kun Huang, Kunal\nChawla, Kyle Huang, Lailin Chen, Lakshya Garg, Lavender A, Le-\nandro Silva, Lee Bell, Lei Zhang, Liangpeng Guo, Licheng Yu, Liron\nMoshkovich, Luca Wehrstedt, Madian Khabsa, Manav Avalani, Manish\nBhatt, Martynas Mankus, Matan Hasson, Matthew Lennie, Matthias\nReso, Maxim Groshev, Maxim Naumov, Maya Lathi, Meghan Keneally,\nMiao Liu, Michael L. Seltzer, Michal Valko, Michelle Restrepo, Mihir\nPatel, Mik Vyatskov, Mikayel Samvelyan, Mike Clark, Mike Macey,\nMike Wang, Miquel Jubert Hermoso, Mo Metanat, Mohammad Raste-\ngari, Munish Bansal, Nandhini Santhanam, Natascha Parks, Natasha\nWhite, Navyata Bawa, Nayan Singhal, Nick Egebo, Nicolas Usunier,\nNikhil Mehta, Nikolay Pavlovich Laptev, Ning Dong, Norman Cheng,\nOleg Chernoguz, Olivia Hart, Omkar Salpekar, Ozlem Kalinli, Parkin\nKent, Parth Parekh, Paul Saab, Pavan Balaji, Pedro Rittner, Philip Bon-\ntrager, Pierre Roux, Piotr Dollar, Polina Zvyagina, Prashant Ratanchan-\ndani, Pritish Yuvraj, Qian Liang, Rachad Alao, Rachel Rodriguez, Rafi\nAyub, Raghotham Murthy, Raghu Nayani, Rahul Mitra, Rangaprabhu\nParthasarathy, Raymond Li, Rebekkah Hogan, Robin Battey, Rocky\nWang, Russ Howes, Ruty Rinott, Sachin Mehta, Sachin Siby, Sai Jayesh\nBondu, Samyak Datta, Sara Chugh, Sara Hunt, Sargun Dhillon, Sasha\nSidorov, Satadru Pan, Saurabh Mahajan, Saurabh Verma, Seiji Ya-\nmamoto, Sharadh Ramaswamy, Shaun Lindsay, Shaun Lindsay, Sheng\nFeng, Shenghao Lin, Shengxin Cindy Zha, Shishir Patil, Shiva Shankar,\nShuqiang Zhang, Shuqiang Zhang, Sinong Wang, Sneha Agarwal, Soji\nSajuyigbe, Soumith Chintala, Stephanie Max, Stephen Chen, Steve\nKehoe, Steve Satterfield, Sudarshan Govindaprasad, Sumit Gupta, Sum-\nmer Deng, Sungmin Cho, Sunny Virk, Suraj Subramanian, Sy Choud-\nhury, Sydney Goldman, Tal Remez, Tamar Glaser, Tamara Best, Thilo\nKoehler, Thomas Robinson, Tianhe Li, Tianjun Zhang, Tim Matthews,\nTimothy Chou, Tzook Shaked, Varun Vontimitta, Victoria Ajayi, Vic-\ntoria Montanez, Vijai Mohan, Vinay Satish Kumar, Vishal Mangla,\nVlad Ionescu, Vlad Poenaru, Vlad Tiberiu Mihailescu, Vladimir Ivanov,\nWei Li, Wenchen Wang, Wenwen Jiang, Wes Bouaziz, Will Constable,\nXiaocheng Tang, Xiaojian Wu, Xiaolan Wang, Xilun Wu, Xinbo Gao,\nYaniv Kleinman, Yanjun Chen, Ye Hu, Ye Jia, Ye Qi, Yenda Li, Yilin\nZhang, Ying Zhang, Yossi Adi, Youngjin Nam, Yu, Wang, Yu Zhao,\nYuchen Hao, Yundi Qian, Yunlu Li, Yuzi He, Zach Rait, Zachary DeVito,\nZef Rosnbrick, Zhaoduo Wen, Zhenyu Yang, Zhiwei Zhao, and Zhiyu\nMa. 2024. The Llama 3 Herd of Models. arXiv:2407.21783 [cs.AI]\nhttps://arxiv.org/abs/2407.21783\n[26] Groq. 2024. GroqCard Accelerator.https://groq.com/groqcard-\naccelerator/. Accessed: 2025-03-27.\n[27] Coleman Hooper, Sehoon Kim, Hiva Mohammadzadeh, Michael W Ma-\nhoney, Sophia Shao, Kurt Keutzer, and Amir Gholami. 2024. KVQuant:\nTowards 10 Million Context Length LLM Inference with KV Cache\nQuantization. InAdvances in Neural Information Processing Systems\n(NeurIPS).https://nips.cc/virtual/2024/poster/96936\n[28] Yu-Chen Hu, Yu-Min Liang, Hsieh-Pin Hu, Chia-Yen Tan, Chih-Ta\nShen, Chien-Hsun Lee, and S. Y. Hou. 2023. CoWoS Architecture\nEvolution for Next Generation HPC on 2.5D System in Package. In2023\nIEEE 73rd Electronic Components and Technology Conference (ECTC).\n1022–1026. doi:10.1109/ECTC51909.2023.00174\n[29] Youhe Jiang, Fangcheng Fu, Xiaozhe Yao, Taiyi Wang, Bin Cui,\nAna Klimovic, and Eiko Yoneki. 2025. ThunderServe: High-\nperformance and Cost-efficient LLM Serving in Cloud Environments.\narXiv:2502.09334 [cs.DC]https://arxiv.org/abs/2502.09334\n[30] Norm Jouppi, George Kurian, Sheng Li, Peter Ma, Rahul Nagarajan,\nLifeng Nai, Nishant Patil, Suvinay Subramanian, Andy Swing, Brian\nTowles, Clifford Young, Xiang Zhou, Zongwei Zhou, and David A\nPatterson. 2023. TPU v4: An Optically Reconfigurable Supercomputer\nfor Machine Learning with Hardware Support for Embeddings. In\nProceedings of the 50th Annual International Symposium on Computer\nArchitecture(Orlando, FL, USA)(ISCA ’23). Association for Computing\nMachinery, New York, NY, USA, Article 82, 14 pages. doi:10.1145/\n3579371.3589350\n[31] Norman P. Jouppi, Doe Hyun Yoon, Matthew Ashcraft, Mark Gottscho,\nThomas B. Jablin, George Kurian, James Laudon, Sheng Li, Peter Ma,\nXiaoyu Ma, Thomas Norrie, Nishant Patil, Sushma Prasad, Cliff Young,\nZongwei Zhou, and David Patterson. 2021. Ten Lessons From Three\nGenerations Shaped Google’s TPUv4i : Industrial Product. In2021\nACM/IEEE 48th Annual International Symposium on Computer Archi-\ntecture (ISCA). 1–14. doi:10.1109/ISCA52012.2021.00010\n[32] Norman P. Jouppi, Cliff Young, Nishant Patil, David Patterson, Gau-\nrav Agrawal, Raminder Bajwa, Sarah Bates, Suresh Bhatia, Nan\nBoden, Al Borchers, Rick Boyle, Pierre-luc Cantin, Clifford Chao,\nChris Clark, Jeremy Coriell, Mike Daley, Matt Dau, Jeffrey Dean,\nBen Gelb, Tara Vazir Ghaemmaghami, Rajendra Gottipati, William\nGulland, Robert Hagmann, C. Richard Ho, Doug Hogberg, John Hu,\nRobert Hundt, Dan Hurt, Julian Ibarz, Aaron Jaffey, Alek Jaworski,\nAlexander Kaplan, Harshit Khaitan, Daniel Killebrew, Andy Koch,\nNaveen Kumar, Steve Lacy, James Laudon, James Law, Diemthu Le,\nChris Leary, Zhuyuan Liu, Kyle Lucke, Alan Lundin, Gordon MacK-\nean, Adriana Maggiore, Maire Mahony, Kieran Miller, Rahul Nagara-\njan, Ravi Narayanaswami, Ray Ni, Kathy Nix, Thomas Norrie, Mark\nOmernick, Narayana Penukonda, Andy Phelps, Jonathan Ross, Matt\nRoss, Amir Salek, Emad Samadiani, Chris Severn, Gregory Sizikov,\nMatthew Snelham, Jed Souter, Dan Steinberg, Andy Swing, Mercedes\nTan, Gregory Thorson, Bo Tian, Horia Toma, Erick Tuttle, Vijay Va-\nsudevan, Richard Walter, Walter Wang, Eric Wilcox, and Doe Hyun\nYoon. 2017. In-Datacenter Performance Analysis of a Tensor Pro-\ncessing Unit. InProceedings of the 44th Annual International Sym-\nposium on Computer Architecture(Toronto, ON, Canada)(ISCA ’17).\nAssociation for Computing Machinery, New York, NY, USA, 1–12.\ndoi:10.1145/3079856.3080246\n[33] Aditya K. Kamath, Ramya Prabhu, Jayashree Mohan, Simon Peter,\nRamachandran Ramjee, and Ashish Panwar. 2025. POD-Attention:\n16",
+    "text_sha256": "96b343ba8fcae4ff2c4c57113880efa4d0adcb77d675de1891efd122e88e5118",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 17,
+    "text": "Unlocking Full Prefill-Decode Overlap for Faster LLM Inference. InPro-\nceedings of the 30th ACM International Conference on Architectural Sup-\nport for Programming Languages and Operating Systems, Volume 2(Rot-\nterdam, Netherlands)(ASPLOS ’25). Association for Computing Ma-\nchinery, New York, NY, USA, 897–912. doi:10.1145/3676641.3715996\n[34] Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin\nZheng, Cody Hao Yu, Joseph Gonzalez, Hao Zhang, and Ion Stoica.\n2023. Efficient Memory Management for Large Language Model\nServing with PagedAttention. InProceedings of the 29th Symposium\non Operating Systems Principles(Koblenz, Germany)(SOSP ’23). As-\nsociation for Computing Machinery, New York, NY, USA, 611–626.\ndoi:10.1145/3600006.3613165\n[35] Ya Liu, Annabelle Pratt, Pavan Kumar, Ming Xu, and Fred C. Lee.\n2007. 390V Input VRM for High Efficiency Server Power Architecture.\nInAPEC 07 - Twenty-Second Annual IEEE Applied Power Electronics\nConference and Exposition. 1619–1624. doi:10.1109/APEX.2007.357734\n[36] Locuza. 2022. Nvidia’s AD102 officially revealed, how close were the\nprevious estimates?https://locuza.substack.com/p/nvidias-ad102-\nofficially-revealed\n[37] Micron. 2024. Micron GDDR7 Memory Product Brief.\nhttps://www.micron.com/content/dam/micron/global/public/\nproducts/product-flyer/gddr7-product-brief.pdfAccessed: 2025-04-\n07.\n[38] Stephen Nellis and Max A. Cherney. 2025. Nvidia CEO says orders\nfor 3.6 million Blackwell GPUs exclude Meta.https://finance.yahoo.\ncom/news/nvidia-ceo-says-orders-3-171501205.htmlAccessed: 2025-\n03-24.\n[39] August Ning, Georgios Tziantzioulis, and David Wentzlaff. 2023. Sup-\nply Chain Aware Computer Architecture. InProceedings of the 50th\nAnnual International Symposium on Computer Architecture(Orlando,\nFL, USA)(ISCA ’23). Association for Computing Machinery, New York,\nNY, USA, Article 17, 15 pages. doi:10.1145/3579371.3589052\n[40] Thomas Norrie, Nishant Patil, Doe Hyun Yoon, George Kurian, Sheng\nLi, James Laudon, Cliff Young, Norman Jouppi, and David Patterson.\n2021. The Design Process for Google’s Training Chips: TPUv2 and\nTPUv3.IEEE Micro41, 2 (2021), 56–63. doi:10.1109/MM.2021.3058217\n[41] NVIDIA. 2023. NVIDIA RTX 6000 Ada Generation Datasheet.\nhttps://www.nvidia.com/content/dam/en-zz/Solutions/design-\nvisualization/rtx-6000/proviz-print-rtx6000-datasheet-web-\n2504660.pdf. Accessed: 2025-04-03.\n[42] NVIDIA. 2024. NVIDIA A100 Tensor Core GPU.https://www.nvidia.\ncom/en-us/data-center/a100/. Accessed: 2025-03-27.\n[43] NVIDIA. 2024. NVIDIA Blackwell Datasheet.https://resources.nvidia.\ncom/en-us-blackwell-architecture/datasheet. Accessed: 2025-03-27.\n[44] NVIDIA. 2024. NVIDIA H100 Tensor Core GPU Architecture\nOverview.https://resources.nvidia.com/en-us-hopper-architecture/\nnvidia-h100-tensor-c. Accessed: 2025-03-27.\n[45] NVIDIA. 2025.Dynamo: A Datacenter Scale Distributed Inference Serv-\ning Framework.https://github.com/ai-dynamo/dynamoAccessed:\n2025-03-26.\n[46] NVIDIA. 2025. NVIDIA GeForce RTX 5090 Graphics Card.https:\n//www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/\nAccessed: 2025-04-03.\n[47] OpenAI. 2024. GPT-4 Technical Report. arXiv:2303.08774 [cs.CL]\nhttps://arxiv.org/abs/2303.08774\n[48] Sang-Soo Park, KyungSoo Kim, Jinin So, Jin Jung, Jonggeon Lee, Ky-\noungwan Woo, Nayeon Kim, Younghyun Lee, Hyungyo Kim, Yong-\nsuk Kwon, Jinhyun Kim, Jieun Lee, YeonGon Cho, Yongmin Tai,\nJeonghyeon Cho, Hoyoung Song, Jung Ho Ahn, and Nam Sung Kim.\n2024. An LPDDR-based CXL-PNM Platform for TCO-efficient In-\nference of Transformer-based Large Language Models. In2024 IEEE\nInternational Symposium on High-Performance Computer Architecture\n(HPCA). 970–982. doi:10.1109/HPCA57654.2024.00078\n[49] Dylan Patel and Afzal Ahmad. 2023. The Inference Cost Of Search Dis-\nruption – Large Language Model Cost Analysis.https://semianalysis.\ncom/2023/02/09/the-inference-cost-of-search-disruption/. Accessed:\n2025-03-24.\n[50] Pratyush Patel, Esha Choukse, Chaojie Zhang, Íñigo Goiri, Brijesh\nWarrier, Nithish Mahalingam, and Ricardo Bianchini. 2024. Charac-\nterizing Power Management Opportunities for LLMs in the Cloud. In\nProceedings of the 29th ACM International Conference on Architectural\nSupport for Programming Languages and Operating Systems, Volume 3\n(La Jolla, CA, USA)(ASPLOS ’24). Association for Computing Machin-\nery, New York, NY, USA, 207–222. doi:10.1145/3620666.3651329\n[51] Pratyush Patel, Esha Choukse, Chaojie Zhang, Aashaka Shah, Íñigo\nGoiri, Saeed Maleki, and Ricardo Bianchini. 2024. Splitwise: Efficient\nGenerative LLM Inference Using Phase Splitting. In2024 ACM/IEEE\n51st Annual International Symposium on Computer Architecture (ISCA).\n118–132. doi:10.1109/ISCA59077.2024.00019\n[52] Reiner Pope, Sholto Douglas, Aakanksha Chowdhery, Jacob\nDevlin, James Bradbury, Jonathan Heek, Kefan Xiao, Shivani\nAgrawal, and Jeff Dean. 2023. Efficiently Scaling Trans-\nformer Inference. InProceedings of Machine Learning and Sys-\ntems, D. Song, M. Carbin, and T. Chen (Eds.), Vol. 5. Curan,\n606–624.https://proceedings.mlsys.org/paper_files/paper/2023/file/\nc4be71ab8d24cdfb45e3d06dbfca2780-Paper-mlsys2023.pdf\n[53] Ruoyu Qin, Zheming Li, Weiran He, Jialei Cui, Feng Ren, Mingxing\nZhang, Yongwei Wu, Weimin Zheng, and Xinran Xu. 2025. Moon-\ncake: Trading More Storage for Less Computation — A KVCache-\ncentric Architecture for Serving LLM Chatbot. In23rd USENIX Confer-\nence on File and Storage Technologies (FAST 25). USENIX Association,\nSanta Clara, CA, 155–170.https://www.usenix.org/conference/fast25/\npresentation/qin\n[54] Teven Le Scao, Angela Fan, Christopher Akiki, Ellie Pavlick, Suzana\nIlić, Daniel Hesslow, Roman Castagné, Alexandra Sasha Luccioni,\nFrançois Yvon, Matthias Gallé, Jonathan Tow, Alexander M. Rush,\nStella Biderman, Albert Webson, Pawan Sasanka Ammanamanchi,\nThomas Wang, Benoît Sagot, Niklas Muennighoff, Albert Villanova\ndel Moral, Olatunji Ruwase, Rachel Bawden, Stas Bekman, Angelina\nMcMillan-Major, Iz Beltagy, Huu Nguyen, Lucile Saulnier, Samson\nTan, Pedro Ortiz Suarez, Victor Sanh, Hugo Laurençon, Yacine Jer-\nnite, Julien Launay, Margaret Mitchell, Colin Raffel, Aaron Gokaslan,\nAdi Simhi, Aitor Soroa, Alham Fikri Aji, Amit Alfassy, Anna Rogers,\nAriel Kreisberg Nitzav, Canwen Xu, Chenghao Mou, Chris Emezue,\nChristopher Klamm, Colin Leong, Daniel van Strien, David Ifeoluwa\nAdelani, Dragomir Radev, Eduardo González Ponferrada, Efrat Lev-\nkovizh, Ethan Kim, Eyal Bar Natan, Francesco De Toni, Gérard Dupont,\nGermán Kruszewski, Giada Pistilli, Hady Elsahar, Hamza Benyamina,\nHieu Tran, Ian Yu, Idris Abdulmumin, Isaac Johnson, Itziar Gonzalez-\nDios, Javier de la Rosa, Jenny Chim, Jesse Dodge, Jian Zhu, Jonathan\nChang, Jörg Frohberg, Joseph Tobing, Joydeep Bhattacharjee, Khalid\nAlmubarak, Kimbo Chen, Kyle Lo, Leandro Von Werra, Leon We-\nber, Long Phan, Loubna Ben allal, Ludovic Tanguy, Manan Dey,\nManuel Romero Muñoz, Maraim Masoud, María Grandury, Mario\nŠaško, Max Huang, Maximin Coavoux, Mayank Singh, Mike Tian-Jian\nJiang, Minh Chien Vu, Mohammad A. Jauhar, Mustafa Ghaleb, Nis-\nhant Subramani, Nora Kassner, Nurulaqilla Khamis, Olivier Nguyen,\nOmar Espejel, Ona de Gibert, Paulo Villegas, Peter Henderson, Pierre\nColombo, Priscilla Amuok, Quentin Lhoest, Rheza Harliman, Rishi\nBommasani, Roberto Luis López, Rui Ribeiro, Salomey Osei, Sampo\nPyysalo, Sebastian Nagel, Shamik Bose, Shamsuddeen Hassan Muham-\nmad, Shanya Sharma, Shayne Longpre, Somaieh Nikpoor, Stanislav Sil-\nberberg, Suhas Pai, Sydney Zink, Tiago Timponi Torrent, Timo Schick,\nTristan Thrush, Valentin Danchev, Vassilina Nikoulina, Veronika Laip-\npala, Violette Lepercq, Vrinda Prabhu, Zaid Alyafeai, Zeerak Talat,\n17",
+    "text_sha256": "f27119135d66ec1da7e1dda4b67de1cd3f9dc2fb398232cda0df8dc55b867258",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 18,
+    "text": "Arun Raja, Benjamin Heinzerling, Chenglei Si, Davut Emre Taşar, Eliz-\nabeth Salesky, Sabrina J. Mielke, Wilson Y. Lee, Abheesht Sharma, An-\ndrea Santilli, Antoine Chaffin, Arnaud Stiegler, Debajyoti Datta, Eliza\nSzczechla, Gunjan Chhablani, Han Wang, Harshit Pandey, Hendrik\nStrobelt, Jason Alan Fries, Jos Rozen, Leo Gao, Lintang Sutawika, M Sai-\nful Bari, Maged S. Al-shaibani, Matteo Manica, Nihal Nayak, Ryan\nTeehan, Samuel Albanie, Sheng Shen, Srulik Ben-David, Stephen H.\nBach, Taewoon Kim, Tali Bers, Thibault Fevry, Trishala Neeraj, Urmish\nThakker, Vikas Raunak, Xiangru Tang, Zheng-Xin Yong, Zhiqing Sun,\nShaked Brody, Yallow Uri, Hadar Tojarieh, Adam Roberts, Hyung Won\nChung, Jaesung Tae, Jason Phang, Ofir Press, Conglong Li, Deepak\nNarayanan, Hatim Bourfoune, Jared Casper, Jeff Rasley, Max Ryabinin,\nMayank Mishra, Minjia Zhang, Mohammad Shoeybi, Myriam Pey-\nrounette, Nicolas Patry, Nouamane Tazi, Omar Sanseviero, Patrick\nvon Platen, Pierre Cornette, Pierre François Lavallée, Rémi Lacroix,\nSamyam Rajbhandari, Sanchit Gandhi, Shaden Smith, Stéphane Re-\nquena, Suraj Patil, Tim Dettmers, Ahmed Baruwa, Amanpreet Singh,\nAnastasia Cheveleva, Anne-Laure Ligozat, Arjun Subramonian, Au-\nrélie Névéol, Charles Lovering, Dan Garrette, Deepak Tunuguntla,\nEhud Reiter, Ekaterina Taktasheva, Ekaterina Voloshina, Eli Bogdanov,\nGenta Indra Winata, Hailey Schoelkopf, Jan-Christoph Kalo, Jekate-\nrina Novikova, Jessica Zosa Forde, Jordan Clive, Jungo Kasai, Ken\nKawamura, Liam Hazan, Marine Carpuat, Miruna Clinciu, Najoung\nKim, Newton Cheng, Oleg Serikov, Omer Antverg, Oskar van der Wal,\nRui Zhang, Ruochen Zhang, Sebastian Gehrmann, Shachar Mirkin,\nShani Pais, Tatiana Shavrina, Thomas Scialom, Tian Yun, Tomasz Lim-\nisiewicz, Verena Rieser, Vitaly Protasov, Vladislav Mikhailov, Yada\nPruksachatkun, Yonatan Belinkov, Zachary Bamberger, Zdeněk Kas-\nner, Alice Rueda, Amanda Pestana, Amir Feizpour, Ammar Khan,\nAmy Faranak, Ana Santos, Anthony Hevia, Antigona Unldreaj, Arash\nAghagol, Arezoo Abdollahi, Aycha Tammour, Azadeh HajiHosseini,\nBahareh Behroozi, Benjamin Ajibade, Bharat Saxena, Carlos Muñoz\nFerrandis, Daniel McDuff, Danish Contractor, David Lansky, Davis\nDavid, Douwe Kiela, Duong A. Nguyen, Edward Tan, Emi Baylor, Ez-\ninwanne Ozoani, Fatima Mirza, Frankline Ononiwu, Habib Rezanejad,\nHessie Jones, Indrani Bhattacharya, Irene Solaiman, Irina Sedenko,\nIsar Nejadgholi, Jesse Passmore, Josh Seltzer, Julio Bonis Sanz, Livia\nDutra, Mairon Samagaio, Maraim Elbadri, Margot Mieskes, Marissa\nGerchick, Martha Akinlolu, Michael McKenna, Mike Qiu, Muhammed\nGhauri, Mykola Burynok, Nafis Abrar, Nazneen Rajani, Nour Elkott,\nNour Fahmy, Olanrewaju Samuel, Ran An, Rasmus Kromann, Ryan\nHao, Samira Alizadeh, Sarmad Shubber, Silas Wang, Sourav Roy, Syl-\nvain Viguier, Thanh Le, Tobi Oyebade, Trieu Le, Yoyo Yang, Zach\nNguyen, Abhinav Ramesh Kashyap, Alfredo Palasciano, Alison Calla-\nhan, Anima Shukla, Antonio Miranda-Escalada, Ayush Singh, Ben-\njamin Beilharz, Bo Wang, Caio Brito, Chenxi Zhou, Chirag Jain, Chuxin\nXu, Clémentine Fourrier, Daniel León Periñán, Daniel Molano, Dian\nYu, Enrique Manjavacas, Fabio Barth, Florian Fuhrimann, Gabriel\nAltay, Giyaseddin Bayrak, Gully Burns, Helena U. Vrabec, Imane\nBello, Ishani Dash, Jihyun Kang, John Giorgi, Jonas Golde, Jose David\nPosada, Karthik Rangasai Sivaraman, Lokesh Bulchandani, Lu Liu,\nLuisa Shinzato, Madeleine Hahn de Bykhovetz, Maiko Takeuchi, Marc\nPàmies, Maria A Castillo, Marianna Nezhurina, Mario Sänger, Matthias\nSamwald, Michael Cullan, Michael Weinberg, Michiel De Wolf, Mina\nMihaljcic, Minna Liu, Moritz Freidank, Myungsun Kang, Natasha See-\nlam, Nathan Dahlberg, Nicholas Michio Broad, Nikolaus Muellner,\nPascale Fung, Patrick Haller, Ramya Chandrasekhar, Renata Eisenberg,\nRobert Martin, Rodrigo Canalli, Rosaline Su, Ruisi Su, Samuel Cahyaw-\nijaya, Samuele Garda, Shlok S Deshmukh, Shubhanshu Mishra, Sid Ki-\nblawi, Simon Ott, Sinee Sang-aroonsiri, Srishti Kumar, Stefan Schweter,\nSushil Bharati, Tanmay Laud, Théo Gigant, Tomoya Kainuma, Woj-\nciech Kusa, Yanis Labrak, Yash Shailesh Bajaj, Yash Venkatraman, Yifan\nXu, Yingxin Xu, Yu Xu, Zhe Tan, Zhongli Xie, Zifan Ye, Mathilde Bras,\nYounes Belkada, and Thomas Wolf. 2023. BLOOM: A 176B-Parameter\nOpen-Access Multilingual Language Model. arXiv:2211.05100 [cs.CL]\nhttps://arxiv.org/abs/2211.05100\n[55] Ying Sheng, Lianmin Zheng, Binhang Yuan, Zhuohan Li, Max\nRyabinin, Beidi Chen, Percy Liang, Christopher Ré, Ion Stoica, and\nCe Zhang. 2023. FlexGen: high-throughput generative inference of\nlarge language models with a single GPU. InProceedings of the 40th\nInternational Conference on Machine Learning(Honolulu, Hawaii, USA)\n(ICML’23). JMLR.org, Article 1288, 23 pages.https://dl.acm.org/doi/\nabs/10.5555/3618408.3619696\n[56] Omar Sohail. 2024. Snapdragon X Elite Die Shot Shows A Core\nArea Of 169.6mm2, With The Entire CPU Cluster 78 Percent Larger\nThan Apple’s M4.https://wccftech.com/snapdragon-x-elite-die-shot-\ncompared-with-apple-m4/Accessed: 2025-04-08.\n[57] Keeyoung Son, Joonsang Park, Seongguk Kim, Boogyo Sim, Keunwoo\nKim, Seonguk Choi, Hyunsik Kim, and Joungho Kim. 2023. Thermal\nAnalysis of High Bandwidth Memory (HBM)-GPU Module consider-\ning Power Consumption. In2023 IEEE Electrical Design of Advanced\nPackaging and Systems (EDAPS). 1–3. doi:10.1109/EDAPS58880.2023.\n10468315\n[58] Vikranth Srivatsa, Zijian He, Reyna Abhyankar, Dongming Li, and\nYiying Zhang. 2024. Preble: Efficient Distributed Prompt Scheduling\nfor LLM Serving. arXiv:2407.00023 [cs.DC]https://arxiv.org/abs/2407.\n00023\n[59] Sean J. Taylor and Benjamin Letham. 2018. Forecasting at Scale.The\nAmerican Statistician72, 1 (2018), 37–45. doi:10.1080/00031305.2017.\n1380080\n[60] TrendForce. [n. d.]. DRAMeXchange.https://www.dramexchange.\ncom/Date Accessed: 07 April 2025.\n[61] TrendForce. 2024. TSMC’s 2nm Wafers Reportedly Set\nto Double in Price, Benefitting IP/ Material Companies.\nhttps://www.trendforce.com/news/2024/10/04/news-tsmcs-2nm-\nwafers-reportedly-set-to-double-in-price-benefitting-ip-material-\ncompanies/\n[62] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion\nJones, Aidan N. Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017.\nAttention is all you need. InProceedings of the 31st International Con-\nference on Neural Information Processing Systems(Long Beach, Cali-\nfornia, USA)(NIPS’17). Curran Associates Inc., Red Hook, NY, USA,\n6000–6010.https://dl.acm.org/doi/10.5555/3295222.3295349\n[63] VideoCardz. 2025. NVIDIA GB202 Blackwell 760mm2GPU\nDie Shot Revealed: 24756 Cores and 512-bit Bus.https:\n//videocardz.com/newz/nvidia-gb202-blackwell-760mm%C2%B2-\ngpu-die-shot-revealed-24756-cores-and-512-bit-busAccessed:\n2025-04-08.\n[64] Bingyang Wu, Shengyu Liu, Yinmin Zhong, Peng Sun, Xuanzhe Liu,\nand Xin Jin. 2024. LoongServe: Efficiently Serving Long-Context Large\nLanguage Models with Elastic Sequence Parallelism. InProceedings\nof the ACM SIGOPS 30th Symposium on Operating Systems Principles\n(Austin, TX, USA)(SOSP ’24). Association for Computing Machinery,\nNew York, NY, USA, 640–654. doi:10.1145/3694715.3695948\n[65] Mengdi Wu, Xinhao Cheng, Shengyu Liu, Chunan Shi, Jianan Ji, Kit\nAo, Praveen Velliengiri, Xupeng Miao, Oded Padon, and Zhihao Jia.\n2025. Mirage: A Multi-Level Superoptimizer for Tensor Programs.\narXiv:2405.05751 [cs.LG]https://arxiv.org/abs/2405.05751\n[66] xAI. 2025.Grok 3 Beta — The Age of Reasoning Agents.https://x.ai/\nblog/grok-3Accessed: 2025-03-24.\n[67] Jerry Yang and Levi Li. 2025. TSMC’s price hikes send Apple A-series\nwafer costs soaring to US$18,000 per wafer.https://www.digitimes.\ncom/news/a20250107PD217/apple-tsmc-3nm-chips-wafer.html\n[68] Zihao Ye, Lequn Chen, Ruihang Lai, Wuwei Lin, Yineng Zhang,\nStephanie Wang, Tianqi Chen, Baris Kasikci, Vinod Grover,\nArvind Krishnamurthy, and Luis Ceze. 2025. FlashInfer: Efficient\nand Customizable Attention Engine for LLM Inference Serving.\narXiv:2501.01005 [cs.DC]https://arxiv.org/abs/2501.01005\n18",
+    "text_sha256": "3bed65c015a52f755ca85de5a89059165350b8d7858a7d50ca2f7760627bbc43",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  },
+  {
+    "page": 19,
+    "text": "[69] Gyeong-In Yu, Joo Seong Jeong, Geon-Woo Kim, Soojeong Kim, and\nByung-Gon Chun. 2022. Orca: A Distributed Serving System for\nTransformer-Based Generative Models. In16th USENIX Symposium on\nOperating Systems Design and Implementation (OSDI 22). USENIX Asso-\nciation, Carlsbad, CA, 521–538.https://www.usenix.org/conference/\nosdi22/presentation/yu\n[70] Chen Zhang, Kuntai Du, Shu Liu, Woosuk Kwon, Xiangxi Mo, Yufeng\nWang, Xiaoxuan Liu, Kaichao You, Zhuohan Li, Mingsheng Long,\nJidong Zhai, Joseph Gonzalez, and Ion Stoica. 2025. Jenga: Effec-\ntive Memory Management for Serving LLM with Heterogeneity.\narXiv:2503.18292 [cs.DC]https://arxiv.org/abs/2503.18292\n[71] Hengrui Zhang, August Ning, Rohan Baskar Prabhakar, and David\nWentzlaff. 2024. LLMCompass: Enabling Efficient Hardware Design\nfor Large Language Model Inference. In2024 ACM/IEEE 51st Annual\nInternational Symposium on Computer Architecture (ISCA). 1080–1096.\ndoi:10.1109/ISCA59077.2024.00082\n[72] Yilong Zhao, Chien-Yu Lin, Kan Zhu, Zihao Ye, Lequn Chen, Size\nZheng, Luis Ceze, Arvind Krishnamurthy, Tianqi Chen, and Baris\nKasikci. 2024. Atom: Low-bit Quantization for Efficient and Accurate\nLLM Serving.https://mlsys.org/virtual/2024/poster/2655\n[73] Lianmin Zheng, Liangsheng Yin, Zhiqiang Xie, Chuyue Sun, Jeff\nHuang, Cody Hao Yu, Shiyi Cao, Christos Kozyrakis, Ion Stoica,\nJoseph E. Gonzalez, Clark Barrett, and Ying Sheng. 2025. SGLang:\nefficient execution of structured language model programs. InPro-\nceedings of the 38th International Conference on Neural Information\nProcessing Systems(Vancouver, BC, Canada)(NIPS ’24). Curran As-\nsociates Inc., Red Hook, NY, USA, Article 2000, 27 pages.https:\n//dl.acm.org/doi/10.5555/3737916.3739916\n[74] Yinmin Zhong, Shengyu Liu, Junda Chen, Jianbo Hu, Yibo Zhu,\nXuanzhe Liu, Xin Jin, and Hao Zhang. 2024. DistServe: disaggre-\ngating prefill and decoding for goodput-optimized large language\nmodel serving. InProceedings of the 18th USENIX Conference on Op-\nerating Systems Design and Implementation(Santa Clara, CA, USA)\n(OSDI’24). USENIX Association, USA, Article 11, 18 pages.https:\n//dl.acm.org/doi/10.5555/3691938.3691949\n[75] Kan Zhu, Yufei Gao, Yilong Zhao, Liangyu Zhao, Gefei Zuo, Yile Gu,\nDedong Xie, Tian Tang, Qinyu Xu, Zihao Ye, Keisuke Kamahori, Chien-\nYu Lin, Ziren Wang, Stephanie Wang, Arvind Krishnamurthy, and\nBaris Kasikci. 2025. NanoFlow: Towards Optimal Large Language\nModel Serving Throughput. arXiv:2408.12757 [cs.DC]https://arxiv.\norg/abs/2408.12757\n19",
+    "text_sha256": "323eab11fdd4a6cd623a7828751b33520017666ae4594a85b63138f1f9a2a6e5",
+    "text_source": "native_text",
+    "text_extraction_error": null,
+    "ocr": {
+      "status": "not_needed",
+      "engine": null
+    },
+    "tables": [],
+    "figures": [],
+    "formula_candidates": [],
+    "section": "references",
+    "start_section": "references",
+    "end_section": "references",
+    "headings": []
+  }
+]

@@ -1,10 +1,10 @@
 # 勘文 / LitAudit 技术文档
 
-**大赛：** 全球人工智能创新·治理·安全大赛  
-**赛道：** 01 智能体应用  
-**赛题：** 面向真实学术场景的深度研究智能体  
-**系统：** 勘文（LitAudit）  
-**范围版本：** v0.1  
+**大赛：** 全球人工智能创新·治理·安全大赛
+**赛道：** 01 智能体应用
+**赛题：** 面向真实学术场景的深度研究智能体
+**系统：** 勘文（LitAudit）
+**范围版本：** v0.1
 **日期：** 2026-08-29
 
 ## 1. 问题与定位
@@ -13,10 +13,10 @@
 
 LitAudit 因此不写长综述。输入一个科研问题或待检验想法，输出四份可回放产物：
 
-1. 系统评价式筛选漏斗  
-2. 研究地图（主线、矛盾对、可回溯边）  
-3. 论断–原文证据卡  
-4. 反证据 / 证伪报告  
+1. 系统评价式筛选漏斗
+2. 研究地图（主线、矛盾对、可回溯边）
+3. 论断–原文证据卡
+4. 反证据 / 证伪报告
 
 首期垂直领域固定为：大模型智能体 / 检索增强 / 自动科研文献问答。主研究问题是：
 
@@ -44,13 +44,13 @@ LitAudit 因此不写长综述。输入一个科研问题或待检验想法，�
 
 硬规则：
 
-- 研究结论必须沿 `Claim -> Evidence -> PaperCard` 回溯  
-- 无 Evidence 不能 `supported`  
-- 正反证据冲突必须 `pending`  
-- `abstract_only` 不得显示成全文已验证；`verified` 只覆盖该摘录  
-- exclude 论文不得删除（`paper-006/007` 被反证据引用）  
-- HTTP 429 必须记为 `rate_limited`，不能当成零结果成功  
-- fixture 不计入真实统计  
+- 研究结论必须沿 `Claim -> Evidence -> PaperCard` 回溯
+- 无 Evidence 不能 `supported`
+- 正反证据冲突必须 `pending`
+- `abstract_only` 不得显示成全文已验证；`verified` 只覆盖该摘录
+- exclude 论文不得删除（`paper-006/007` 被反证据引用）
+- HTTP 429 必须记为 `rate_limited`，不能当成零结果成功
+- fixture 不计入真实统计
 
 ## 3. 当前数据与核验层级
 
@@ -106,9 +106,9 @@ python -m src.cli ui --run-id phase2-real
 
 连续追问采用双层路由契约：LLM 先给出 `direct_answer / clarify / retrieve`，同时标记 `follow_up / paper_explore / branch_deepen / requery / new_topic`。服务端据此选择当前 run 数据或在线检索工具，并校验检索完成后必须存在可回放 run；客户端不会把无 run 的直接回答或澄清误当作检索结果。
 
-- 在线多源检索未接入 pipeline；Semantic Scholar 曾 429  
-- 研究地图不是引用图谱  
-- 未完成全部论文的逐页审阅  
-- 主问题的普遍优越性主张保持 pending  
+- 在线多源检索未接入 pipeline；Semantic Scholar 曾 429
+- 研究地图不是引用图谱
+- 未完成全部论文的逐页审阅
+- 主问题的普遍优越性主张保持 pending
 
 这些限制是产品的一部分：系统宁可停在 pending，也不生成无法点回原文的流畅综述。

@@ -1,0 +1,2147 @@
+{
+  "version": "page-structure-v1",
+  "created_at": "2026-11-07T04:32:53.937414+00:00",
+  "documents": [
+    {
+      "paper_id": "paper-009",
+      "backend": "pypdf_with_optional_pymupdf",
+      "coverage": {
+        "page_count": 17,
+        "text_pages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "native_text_pages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "ocr_text_pages": [],
+        "no_text_pages": [],
+        "ocr_required_pages": [],
+        "ocr_attempted_pages": 0,
+        "text_extraction_error_pages": [],
+        "text_page_coverage": 1.0,
+        "table_count": 27,
+        "figure_region_count": 32,
+        "formula_candidate_count": 51,
+        "status": "text_extracted",
+        "scope": "extraction_coverage_not_reading_or_semantic_verification"
+      },
+      "capabilities": {
+        "text_extraction": "pypdf",
+        "layout_detection": true,
+        "table_extraction": true,
+        "image_region_detection": true,
+        "pdf_page_render": true,
+        "ocr_available": false,
+        "ocr_engine": null,
+        "ocr_setup": "Install optional documents dependencies and either Tesseract or local language data in TESSDATA_PREFIX.",
+        "formula_interpretation": false,
+        "figure_interpretation": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "text_sha256": "3d39a733ca918f72b84d4c2ee69863c5d89b1805c50ece49d11d4c271df81e56",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": null,
+          "end_section": "introduction",
+          "headings": [
+            {
+              "section": "abstract",
+              "title": "Abstract",
+              "char_offset": 197
+            },
+            {
+              "section": "introduction",
+              "title": "1 Introduction",
+              "char_offset": 1322
+            }
+          ]
+        },
+        {
+          "page": 2,
+          "text_sha256": "f2577d4e0880a86fd6d84547dc79edb4017b352cc78344671fff4765e8231310",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                266.65,
+                124.82,
+                326.78,
+                225.28
+              ],
+              "rows": [
+                [
+                  "",
+                  null
+                ],
+                [
+                  "LM",
+                  null
+                ],
+                [
+                  "Blo",
+                  null
+                ],
+                [
+                  "Blo",
+                  null
+                ],
+                [
+                  "Blo",
+                  null
+                ],
+                [
+                  "Blo",
+                  "ck 5"
+                ]
+              ],
+              "row_count": 6,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                110.62,
+                205.45,
+                167.26,
+                218.1
+              ],
+              "rows": [
+                [
+                  "Blo",
+                  "ck 5"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                436.2,
+                205.45,
+                492.84,
+                218.1
+              ],
+              "rows": [
+                [
+                  "Blo",
+                  "ck 5"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [
+            {
+              "region_id": "image-1",
+              "bbox": [
+                108.95,
+                221.51,
+                127.46,
+                240.02
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-2",
+              "bbox": [
+                108.95,
+                259.87,
+                127.46,
+                278.38
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-3",
+              "bbox": [
+                182.0,
+                249.0,
+                254.0,
+                253.0
+              ],
+              "width": 72,
+              "height": 4,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-4",
+              "bbox": [
+                165.89,
+                281.89,
+                182.35,
+                298.36
+              ],
+              "width": 106,
+              "height": 106,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-5",
+              "bbox": [
+                181.0,
+                287.0,
+                254.0,
+                291.0
+              ],
+              "width": 73,
+              "height": 4,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-6",
+              "bbox": [
+                182.0,
+                152.0,
+                254.0,
+                157.0
+              ],
+              "width": 72,
+              "height": 5,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-7",
+              "bbox": [
+                165.39,
+                243.25,
+                181.85,
+                259.71
+              ],
+              "width": 106,
+              "height": 106,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-8",
+              "bbox": [
+                165.13,
+                175.48,
+                181.59,
+                191.94
+              ],
+              "width": 106,
+              "height": 106,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-9",
+              "bbox": [
+                165.39,
+                147.06,
+                181.85,
+                163.52
+              ],
+              "width": 106,
+              "height": 106,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-10",
+              "bbox": [
+                343.0,
+                152.0,
+                416.0,
+                157.0
+              ],
+              "width": 73,
+              "height": 5,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-11",
+              "bbox": [
+                343.0,
+                249.0,
+                416.0,
+                253.0
+              ],
+              "width": 73,
+              "height": 4,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-12",
+              "bbox": [
+                342.0,
+                287.0,
+                415.0,
+                291.0
+              ],
+              "width": 73,
+              "height": 4,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-13",
+              "bbox": [
+                109.18,
+                77.98,
+                131.34,
+                100.14
+              ],
+              "width": 143,
+              "height": 143,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-14",
+              "bbox": [
+                153.24,
+                77.39,
+                178.64,
+                102.79
+              ],
+              "width": 1024,
+              "height": 1024,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-15",
+              "bbox": [
+                272.1,
+                75.0,
+                284.65,
+                87.54
+              ],
+              "width": 81,
+              "height": 81,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-16",
+              "bbox": [
+                329.93,
+                73.21,
+                348.44,
+                91.72
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-17",
+              "bbox": [
+                330.66,
+                90.28,
+                349.72,
+                109.33
+              ],
+              "width": 123,
+              "height": 123,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-18",
+              "bbox": [
+                268.23,
+                221.5,
+                287.29,
+                240.55
+              ],
+              "width": 123,
+              "height": 123,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-19",
+              "bbox": [
+                268.39,
+                259.98,
+                287.45,
+                279.03
+              ],
+              "width": 123,
+              "height": 123,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-20",
+              "bbox": [
+                417.76,
+                148.08,
+                434.52,
+                164.73
+              ],
+              "width": 108,
+              "height": 107,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-21",
+              "bbox": [
+                417.71,
+                176.14,
+                434.48,
+                192.79
+              ],
+              "width": 108,
+              "height": 107,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-22",
+              "bbox": [
+                417.71,
+                243.58,
+                434.48,
+                260.23
+              ],
+              "width": 108,
+              "height": 107,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-23",
+              "bbox": [
+                417.59,
+                282.23,
+                434.36,
+                298.88
+              ],
+              "width": 108,
+              "height": 107,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-24",
+              "bbox": [
+                108.95,
+                201.98,
+                127.46,
+                220.48
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-25",
+              "bbox": [
+                434.53,
+                221.51,
+                453.04,
+                240.02
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-26",
+              "bbox": [
+                434.53,
+                259.87,
+                453.04,
+                278.38
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-27",
+              "bbox": [
+                434.53,
+                201.98,
+                453.04,
+                220.48
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-28",
+              "bbox": [
+                182.0,
+                183.0,
+                254.0,
+                194.0
+              ],
+              "width": 72,
+              "height": 11,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-29",
+              "bbox": [
+                341.0,
+                183.0,
+                414.0,
+                194.0
+              ],
+              "width": 73,
+              "height": 11,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-30",
+              "bbox": [
+                434.53,
+                173.44,
+                453.04,
+                191.95
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            },
+            {
+              "region_id": "image-31",
+              "bbox": [
+                108.95,
+                173.44,
+                127.46,
+                191.95
+              ],
+              "width": 119,
+              "height": 119,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            }
+          ],
+          "formula_candidates": [],
+          "section": "introduction",
+          "start_section": "introduction",
+          "end_section": "related_work",
+          "headings": [
+            {
+              "section": "related_work",
+              "title": "2 Related Work",
+              "char_offset": 2042
+            }
+          ]
+        },
+        {
+          "page": 3,
+          "text_sha256": "083abb0d66da7df240fce56a18670d51a32f5d24549ba83c982ed3ced53a7a7f",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [
+            {
+              "text": "ri = cos(hi−1, hi)",
+              "bbox": [
+                374.8,
+                123.46,
+                455.75,
+                136.0
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "Pinitial = {blocki | ri ∈Top",
+              "bbox": [
+                312.33,
+                292.84,
+                419.13,
+                303.49
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "di = 1",
+              "bbox": [
+                306.14,
+                457.55,
+                335.17,
+                472.1
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "D = {(blocki, blocki+1) | di ≥dT and",
+              "bbox": [
+                323.26,
+                712.11,
+                495.67,
+                724.85
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "{blocki, blocki+1} ∩Pinitial = ∅}",
+              "bbox": [
+                345.02,
+                728.65,
+                495.67,
+                741.48
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "related_work",
+          "start_section": "related_work",
+          "end_section": "methods",
+          "headings": [
+            {
+              "section": "methods",
+              "title": "3 Methodology",
+              "char_offset": 1728
+            }
+          ]
+        },
+        {
+          "page": 4,
+          "text_sha256": "41b0250f5e6b5546f70fb9fa58dcb95b3d28e4560cd26f3eb01be055409101f1",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [
+            {
+              "text": "Pfinal = {blocki| {(blocki−1, blocki),",
+              "bbox": [
+                95.88,
+                188.43,
+                264.12,
+                201.26
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "(blocki, blocki+1)} ∩D = ∅}",
+              "bbox": [
+                133.77,
+                204.97,
+                264.12,
+                217.01
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "if |D| ≥k −",
+              "bbox": [
+                133.28,
+                605.09,
+                176.86,
+                612.15
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "Binitial = Pinitial ∪Bpartial",
+              "bbox": [
+                115.33,
+                676.96,
+                244.08,
+                689.78
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "j=1 ωj",
+              "bbox": [
+                418.64,
+                293.16,
+                445.88,
+                307.29
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∆f = fs −fs′",
+              "bbox": [
+                414.62,
+                480.81,
+                479.3,
+                493.35
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "using the decay factor T = αT. We repeat this",
+              "bbox": [
+                306.14,
+                596.66,
+                524.41,
+                607.85
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "Boptimal = arg",
+              "bbox": [
+                351.43,
+                725.78,
+                417.73,
+                738.61
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "methods",
+          "start_section": "methods",
+          "end_section": "methods",
+          "headings": []
+        },
+        {
+          "page": 5,
+          "text_sha256": "da643153930c10916b70925cfafeecbc6820733c080e0083a70e64c5f09199c0",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [
+            {
+              "text": "for xt are given by q = xtWQ and ∆q = xt∆WQ.",
+              "bbox": [
+                70.87,
+                343.47,
+                291.04,
+                356.31
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "fined as (K, V ), where K = [Kpre, xtWK] and",
+              "bbox": [
+                70.87,
+                370.57,
+                289.13,
+                382.52
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "bations ∆K = [∆Kpre, xt∆WK] and ∆V",
+              "bbox": [
+                70.87,
+                397.66,
+                271.38,
+                409.62
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "Here, Kpre = XWK and",
+              "bbox": [
+                162.43,
+                411.21,
+                289.13,
+                424.09
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∆K = X∆WK; the same applies to the others.",
+              "bbox": [
+                69.96,
+                424.76,
+                291.04,
+                436.72
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "o = softmax",
+              "bbox": [
+                125.93,
+                492.08,
+                188.22,
+                502.99
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "˜o = softmax",
+              "bbox": [
+                76.43,
+                523.29,
+                135.6,
+                533.65
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "˜A = softmax",
+              "bbox": [
+                95.13,
+                546.76,
+                160.31,
+                560.43
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∆A = ˜A −softmax",
+              "bbox": [
+                114.48,
+                573.78,
+                210.27,
+                587.45
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "E = ˜o −o = ∆A V + ˜A ∆V",
+              "bbox": [
+                114.61,
+                598.29,
+                242.96,
+                611.96
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥E∥F ≤Lsoftmax",
+              "bbox": [
+                78.15,
+                669.53,
+                160.7,
+                689.57
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "E = G(xt, Ypre, ∆)",
+              "bbox": [
+                136.03,
+                730.83,
+                223.98,
+                742.73
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "methods",
+          "start_section": "methods",
+          "end_section": "experimental_setup",
+          "headings": [
+            {
+              "section": "experimental_setup",
+              "title": "4 Experiments",
+              "char_offset": 3218
+            },
+            {
+              "section": "experimental_setup",
+              "title": "4.1 Experimental Setup",
+              "char_offset": 3232
+            }
+          ]
+        },
+        {
+          "page": 6,
+          "text_sha256": "d534208b1a67999c719d940947f2b6490d822ac30ffa2abdb211ed6d01f716cb",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                70.87,
+                71.17,
+                524.43,
+                364.27
+              ],
+              "rows": [
+                [
+                  "LLM",
+                  "Method",
+                  "MMLU CMMLU ARC-E ARC-C PIQA Winog HSwag BoolQ MathQA WNLI SST-2 RTE CB",
+                  "AVG"
+                ],
+                [
+                  "LLaMA3.1-8B",
+                  "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+                  "63.35 50.85 81.52 51.28 80.30 74.03 60.05 82.26 39.56 59.15 76.83 71.12 60.71\n52.01 41.12 67.36 42.06 74.54 69.32 51.50 73.78 32.35 50.78 69.37 49.40 55.28\n52.11 41.13 67.42 42.15 74.63 69.36 51.56 73.82 32.39 50.82 69.41 49.44 55.34\n33.54 34.28 72.31 42.15 72.63 69.61 47.96 45.23 34.27 56.34 52.52 67.15 69.64\n51.92 41.11 67.34 42.06 74.48 69.38 51.56 73.76 32.50 50.70 69.31 49.50 55.36\n28.35 25.51 71.04 36.18 75.46 62.98 49.70 57.89 27.30 46.48 55.85 57.04 35.71\n60.82 46.66 73.15 43.86 76.99 73.56 53.80 69.85 34.28 60.56 83.03 70.76 73.21",
+                  "65.46\n56.07\n56.11\n53.66\n56.08\n48.42\n62.99"
+                ],
+                [
+                  "LLaMA2-13B",
+                  "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+                  "52.10 34.73 79.42 48.38 79.05 72.22 60.07 80.61 32.09 66.20 87.61 69.31 80.36\n50.11 33.57 61.16 37.67 71.38 70.71 47.37 62.53 24.41 43.24 65.37 59.19 51.38\n49.89 33.91 60.90 37.65 71.44 70.69 47.54 62.43 24.78 43.26 64.91 59.19 51.34\n26.71 25.50 26.26 22.61 51.14 48.22 25.76 38.93 18.89 43.66 46.56 52.71 37.50\n50.13 33.97 61.32 37.88 71.44 70.80 47.71 62.54 24.82 43.66 65.37 59.57 51.79\n23.76 25.41 67.85 33.87 75.41 63.77 48.76 62.42 25.46 45.07 50.92 58.84 41.07\n51.52 35.37 69.78 40.02 74.43 70.72 53.11 62.84 28.44 53.52 80.16 64.26 46.43",
+                  "64.78\n52.16\n52.15\n35.73\n52.38\n47.89\n56.20"
+                ],
+                [
+                  "Qwen2.5-7B",
+                  "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+                  "71.92 81.69 80.56 48.21 78.73 72.93 59.92 84.46 43.22 71.83 91.86 81.23 87.50\n36.96 36.71 71.33 38.20 74.86 55.79 47.71 55.67 31.08 60.43 70.79 54.42 38.81\n37.17 36.39 71.47 37.83 76.21 55.65 47.47 57.23 30.11 61.61 70.68 54.59 37.32\n24.90 25.08 25.25 20.31 53.65 50.99 25.69 37.83 19.50 53.52 50.92 46.21 19.64\n36.89 31.07 71.46 37.80 76.12 55.80 48.67 63.21 30.59 42.25 80.62 54.87 41.07\n38.56 38.25 71.84 39.42 76.77 55.96 47.98 57.49 31.12 61.97 72.25 56.32 39.29\n52.96 51.34 71.09 39.16 77.04 56.99 51.19 72.20 30.95 66.20 63.53 65.34 57.14",
+                  "73.39\n51.75\n51.82\n34.88\n51.57\n52.86\n58.09"
+                ],
+                [
+                  "Qwen2.5-14B",
+                  "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+                  "77.45 84.44 82.37 56.31 81.12 75.37 63.37 85.23 53.03 77.46 89.11 79.78 80.36\n43.09 42.01 73.33 40.54 73.58 58.47 47.79 61.89 31.53 48.79 54.26 56.88 49.27\n44.86 44.77 50.29 31.00 60.72 51.44 34.14 65.16 25.65 65.28 89.95 76.87 68.74\n24.63 25.31 25.04 20.14 52.88 50.43 25.69 37.92 18.93 52.11 48.62 51.99 37.50\n45.75 45.63 50.63 31.40 61.81 52.64 34.41 65.72 26.16 66.20 91.28 78.34 69.64\n43.77 42.90 74.07 41.04 74.37 58.96 48.43 62.57 32.23 49.30 54.93 57.40 50.00\n72.01 76.82 68.81 44.37 71.38 70.17 47.98 64.80 34.91 61.97 82.11 74.01 69.65",
+                  "75.80\n52.42\n54.53\n36.25\n55.35\n53.07\n64.54"
+                ]
+              ],
+              "row_count": 5,
+              "column_count": 4,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "experimental_setup",
+          "start_section": "experimental_setup",
+          "end_section": "experimental_setup",
+          "headings": []
+        },
+        {
+          "page": 7,
+          "text_sha256": "07c892a3ba6d81321b116a128125466b93ccc8efd262982bce3cb2b7bb4771c9",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                70.87,
+                71.2,
+                523.38,
+                328.32
+              ],
+              "rows": [
+                [
+                  "LLM",
+                  "Method",
+                  "MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE",
+                  "AVG"
+                ],
+                [
+                  "LLM-Pruner 52.01 41.12 67.36 42.06 51.50 32.35 50.78 49.40 48.32\nShortGPT 51.92 41.11 67.34 42.06 51.56 32.50 50.70 49.50 48.34\nLLaMA3.1-8B\nLLM-Pruner (Ours) 54.95 44.30 72.46 43.82 52.84 34.13 53.94 52.88 51.16\nShortGPT (Ours) 54.62 43.89 71.38 43.11 53.55 35.08 53.62 52.63 50.98\nOurs 60.82 46.66 73.15 43.86 53.80 34.28 60.56 70.76 55.49",
+                  null,
+                  "52.01 41.12 67.36 42.06 51.50 32.35 50.78 49.40\n51.92 41.11 67.34 42.06 51.56 32.50 50.70 49.50",
+                  null
+                ],
+                [
+                  null,
+                  null,
+                  "54.95 44.30 72.46 43.82 52.84 34.13 53.94 52.88\n54.62 43.89 71.38 43.11 53.55 35.08 53.62 52.63\n60.82 46.66 73.15 43.86 53.80 34.28 60.56 70.76",
+                  null
+                ],
+                [
+                  "LLM-Pruner 50.11 33.57 61.16 37.67 47.37 24.41 43.24 59.19 44.59\nShortGPT 50.13 33.97 61.32 37.88 47.71 24.82 43.66 59.57 44.88\nLLaMA2-13B\nLLM-Pruner (Ours) 52.58 34.27 65.55 39.19 49.99 25.96 44.53 62.54 46.83\nShortGPT (Ours) 53.70 34.28 64.25 38.98 50.76 26.50 46.84 63.41 47.34\nOurs 51.52 35.37 69.78 40.02 53.11 28.44 53.52 64.26 49.50",
+                  null,
+                  "50.11 33.57 61.16 37.67 47.37 24.41 43.24 59.19\n50.13 33.97 61.32 37.88 47.71 24.82 43.66 59.57",
+                  null
+                ],
+                [
+                  null,
+                  null,
+                  "52.58 34.27 65.55 39.19 49.99 25.96 44.53 62.54\n53.70 34.28 64.25 38.98 50.76 26.50 46.84 63.41\n51.52 35.37 69.78 40.02 53.11 28.44 53.52 64.26",
+                  null
+                ],
+                [
+                  "LLM-Pruner 36.96 36.71 71.33 38.20 47.71 31.08 60.43 54.42 47.11\nShortGPT 36.89 31.07 71.46 37.80 48.67 30.59 42.25 54.87 44.20\nQwen2.5-7B\nLLM-Pruner (Ours) 38.99 39.42 72.41 38.66 50.54 33.34 61.89 56.83 49.01\nShortGPT (Ours) 39.51 33.01 73.04 39.01 51.18 32.88 62.96 56.64 48.53\nOurs 52.96 51.34 71.09 39.16 51.19 30.95 66.20 65.34 53.53",
+                  null,
+                  "36.96 36.71 71.33 38.20 47.71 31.08 60.43 54.42\n36.89 31.07 71.46 37.80 48.67 30.59 42.25 54.87",
+                  null
+                ],
+                [
+                  null,
+                  null,
+                  "38.99 39.42 72.41 38.66 50.54 33.34 61.89 56.83\n39.51 33.01 73.04 39.01 51.18 32.88 62.96 56.64\n52.96 51.34 71.09 39.16 51.19 30.95 66.20 65.34",
+                  null
+                ],
+                [
+                  "LLM-Pruner 43.09 42.01 73.33 40.54 47.79 31.53 48.79 56.88 48.00\nShortGPT 45.75 45.63 50.63 31.40 34.41 26.16 66.20 78.34 47.32\nQwen2.5-14B\nLLM-Pruner (Ours) 65.75 45.32 74.49 43.13 48.75 32.43 51.27 58.44 52.45\nShortGPT (Ours) 68.34 47.36 52.21 33.16 36.37 28.05 67.64 78.89 51.50\nOurs 72.01 76.82 68.81 44.37 47.98 34.91 61.97 74.01 60.11",
+                  null,
+                  "43.09 42.01 73.33 40.54 47.79 31.53 48.79 56.88\n45.75 45.63 50.63 31.40 34.41 26.16 66.20 78.34",
+                  null
+                ],
+                [
+                  null,
+                  null,
+                  "65.75 45.32 74.49 43.13 48.75 32.43 51.27 58.44\n68.34 47.36 52.21 33.16 36.37 28.05 67.64 78.89\n72.01 76.82 68.81 44.37 47.98 34.91 61.97 74.01",
+                  null
+                ]
+              ],
+              "row_count": 9,
+              "column_count": 4,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                308.21,
+                382.74,
+                523.38,
+                420.82
+              ],
+              "rows": [
+                [
+                  "Method",
+                  "Dense SliceGPT LLM-Pruner FLAP Ours"
+                ],
+                [
+                  "Time (13.58%)",
+                  "287.35 263.35 278.19 259.81 236.63"
+                ],
+                [
+                  "Time (∼50%)",
+                  "287.35 202.69 252.69 184.16 151.89"
+                ]
+              ],
+              "row_count": 3,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "experimental_setup",
+          "start_section": "experimental_setup",
+          "end_section": "experimental_setup",
+          "headings": []
+        },
+        {
+          "page": 8,
+          "text_sha256": "a023b300e27b09bc4271094717cd8c8e57d5e4d1ab57273631a5be348345cd80",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                73.15,
+                88.43,
+                288.85,
+                108.15
+              ],
+              "rows": [
+                [
+                  "LLaMA3.1-8B",
+                  "SLEB (Song et al., 2024)\nOurs",
+                  "183.6\n44.06"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "experimental_setup",
+          "start_section": "experimental_setup",
+          "end_section": "references",
+          "headings": [
+            {
+              "section": "conclusion",
+              "title": "5 Conclusion",
+              "char_offset": 1863
+            },
+            {
+              "section": "limitations",
+              "title": "Limitations",
+              "char_offset": 2694
+            },
+            {
+              "section": "references",
+              "title": "References",
+              "char_offset": 3177
+            }
+          ]
+        },
+        {
+          "page": 9,
+          "text_sha256": "6e0311f8f754f4a15fcb505a585f1f2e2a6ac067cfba1b299af3094b2c85247b",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                72.3,
+                74.64,
+                523.17,
+                89.32
+              ],
+              "rows": [
+                [
+                  "Method",
+                  "MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE",
+                  "AVG"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                72.3,
+                92.54,
+                523.17,
+                182.94
+              ],
+              "rows": [
+                [
+                  "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs (Unified)",
+                  "52.10 34.73 79.42 48.38 60.07 32.09 66.20 69.31\n50.11 33.57 61.16 37.67 47.37 24.41 43.24 59.19\n49.89 33.91 60.90 37.65 47.54 24.78 43.26 59.19\n26.71 25.50 26.26 22.61 25.76 18.89 43.66 52.71\n50.13 33.97 61.32 37.88 47.71 24.82 43.66 59.57\n23.76 25.41 67.85 33.87 48.76 25.46 45.07 58.84\n51.05 33.99 64.02 37.88 48.83 26.06 53.12 63.54",
+                  "55.29\n44.59\n44.64\n30.26\n44.88\n41.13\n47.31"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                72.3,
+                220.94,
+                523.17,
+                235.38
+              ],
+              "rows": [
+                [
+                  "Strategy",
+                  "MMLU CMMLU ARC-E ARC-C HSwag MathQA WNLI RTE",
+                  "AVG"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-4",
+              "bbox": [
+                72.3,
+                238.55,
+                523.17,
+                265.53
+              ],
+              "rows": [
+                [
+                  "Unified\nDisaggregation",
+                  "51.05 33.99 64.02 37.88 48.83 26.06 53.12 63.54\n51.52 35.37 69.78 40.02 53.11 28.44 53.52 64.26",
+                  "47.31\n49.50"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-5",
+              "bbox": [
+                72.3,
+                308.07,
+                286.96,
+                363.1
+              ],
+              "rows": [
+                [
+                  "Method",
+                  "PIQA Winog HellaSwag ARC-E ARC-C"
+                ],
+                [
+                  "Dense\nFLAP\nOurs\nOurs + Quant",
+                  "81.88 75.3 64.91 80.51 53.41\n77.56 61.08 55.23 70.36 42.37\n78.45 72.85 57 75.8 46.67\n78.21 71.98 56.88 75.21 46.1"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 10,
+          "text_sha256": "48db1f6c80b69b1eb10ed327a195087a6eab0c06a8719f38a82148226ffe4625",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 11,
+          "text_sha256": "6ffa2506913b6a3269f427aa41159c7e0ef079474bb28c17c549db9bd54c69db",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 12,
+          "text_sha256": "9b6adcaf1e1f0a247dbe4b146fbb9bdeb6216307e09613cdb5a9c57a6609099f",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [],
+          "figures": [],
+          "formula_candidates": [
+            {
+              "text": "q = xtWQ, ∆q = xt∆WQ",
+              "bbox": [
+                119.91,
+                203.84,
+                239.59,
+                215.8
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "K = [Kpre, xtWK], V = [Vpre, xtWV ]",
+              "bbox": [
+                82.42,
+                276.47,
+                260.5,
+                289.07
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∆K = [∆Kpre, xt∆WK], ∆V = [∆Vpre, xt∆WV ] (21)",
+              "bbox": [
+                77.25,
+                302.15,
+                289.86,
+                313.72
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "Here, Kpre = XWK and ∆K = X∆WK; the",
+              "bbox": [
+                70.87,
+                322.46,
+                289.13,
+                335.34
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "o = softmax",
+              "bbox": [
+                125.93,
+                401.63,
+                188.22,
+                412.54
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "˜o = softmax",
+              "bbox": [
+                76.43,
+                433.94,
+                135.6,
+                444.3
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "˜A = softmax",
+              "bbox": [
+                95.13,
+                458.5,
+                160.31,
+                472.17
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∆A = ˜A −softmax",
+              "bbox": [
+                114.48,
+                486.61,
+                210.27,
+                500.28
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "E = ˜o −o = ∆A V + ˜A ∆V",
+              "bbox": [
+                114.61,
+                512.21,
+                242.96,
+                525.88
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥E∥F ≤∥∆A V ∥F + ∥˜A ∆V ∥F",
+              "bbox": [
+                106.93,
+                598.39,
+                251.39,
+                613.74
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥∆A V ∥F ≤∥∆A∥F ∥V ∥F",
+              "bbox": [
+                117.93,
+                678.04,
+                240.39,
+                690.64
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥˜A ∆V ∥F ≤∥˜A∥2 ∥∆V ∥F",
+              "bbox": [
+                119.09,
+                700.85,
+                239.24,
+                716.06
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥∆A∥F ≤Lsoftmax",
+              "bbox": [
+                76.55,
+                764.44,
+                160.21,
+                776.15
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥∆q K⊤∥F ≤∥∆q∥2 ∥K∥F",
+              "bbox": [
+                352.48,
+                220.26,
+                476.39,
+                235.03
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥q(∆K)⊤∥F ≤∥q∥2 ∥∆K∥F",
+              "bbox": [
+                349.15,
+                241.13,
+                479.73,
+                255.89
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥E∥F ≤Lsoftmax",
+              "bbox": [
+                313.42,
+                291.06,
+                395.98,
+                311.1
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "Considering that ∥˜A∥2 ≤1, we obtain the follow-",
+              "bbox": [
+                306.14,
+                348.0,
+                526.23,
+                363.16
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥E∥F ≤Lsoftmax",
+              "bbox": [
+                313.42,
+                382.44,
+                395.98,
+                402.47
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "E = G(xt, Ypre, ∆)",
+              "bbox": [
+                371.3,
+                501.0,
+                459.25,
+                512.9
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∥softmax(a) −softmax(b)∥F ≤Lsoftmax∥a −b∥F (37)",
+              "bbox": [
+                311.73,
+                668.15,
+                525.14,
+                680.39
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "∆A = softmax",
+              "bbox": [
+                326.77,
+                739.08,
+                401.04,
+                749.98
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 13,
+          "text_sha256": "259f7b08557e91c21fd7e638fd12acae00153581dd93bae7f60d16ff1117c0a7",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                308.44,
+                483.9,
+                522.11,
+                572.74
+              ],
+              "rows": [
+                [
+                  "Method",
+                  "PIQA Winog HSwag ARC-E ARC-C"
+                ],
+                [
+                  "Dense\nLLM-Pruner\nFLAP\nShortened\nShortGPT\nSLEB\nOurs",
+                  "81.88 75.3 64.91 80.51 53.41\n78.02 61.64 55.02 70.24 42.24\n77.56 61.08 55.23 70.36 42.37\n76.55 61.81 55.39 71.31 41.7\n76.66 72.53 52.4 72.85 42.24\n72.28 65.88 56.32 69.22 38.61\n78.45 72.85 57 75.8 46.67"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [
+            {
+              "text": "∥∆A∥F ≤Lsoftmax",
+              "bbox": [
+                77.4,
+                115.56,
+                161.05,
+                127.28
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "α = 0.85 until it reaches the minimum temperature",
+              "bbox": [
+                70.87,
+                655.92,
+                289.14,
+                667.05
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "Tmin = 0.05. When distilling two blocks, we use",
+              "bbox": [
+                70.87,
+                669.46,
+                289.14,
+                682.01
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "set the pruning ratio p = 0.3, with an attention",
+              "bbox": [
+                70.87,
+                764.31,
+                289.13,
+                775.5
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            },
+            {
+              "text": "score threshold γ = 0.75 to preserve the most se-",
+              "bbox": [
+                306.14,
+                73.3,
+                526.22,
+                84.49
+              ],
+              "status": "text_pattern_candidate",
+              "interpretation": "not_performed"
+            }
+          ],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 14,
+          "text_sha256": "a6735813f562a2964254d6a5c65c85460c3a693a4c2c982819e339d78a8fa6bd",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                84.62,
+                94.18,
+                510.66,
+                123.68
+              ],
+              "rows": [
+                [
+                  "OPT-6.7B\nLLaMA2-13B",
+                  "10.86 11.92 11.68 12.51 13.68 12.94 11.28\n4.88 8.16 9.73 10.81 9.25 8.96 7.38"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                88.86,
+                181.3,
+                506.42,
+                210.8
+              ],
+              "rows": [
+                [
+                  "IFEval\nHumanEval",
+                  "76.36 65.41 65.45 62.60 65.42 56.48 73.48\n68.95 59.36 60.26 57.27 60.44 51.39 66.99"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                92.69,
+                390.44,
+                260.48,
+                460.79
+              ],
+              "rows": [
+                [
+                  "",
+                  null,
+                  null,
+                  null,
+                  "",
+                  "",
+                  "60.56 63.54",
+                  null,
+                  null,
+                  null,
+                  null,
+                  "",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "45.39 47.18",
+                  null,
+                  null,
+                  null,
+                  "",
+                  "",
+                  "",
+                  null,
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "42.25",
+                  null,
+                  "",
+                  "",
+                  "",
+                  "",
+                  "41.07",
+                  null,
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                ]
+              ],
+              "row_count": 7,
+              "column_count": 15,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [
+            {
+              "region_id": "image-1",
+              "bbox": [
+                306.14,
+                253.08,
+                524.41,
+                420.14
+              ],
+              "width": 12864,
+              "height": 9846,
+              "status": "region_detected",
+              "interpretation": "not_performed"
+            }
+          ],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 15,
+          "text_sha256": "258a85429da2889f4e072e2c8d7801d7c1c0c671ebedd6e3e274af565040f8b7",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                72.32,
+                71.19,
+                523.6,
+                119.8
+              ],
+              "rows": [
+                [
+                  "T α Tmin",
+                  "ARC-E ARC-C PIQA Winog BoolQ MathQA WNLI SST-2 RTE CB MMLU CMMLU HSwag",
+                  "AVG"
+                ],
+                [
+                  "5 0.70 0.10\n10 0.80 0.10\n15 0.85 0.05",
+                  "76.77 47.53 79.11 73.09 80.24 33.84 59.15 63.53 67.51 75.00 62.79 49.97 56.78\n78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33\n78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33",
+                  "63.49\n63.56\n63.56"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                72.32,
+                166.29,
+                523.6,
+                229.17
+              ],
+              "rows": [
+                [
+                  "d\nT",
+                  "ARC-E ARC-C PIQA Winog BoolQ MathQA WNLI SST-2 RTE CB MMLU CMMLU HSwag",
+                  "AVG"
+                ],
+                [
+                  "0.97\n0.96\n0.95\n0.94",
+                  "77.44 47.18 78.40 72.53 76.82 36.82 60.56 59.75 71.12 73.21 58.74 48.39 55.38\n78.11 47.53 78.62 71.82 79.08 36.31 61.97 57.45 72.56 73.21 63.43 49.91 56.33\n77.65 47.18 78.40 73.40 79.57 36.21 64.79 69.72 73.29 76.79 60.76 43.37 57.22\n76.77 47.53 79.11 73.09 80.24 33.84 59.15 63.53 67.51 75.00 62.79 49.97 56.78",
+                  "62.80\n63.56\n64.49\n63.49"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                309.07,
+                596.74,
+                523.6,
+                638.5
+              ],
+              "rows": [
+                [
+                  "Euclidean distance\nDot product\nCosine similarity",
+                  "75.70 52.20 50.51\n75.87 55.88 47.62\n77.04 56.99 51.19"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-4",
+              "bbox": [
+                72.32,
+                684.91,
+                288.85,
+                721.67
+              ],
+              "rows": [
+                [
+                  "Method",
+                  "PIQA Winog HSwag ARC-E ARC-C"
+                ],
+                [
+                  "Global Optimum\nOurs",
+                  "76.99 73.56 53.80 73.15 43.86\n76.99 73.56 53.80 73.15 43.86"
+                ]
+              ],
+              "row_count": 2,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 16,
+          "text_sha256": "9d910a9e1a5282012b9cdc541139418a12ccd5f1fb373b63520c54377ced6406",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                88.44,
+                74.93,
+                506.84,
+                90.72
+              ],
+              "rows": [
+                [
+                  "Layer",
+                  "0 1 2 3 4 5 · · · 21 22 23 24 25 26 27"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                111.32,
+                160.46,
+                483.95,
+                176.24
+              ],
+              "rows": [
+                [
+                  "Calibration Set",
+                  "Size",
+                  "15.63% Blocks Removal 9.38% Blocks Removal"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                111.32,
+                179.71,
+                483.95,
+                222.59
+              ],
+              "rows": [
+                [
+                  "PIQA",
+                  "256\n512\n1024",
+                  "24, 25, 26, [22, 23], [27, 28] 25, 26, [27, 28]"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-4",
+              "bbox": [
+                111.32,
+                226.05,
+                483.95,
+                269.1
+              ],
+              "rows": [
+                [
+                  "WikiText-2",
+                  "256\n512\n1024",
+                  "24, 25, 26, [22, 23], [27, 28] 25, 26, [27, 28]"
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 3,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        },
+        {
+          "page": 17,
+          "text_sha256": "8fa885b49fc820ade095b3c58e8ca76bdb7c0cf6c098c3138c96f6f71471b7e3",
+          "text_source": "native_text",
+          "text_extraction_error": null,
+          "ocr": {
+            "status": "not_needed",
+            "engine": null
+          },
+          "tables": [
+            {
+              "table_id": "table-1",
+              "bbox": [
+                73.43,
+                237.9,
+                521.87,
+                341.72
+              ],
+              "rows": [
+                [
+                  "Explain what artifciial intelligence is. Artificial in-\ntelligence (AI) is the simulation of human intelli-\ngence processes by machines, especially computer\nsystems. These processes include learning (the acqui-\nsition of information and rules for using the informa-\ntion), reasoning (using the rules to reach approximate\nor definite conclusions), and self-correction. Particu-\nlar applications of AI ...",
+                  "Explain what artificial intelligence is. Artificial in-\ntelligence, or AI, is a field of computer science that\ndeals with the creation of machines that can perform\ntasks that normally require human intelligence. This\nincludes things such as understanding natural lan-\nguage, recognizing objects in images, and making\ndecisions based on complex data. While AI has been\naround for decades, recent ..."
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-2",
+              "bbox": [
+                73.43,
+                344.97,
+                521.87,
+                448.79
+              ],
+              "rows": [
+                [
+                  "Provide some tips for learning a new language. 1.\nSet realistic goals: Start by setting realistic goals\nfor yourself, such as learning a few basic phrases\nor mastering a specific skill. 2. Practice regularly:\nConsistency is key when it comes to learning a new\nlanguage. 3. Find a language partner: Finding a\nlanguage partner can be a great way to practice and\nimprove your language skills. 4. Use technology...",
+                  "Provide some tips for learning a new language.\nHere are some tips for learning a new language: 1.\nStart by learning the basics of the language, such as\nthe alphabet, common words and phrases, and basic\ngrammar rules. 2. Find a language learning app or\nprogram that suits your learning style and goals. 3.\nPractice speaking and listening to the language as\nmuch as possible. 4. Practice ..."
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            },
+            {
+              "table_id": "table-3",
+              "bbox": [
+                73.43,
+                452.04,
+                521.87,
+                581.45
+              ],
+              "rows": [
+                [
+                  "Explain how a car engine works. A car engine is a\nmachine that converts the chemical energy stored in\ngasoline into mechanical energy that can be used to\nmove the car. The engine consists of several parts\nthat work together to produce this energy. The first\npart of the engine is the combustion chamber. This\nis where the gasoline is mixed with air and ignited\nto create an explosion. The explosion pushes down\non a piston, which is connected to a crankshaft. The\ncrankshaft is what turns wheels ...",
+                  "Explain how a car engine works. A car engine works\nby converting chemical energy stored in fuel into\nmechanical energy that drives the car. The process of\nconverting chemical energy into mechanical energy\nis known as combustion. In a car engine, combustion\noccurs in the combustion chamber, which is located\nin the center of the engine. The combustion chamber\nis connected to the intake manifold, which is where\nthe fuel and air mixture enters the engine. The intake\nmanifold ..."
+                ]
+              ],
+              "row_count": 1,
+              "column_count": 2,
+              "status": "extracted_candidate"
+            }
+          ],
+          "figures": [],
+          "formula_candidates": [],
+          "section": "references",
+          "start_section": "references",
+          "end_section": "references",
+          "headings": []
+        }
+      ]
+    }
+  ],
+  "scope": "页面文本提取、表格候选和图像区域定位；图表、公式与语义判决须分别核查。"
+}

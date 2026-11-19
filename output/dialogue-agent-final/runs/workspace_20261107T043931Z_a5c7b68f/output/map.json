@@ -1,0 +1,12 @@
+{
+  "status": "unavailable",
+  "nodes": [],
+  "edges": [],
+  "tracks": [],
+  "embedding": {
+    "backend": "unavailable"
+  },
+  "limitations": [
+    "Map generation is outside this chat acceptance test."
+  ]
+}

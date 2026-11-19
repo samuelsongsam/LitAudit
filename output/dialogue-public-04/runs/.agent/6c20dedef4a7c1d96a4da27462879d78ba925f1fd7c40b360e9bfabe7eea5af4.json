@@ -1,0 +1,92 @@
+{
+  "execution_id": "6c20dedef4a7c1d96a4da27462879d78ba925f1fd7c40b360e9bfabe7eea5af4",
+  "source_run_id": "public-dialogue",
+  "run_id": "workspace_20261107T043253Z_b1680467",
+  "status": "timeout",
+  "steps": [
+    {
+      "action": {
+        "tool": "read_papers",
+        "paper_ids": [
+          "paper-009",
+          "paper-011"
+        ],
+        "query": ""
+      },
+      "status": "completed",
+      "result": {
+        "papers": [
+          {
+            "paper_id": "paper-009",
+            "title": "PDTrim: Targeted Pruning for Prefill-Decode Disaggregation in Inference",
+            "abstract": "Large Language Models (LLMs) demonstrate exceptional capabilities across various tasks, but their deployment is constrained by high computational and memory costs. Model pruning provides an effective means to alleviate these demands. However, existing methods often ignore the characteristics of prefill-decode (PD) disaggregation in practice. In this paper, we propose a pruning method that is highly integrated with PD disaggregation, enabling more precise pruning of blocks. Our approach constructs pruning and distillation sets to perform iterative block removal, obtaining better pruning solutions. Moreover, we analyze the pruning sensitivity of the prefill and decode stages and identify removable blocks specific to each stage, making it well suited for PD disaggregation deployment. Extensive experiments demonstrate our approach consistently achieves strong performance in both PD disaggregation and PD unified (non-PD disaggregation) settings, and can also be extended to other non-block pruning methods. Under the same settings, our method achieves improved performance and faster inference."
+          },
+          {
+            "paper_id": "paper-011",
+            "title": "POD-A ttention : Unlocking Full Prefill-Decode Overlap for Faster LLM Inference",
+            "abstract": "Each request in LLM inference goes through two phases: compute-bound prefill and memory-bandwidth-bound decode. To improve GPU utilization, recent systems use hybrid batching that combines the prefill and decode phases of different requests into the same batch. This approach optimizes linear operations but remains inefficient for attention computation because existing attention kernels specialize execution independently for the prefill and decode phases. In this paper, we present POD-Attention - the first GPU kernel that efficiently computes attention for hybrid batches. POD-Attention aims to maximize the utilization of both compute and memory bandwidth by carefully allocating the GPU's resources such that prefill and decode operations happen concurrently on the same multiprocessor. POD-Attention speeds up attention computation by up to $59\\%$ (mean $28\\%$), enabling higher throughput and lower latency LLM inference compared to the use of independently optimized prefill and decode attention kernels."
+          }
+        ]
+      }
+    },
+    {
+      "action": {
+        "tool": "acquire_fulltext",
+        "paper_ids": [
+          "paper-009"
+        ],
+        "query": ""
+      },
+      "status": "completed",
+      "result": {
+        "run_id": "workspace_20261107T043253Z_b1680467",
+        "acquisition": {
+          "requested_paper_ids": [
+            "paper-009"
+          ],
+          "download_requested": true,
+          "status": "completed",
+          "ready_paper_ids": [
+            "paper-009"
+          ],
+          "failed_paper_ids": [],
+          "pending_paper_ids": [],
+          "documents": [
+            {
+              "paper_id": "paper-009",
+              "status": "parsed",
+              "error_code": null,
+              "acquisition": "arxiv_download",
+              "pdf_saved": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "action": {
+        "tool": "search_fulltext",
+        "paper_ids": [
+          "paper-009"
+        ],
+        "query": "experimental setup configuration performance results benchmarks speedup"
+      },
+      "status": "running"
+    }
+  ],
+  "hits": [],
+  "model_calls": 3,
+  "limits": {
+    "steps": 4,
+    "acquisitions": 1,
+    "papers_per_action": 2,
+    "seconds": 90
+  },
+  "last_action": {
+    "tool": "search_fulltext",
+    "paper_ids": [
+      "paper-009"
+    ],
+    "query": "experimental setup configuration performance results benchmarks speedup"
+  }
+}

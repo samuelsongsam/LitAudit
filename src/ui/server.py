@@ -455,6 +455,14 @@ class LitAuditHandler(BaseHTTPRequestHandler):
                 return
             from src.tasks import report_progress
             report_progress("understand")
+            agent_mode = body.get('agent_mode', False)
+            if not isinstance(agent_mode, bool):
+                raise ValueError('自动补证开关必须为布尔值')
+            if agent_mode:
+                if not requested_run or explicit_search or body.get('reading_selection'):
+                    raise ValueError('自动补证需要当前研究，不能与新检索或选中文本同时使用')
+                self._json(self._agent_chat(settings, requested_run, message, body))
+                return
             current_payload = build_payload(settings.runs_dir, requested_run) if requested_run and not explicit_search else None
             from src.reading_selection import resolve_reader_selection
             selection = resolve_reader_selection(settings.runs_dir, requested_run, body.get('reading_selection')) if current_payload is not None else None
@@ -465,9 +473,8 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             history = []
             if current_payload is not None:
                 history = load_conversation(settings.runs_dir, requested_run).get("messages", [])
-                current_payload["conversation_context"] = [
-                    {"role": p["role"], "content": p["content"][:1500]} for p in history[-6:]
-                    if isinstance(p, dict) and p.get("role") in {"user", "assistant"} and isinstance(p.get("content"), str)]
+                from src.dialogue_context import recent_context
+                current_payload["conversation_context"] = recent_context(history)
             from src.map_topics import is_map_question, map_chat_response, validate_map_context, resolve_cluster_reading_scope
             from src.reading_scope import is_research_agenda_question, resolve_reading_scope
             research_agenda = current_payload is not None and is_research_agenda_question(
@@ -530,7 +537,9 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             if intent.direct_answer or intent.needs_clarification:
                 if intent.direct_answer and current_payload:
                     self._attach_fulltext(current_payload, message, intent)
-                    current_payload["reading_mode"] = "grounded"
+                    current_payload["reading_mode"] = "grounded" if (
+                        body.get("reading_mode") is True or selection or cluster_scope or research_agenda
+                    ) else "materials"
                     current_payload["user_resources"] = resources
                 report_progress("answer")
                 response = build_chat_response(current_payload or {"run_id": None, "papers": []}, message, intent, settings)
@@ -539,7 +548,7 @@ class LitAuditHandler(BaseHTTPRequestHandler):
                 if selection:
                     response['reading_selection'] = selection
                 if response.get("overview_mode") == "llm_error":
-                    status = "insufficient_evidence" if response.get("error") == "no_fulltext" else "llm_unavailable"
+                    status = "insufficient_evidence" if response.get("error") in {"no_fulltext", "no_materials"} else "llm_unavailable"
                     self._json({"conversation_id": requested_run, "run_id": requested_run, "status": status, "action": "reuse_run" if requested_run else "no_run", "response": response})
                     return
                 if intent.direct_answer and requested_run:
@@ -559,7 +568,8 @@ class LitAuditHandler(BaseHTTPRequestHandler):
                 result = run_pipeline(settings, source="data", question=intent.expanded_query or message, live=True, **options)
                 run_id = result["run_id"]
                 current_payload = build_payload(settings.runs_dir, run_id)
-                for previous in body.get("conversation_context") or []:
+                saved_history = load_conversation(settings.runs_dir, requested_run).get("messages", []) if requested_run else []
+                for previous in saved_history or body.get("conversation_context") or []:
                     if isinstance(previous, dict) and previous.get("role") in {"user", "assistant"} and isinstance(previous.get("content"), str):
                         save_message(settings.runs_dir, run_id, previous["role"], previous["content"], previous.get("response"))
             else:
@@ -577,6 +587,9 @@ class LitAuditHandler(BaseHTTPRequestHandler):
                 run_id = fork_workspace(settings.runs_dir, run_id)["run_id"]
                 response["run_id"] = run_id
             save_turn(settings.runs_dir, run_id, message, response["overview"], response)
+            if requested_run and requested_run != run_id:
+                from src.conversation import continue_conversation
+                continue_conversation(settings.runs_dir, requested_run, run_id)
             self._save_research_context(run_id, constraints, resources)
             self._json({"conversation_id": run_id, "run_id": run_id, "status": "completed", "action": "new_run" if intent.needs_retrieval else "reuse_run", "response": response})
         except FileNotFoundError as exc:
@@ -589,7 +602,7 @@ class LitAuditHandler(BaseHTTPRequestHandler):
     @staticmethod
     def _retry_descriptor(path: str, body: dict):
         fields = {
-            "/api/chat": {"message", "question", "run_id", "constraints", "user_resources", "reading_mode", "reading_paper_id", "reading_paper_ids", "reading_scope_mode", "clarification_context", "clarification_topic", "skip_clarification", "search_supplement", "map_context", "reading_selection", "analysis_preset"},
+            "/api/chat": {"message", "question", "run_id", "constraints", "user_resources", "reading_mode", "reading_paper_id", "reading_paper_ids", "reading_scope_mode", "clarification_context", "clarification_topic", "skip_clarification", "search_supplement", "map_context", "reading_selection", "analysis_preset", "agent_mode", "agent_request_id"},
             "/api/map-topics/refresh": {"run_id", "force"},
             "/api/search": {"question", "constraints", "search_supplement"},
             "/api/live": {"question", "constraints", "search_supplement"},
@@ -620,6 +633,65 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             if resources is not None:
                 context["user_resources"] = resources
             _write_conversation(path, context)
+
+    def _agent_chat(self, settings, run_id, message, body):
+        from hashlib import sha256
+        from src.research_workspace import _lock
+        from src.conversation import _write_conversation
+        request_id = body.get('agent_request_id') or body.get('request_id')
+        if not isinstance(request_id, str) or not 0 < len(request_id) <= 120:
+            raise ValueError('补证任务需要有效请求编号')
+        identity = sha256(json.dumps([run_id, message, request_id], ensure_ascii=False).encode()).hexdigest()
+        path = settings.runs_dir / '.agent' / (identity + '.response.json')
+        with _lock(path):
+            if path.exists():
+                return json.loads(path.read_text(encoding='utf-8'))
+            response = self._agent_chat_work(settings, run_id, message, body)
+            if response['response'].get('overview_mode') != 'llm_error':
+                _write_conversation(path, response)
+            return response
+
+    def _agent_chat_work(self, settings, run_id, message, body):
+        from src.research_agent import run_agent
+        from src.conversation import Intent, continue_conversation
+        from src.research_workspace import fork_workspace
+        request_id = body.get('agent_request_id') or body.get('request_id')
+        from src.dialogue_context import recent_context
+        context = recent_context(load_conversation(settings.runs_dir, run_id)['messages'])
+        result = run_agent(settings, run_id, message, request_id, conversation_context=context)
+        target = result['run_id']
+        payload = build_payload(settings.runs_dir, target)
+        payload['reading_mode'] = 'materials'
+        payload['conversation_context'] = context
+        payload['fulltext_index'] = {'hits': result['hits']}
+        selected_ids = next((step['action']['paper_ids'] for step in reversed(result['steps'])
+            if step['status'] == 'completed' and step['action']['tool'] in {'search_fulltext', 'acquire_fulltext'}), [])
+        if selected_ids:
+            payload['papers'] = [p for p in payload.get('papers', []) if p['paper_id'] in selected_ids]
+        intent = Intent('follow_up', 1, '用户开启有界全文补证', False, direct_answer=True,
+                        target_paper_id=selected_ids[0] if len(selected_ids) == 1 else None)
+        response = build_chat_response(payload, message, intent, settings)
+        response['agent_execution'] = {k: result[k] for k in ('execution_id', 'status', 'model_calls', 'limits')}
+        response['agent_execution']['steps'] = [
+            {'tool': s['action']['tool'], 'status': s['status']} for s in result['steps']]
+        if response.get('overview_mode') != 'llm_error':
+            if target in {'phase2-real', 'demo'}:
+                target = fork_workspace(settings.runs_dir, target)['run_id']
+            response['run_id'] = target
+            # Repeated HTTP requests cannot append the same turn twice.
+            from src.research_workspace import _lock
+            from src.run_paths import resolve_run_dir
+            with _lock(resolve_run_dir(settings.runs_dir, target)):
+                history = load_conversation(settings.runs_dir, target)['messages']
+                if not any((m.get('response') or {}).get('agent_execution', {}).get('execution_id') == result['execution_id'] for m in history):
+                    save_turn(settings.runs_dir, target, message, response['overview'], response)
+            if target != run_id:
+                continue_conversation(settings.runs_dir, run_id, target)
+        identity = load_conversation(settings.runs_dir, target)['conversation_id']
+        status = ('insufficient_evidence' if response.get('error') in {'no_fulltext', 'no_materials'} else
+                  'llm_unavailable' if response.get('overview_mode') == 'llm_error' else 'completed')
+        return {'run_id': target, 'conversation_id': identity, 'status': status,
+                'action': 'reuse_run', 'response': response}
 
     @staticmethod
     def _paper_method_chat(runs_dir, run_id, paper_id, message):
@@ -972,6 +1044,9 @@ class LitAuditHandler(BaseHTTPRequestHandler):
             return None
 
     def _json(self, payload: dict, status: int = 200) -> None:
+        if payload.get('conversation_id') and payload.get('run_id'):
+            payload = {**payload, 'conversation_id': load_conversation(
+                self.settings.runs_dir, payload['run_id'])['conversation_id']}
         data = json.dumps(payload, ensure_ascii=False, default=str).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")

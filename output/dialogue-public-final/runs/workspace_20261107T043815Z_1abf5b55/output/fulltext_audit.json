@@ -1,0 +1,88 @@
+{
+  "created_at": "2026-11-07T04:38:15.738471+00:00",
+  "documents": [
+    {
+      "paper_id": "paper-008",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-009",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-010",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-011",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-012",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-013",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-014",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-015",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-016",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-017",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-018",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    },
+    {
+      "paper_id": "paper-019",
+      "status": "missing",
+      "error_code": "fulltext_not_available",
+      "page_count": 0
+    }
+  ],
+  "checks": [],
+  "search_index": {
+    "algorithm": "bm25_passage_ranking",
+    "passage_count": 0,
+    "hit_count": 0
+  },
+  "limitations": [
+    "精确文本匹配只检查摘录位置，不判断语义支持，也不代表人工通读。",
+    "全文下载支持 arXiv 及检索提供商声明的开放 PDF，每次最多 5 篇。",
+    "扫描页仅在本地OCR引擎可用时处理；未处理页与表格/图像/公式状态逐页记录。"
+  ]
+}

@@ -613,6 +613,7 @@ function startNewConversation() {
   state.fulltext = {query:'',paperId:'',section:'',result:null,loading:false,error:''};
   state.chatNew = true;
   state.readingMode = false;
+  state.agentMode = false;
   state.readingPaperId = "auto";
   state.searchSupplement=false;
   state.view = "chat";
@@ -891,7 +892,8 @@ function bindWorkbenchTools(stage) {
   });
   stage.querySelectorAll('[data-discard-draft]').forEach(b=>b.onclick=()=>{clearFormDraft(b.dataset.discardDraft,b.dataset.paperId,b.dataset.passageId||'',b.dataset.field||'');paint();});
   const readingSelect=stage.querySelector('[data-reading-paper]');if(readingSelect)readingSelect.onchange=()=>{state.readingPaperId=readingSelect.value;const summary=readingSelect.closest?.('details')?.querySelector('summary');if(summary)summary.textContent='范围：'+(state.readingPaperId==='all'?'全部当前论文':state.readingPaperId==='auto'?'自动识别':titleOf(state.readingPaperId));};
-  const readingToggle=stage.querySelector('[data-reading-mode]');if(readingToggle)readingToggle.onchange=()=>{state.readingMode=readingToggle.checked;const input=stage.querySelector('#search-form input[name=q]');if(input)input.placeholder=state.readingMode?'围绕当前论文继续提问…':'输入研究问题，或论文题名、arXiv编号…';};
+  const agentToggle=stage.querySelector('[data-agent-mode]');if(agentToggle)agentToggle.onchange=()=>{state.agentMode=agentToggle.checked;if(state.agentMode)state.readingMode=false;paint();};
+  const readingToggle=stage.querySelector('[data-reading-mode]');if(readingToggle)readingToggle.onchange=()=>{state.readingMode=readingToggle.checked;if(state.readingMode)state.agentMode=false;const input=stage.querySelector('#search-form input[name=q]');if(input)input.placeholder=state.readingMode?'围绕当前论文继续提问…':'输入研究问题，或论文题名、arXiv编号…';};
   stage.querySelectorAll('[data-constraint]').forEach(input=>input.oninput=()=>{state.constraints[input.dataset.constraint]=input.value;});
   stage.querySelectorAll('[data-resource]').forEach(input=>input.oninput=()=>{state.resources[input.dataset.resource]=input.value;});
   stage.querySelectorAll('[data-preview-plan],[data-direct-search]').forEach(button=>button.onclick=async()=>{
@@ -1066,6 +1068,8 @@ function conversationHistoryView() {
 
 function llmErrorText(response) {
   const code = String(response?.error || "");
+  if (code === "no_fulltext") return "当前选择的论文尚无可检索正文。请获取全文或导入 PDF 后进行全文分析；也可关闭正文阅读模式，基于已有摘要提问。";
+  if (code === "no_materials") return "当前范围内没有可用于回答的摘要或正文，请补充文献材料或调整范围。";
   if (code === "answer_audit_rejected") return "回答未通过引用完整性检查，未展示未经支持的陈述。已有论文与审计数据已保留，可查看证据后重新提问。";
   const reasons = {
     no_fulltext: "当前选择的论文尚无可检索正文，请先获取全文或调整论文范围。",
@@ -1091,9 +1095,11 @@ function citationView(response) {
 
 function readingScopeControl() {
   const papers=readablePapers();
-  if(!state.runId||!papers.length)return '';
+  if(!state.runId)return '';
+  const agent=`<label class="reading-scope"><input type="checkbox" data-agent-mode ${state.agentMode?'checked':''}/> 自动补充全文依据（试用，最多两篇）</label>`;
+  if(!papers.length)return agent;
   const title=state.readingPaperId==='all'?'全部当前论文':state.readingPaperId==='auto'?'自动识别':titleOf(state.readingPaperId);
-  return `<div class="reading-scope"><label><input type="checkbox" data-reading-mode ${state.readingMode?'checked':''}/> 基于当前论文全文回答</label><details data-panel="reading-scope" class="reading-scope-options"><summary>范围：${esc(title)}</summary><label>论文范围<select data-reading-paper><option value="auto" ${state.readingPaperId==='auto'?'selected':''}>根据本轮问题确定</option><option value="all" ${state.readingPaperId==='all'?'selected':''}>全部当前论文</option>${papers.map(p=>`<option value="${esc(p.paper_id)}" ${state.readingPaperId===p.paper_id?'selected':''}>${esc(p.title)}</option>`).join('')}</select></label><p class="tiny">本轮明确提到的论文优先，实际范围随回答显示。</p></details></div>`;
+  return `${agent}<div class="reading-scope"><label><input type="checkbox" data-reading-mode ${state.readingMode?'checked':''}/> 基于当前论文全文回答</label><details data-panel="reading-scope" class="reading-scope-options"><summary>范围：${esc(title)}</summary><label>论文范围<select data-reading-paper><option value="auto" ${state.readingPaperId==='auto'?'selected':''}>根据本轮问题确定</option><option value="all" ${state.readingPaperId==='all'?'selected':''}>全部当前论文</option>${papers.map(p=>`<option value="${esc(p.paper_id)}" ${state.readingPaperId===p.paper_id?'selected':''}>${esc(p.title)}</option>`).join('')}</select></label><p class="tiny">本轮明确提到的论文优先，实际范围随回答显示。</p></details></div>`;
 }
 
 function readingScopeView(response) {
@@ -1173,13 +1179,19 @@ function bindClarification(stage) {
   };
 }
 
+function agentExecutionView(response) {
+  const a=response.agent_execution;if(!a)return '';
+  const labels={completed:'补证完成',insufficient_evidence:'补证结束，尚无正文依据',budget_exhausted:'已达到补证上限',no_progress:'停止重复动作',timeout:'补证超时',failed:'补证服务失败',tool_failed:'补证工具失败',model_failed:'补证模型失败',invalid_action:'工具参数无效，已停止',interrupted:'上次执行中断，未重复执行',cancelled:'补证已取消'};
+  return `<details><summary>${esc(labels[a.status]||'补证已停止')} · ${(a.steps||[]).length} 步</summary><p>以下回答仍需通过材料引用核验。</p>${(a.steps||[]).map(s=>`<p>${esc({read_papers:'读取摘要',search_fulltext:'检索正文',acquire_fulltext:'获取全文'}[s.tool]||s.tool)} · ${esc(s.status==='completed'?'已完成':'未确认完成')}</p>`).join('')}</details>`;
+}
+
 function chatMessage(item,messageIndex=0) {
   if(item.role==='user')return `<div class="chat-message user"><div class="chat-role">你</div><div class="chat-bubble">${esc(item.content)}</div></div>`;
   const response=item.response||{};
-  if(response.overview_mode==='llm_error')return `<div class="chat-message assistant"><div class="chat-role">勘文</div><article class="chat-bubble assistant-bubble"><p role="status">${esc(llmErrorText(response))}</p><div class="panel-actions"><button class="ghost" type="button" data-open-sources>连接设置</button></div></article></div>`;
+  if(response.overview_mode==='llm_error')return `<div class="chat-message assistant"><div class="chat-role">勘文</div><article class="chat-bubble assistant-bubble"><p role="status">${esc(llmErrorText(response))}</p><div class="panel-actions">${['no_fulltext','no_materials'].includes(response.error)?'<button class="ghost" type="button" data-open-chat-tool="import">导入 PDF</button>':(response.error==='missing_llm_api_key'||String(response.error||'').startsWith('llm_request_failed:'))?'<button class="ghost" type="button" data-open-sources>连接设置</button>':''}</div></article></div>`;
   if(response.overview_mode==='clarification')return clarificationMessage(item,messageIndex);
   if(response.overview_mode==='map_answer')return `<div class="chat-message assistant"><div class="chat-role">勘文 · 研究地图</div><article class="chat-bubble assistant-bubble">${mapAnswerView(response,item.content)}</article></div>`;
-  if(['direct_answer','method_evidence'].includes(response.overview_mode))return `<div class="chat-message assistant direct"><div class="chat-role">勘文</div><article class="chat-bubble assistant-bubble">${readingScopeView(response)}${readingAnswerView(response,item.content)}</article></div>`;
+  if(['direct_answer','method_evidence'].includes(response.overview_mode))return `<div class="chat-message assistant direct"><div class="chat-role">勘文</div><article class="chat-bubble assistant-bubble">${agentExecutionView(response)}${readingScopeView(response)}${readingAnswerView(response,item.content)}</article></div>`;
   const papers=response.papers||[];const currentMap=state.data?.map?.nodes?.length?state.data.map:response.map;
   return `<div class="chat-message assistant"><div class="chat-role">勘文</div><article class="chat-bubble assistant-bubble"><div class="chat-overview rich-text">${renderMarkdown(cleanAssistantText(item.content))}</div>${citationView(response)}${papers.length?`<div class="research-result-heading"><h3>相关文献</h3><span>${papers.length} 篇</span></div><div class="chat-papers">${papers.map(chatPaper).join('')}</div>`:''}${response.paper_selection?.retrieval_failures?.length?`<details class="source-status-details"><summary>检索来源状态</summary>${response.paper_selection.retrieval_failures.map(r=>`<p>${esc(labelOf('source',r.source))} · ${esc(labelOf('retrievalStatus',r.status))}</p>`).join('')}</details>`:''}${currentMap?.nodes?.length?`<details class="chat-map-details" data-panel="chat-map:${messageIndex}"><summary>${uiIcon('map')}研究地图 · ${(currentMap.tracks||[]).length} 个主题</summary><div class="chat-map">${mapView(currentMap,{embed:true,graphId:'chat-map-'+messageIndex})}</div></details>`:''}</article></div>`;
 }
@@ -1215,7 +1227,7 @@ async function chatTurn(message, options = {}) {
   }, 1000);
   try {
     const result = await api("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal,
-      body: JSON.stringify({ message, run_id: requestedRunId, conversation_context: conversationBeforeRunChange.slice(0, -1), clarification_context: clarificationContext, clarification_topic: clarificationTopic, skip_clarification: skipClarification || undefined, constraints:state.constraints,search_supplement:searchSupplementOptions(),user_resources:state.resources,reading_mode:readingMode,map_context:continuingSearch?undefined:state.mapContext,reading_paper_id:!['auto','all'].includes(readingPaperId)?readingPaperId:undefined,reading_scope_mode:readingPaperId==='all'?'all':readingPaperId==='auto'?'auto':'selected',request_id:`${task.started}-${owner}-${task.id}` }) });
+      body: JSON.stringify({ message, run_id: requestedRunId, agent_mode:!continuingSearch&&Boolean(state.agentMode)&&Boolean(requestedRunId),agent_request_id:`${task.started}-${owner}-${task.id}`, conversation_context: conversationBeforeRunChange.slice(0, -1), clarification_context: clarificationContext, clarification_topic: clarificationTopic, skip_clarification: skipClarification || undefined, constraints:state.constraints,search_supplement:searchSupplementOptions(),user_resources:state.resources,reading_mode:readingMode,map_context:continuingSearch?undefined:state.mapContext,reading_paper_id:!['auto','all'].includes(readingPaperId)?readingPaperId:undefined,reading_scope_mode:readingPaperId==='all'?'all':readingPaperId==='auto'?'auto':'selected',request_id:`${task.started}-${owner}-${task.id}` }) });
     if (state.chatKey !== owner) {
       state.backgroundNotice = { text: result.run_id ? "后台研究已完成，结果已保存在原研究中。" : "后台任务已返回；切回原研究可继续查看。", runId: result.run_id || requestedRunId };
       await refreshConversations();
@@ -2272,6 +2284,7 @@ async function loadRun(runId, repaint = true, push = false, preserveContext = fa
   const initialLoad = !state.data;
   const hadReadable = readablePapers().length>0;
   state.runId = runId;
+  if(changed)state.agentMode=false;
   state.data = data;
   if (!preserveContext && (changed || data.research_context?.user_resources)) state.resources = {data:'',compute:'',time:'',...(data.research_context?.user_resources||{})};
   if (!preserveContext && (changed || data.research_context?.constraints || data.manifest?.constraints)) state.constraints = {year_from:'',year_to:'',research_object:'',method:'',publication_type:'any',...(data.research_context?.constraints || data.manifest?.constraints || {})};
